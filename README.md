@@ -39,16 +39,16 @@
 
 ---
 
-## 📁 파일 구조 (`D:\git_test\word-typing-defense\`)
+## 📁 파일 구조
 
-- `index.html` : 메인 레이아웃, N인 선택 UI, 다중 입력바 및 결과 랭킹 모달 ([index.html](file:///D:/git_test/word-typing-defense/index.html))
-- `style.css` : 사이버펑크 네온 글로우 CSS, N인 그리드 및 OBS 오버레이 스타일 ([style.css](file:///D:/git_test/word-typing-defense/style.css))
-- `js/game.js` : Canvas 2D 파티클, 2단 몬스터 UI 렌더링, 동적 N인 포탑 엔진 ([game.js](file:///D:/git_test/word-typing-defense/js/game.js))
-- `js/audio.js` : Web Audio API 사운드 합성기 (레이저, 폭발음, 피버음) ([audio.js](file:///D:/git_test/word-typing-defense/js/audio.js))
-- `js/wordPacks.js` : 방송 밈, 억까 단어, 2단 시청자/제시어 생성기 ([wordPacks.js](file:///D:/git_test/word-typing-defense/js/wordPacks.js))
-- `js/chatIntegration.js` : 다중 채널 동시 라이브 채팅 연동기 ([chatIntegration.js](file:///D:/git_test/word-typing-defense/js/chatIntegration.js))
-- `README.md` : 게임 설명서
-- `implementation_plan.md` : 상세 기술 구현 계획서
+- [`index.html`](./index.html) : 메인 레이아웃, N인 선택 UI, 다중 입력바 및 결과 랭킹 모달
+- [`style.css`](./style.css) : 사이버펑크 네온 글로우 CSS, N인 그리드 및 OBS 오버레이 스타일
+- [`js/game.js`](./js/game.js) : Canvas 2D 파티클, 2단 몬스터 UI 렌더링, 동적 N인 포탑 엔진
+- [`js/audio.js`](./js/audio.js) : Web Audio API 사운드 합성기 (레이저, 폭발음, 피버음)
+- [`js/wordPacks.js`](./js/wordPacks.js) : 방송 밈, 억까 단어, 2단 시청자/제시어 생성기
+- [`js/chatIntegration.js`](./js/chatIntegration.js) : 다중 채널 동시 라이브 채팅 연동기
+- [`README.md`](./README.md) : 게임 설명서
+- [`implementation_plan.md`](./implementation_plan.md) : 상세 기술 구현 계획서
 
 ---
 

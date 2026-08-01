@@ -727,7 +727,11 @@ class GameEngine {
         this.ctx.shadowColor = '#ffd700';
 
         this.ctx.beginPath();
-        this.ctx.roundRect(m.x - badgeWidth / 2, badgeY - badgeHeight / 2, badgeWidth, badgeHeight, 9);
+        if (this.ctx.roundRect) {
+          this.ctx.roundRect(m.x - badgeWidth / 2, badgeY - badgeHeight / 2, badgeWidth, badgeHeight, 9);
+        } else {
+          this.ctx.rect(m.x - badgeWidth / 2, badgeY - badgeHeight / 2, badgeWidth, badgeHeight);
+        }
         this.ctx.fill();
         this.ctx.stroke();
 
@@ -746,7 +750,11 @@ class GameEngine {
       this.ctx.shadowColor = m.color;
 
       this.ctx.beginPath();
-      this.ctx.roundRect(m.x - boxWidth / 2, m.y - boxHeight / 2, boxWidth, boxHeight, 10);
+      if (this.ctx.roundRect) {
+        this.ctx.roundRect(m.x - boxWidth / 2, m.y - boxHeight / 2, boxWidth, boxHeight, 10);
+      } else {
+        this.ctx.rect(m.x - boxWidth / 2, m.y - boxHeight / 2, boxWidth, boxHeight);
+      }
       this.ctx.fill();
       this.ctx.stroke();
 
