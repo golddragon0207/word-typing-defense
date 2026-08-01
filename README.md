@@ -1,0 +1,65 @@
+# 🎮 스트리머 전용 단어 타자 방어 웹 게임 (Streamer Word Typing Defense)
+
+유튜브 라이브, 치지직, SOOP 방송 및 시청자 참여 합방 콘텐츠에 최적화된 **네온 사이버펑크 스타일의 N인 타자 방어(산성비) 웹 게임**입니다.
+
+---
+
+## 🎯 주요 기능 요약
+
+### 1. 🏷️ 시청자 닉네임 & 타깃 제시어 2단 몬스터 UI (대기업 방송 최적화)
+- **상단 뱃지**: 몬스터 상단에 시청자 닉네임(`🟢 억까의신`, `🔵 SOOP팬클럽` 등)이 돋보이는 네온 뱃지로 표시되어 시청자가 자신의 출전을 직관적으로 확인합니다.
+- **하단 제시어 상자**: 스트리머가 복잡한 닉네임을 타자로 치는 대신, 실제 타격할 가독성 높은 **clean 제시어**(예: `구독과좋아요`, `쀍`, `오타내지마라`)를 커다란 네온 상자 안에 명확히 제공합니다.
+
+### 2. 🛡️ 대형 방송 마비 방지 시스템 (Max Monster Cap)
+- 시청자가 수만 명인 대형 방송에서 채팅이 폭주하더라도 **화면 내 최대 몬스터 수를 15개로 제어**하여 화면 마비나 브라우저 렉(Lag)을 완벽히 방지합니다.
+
+### 3. 👥 동적 N인 스트리머 모드 (1인 ~ 6인+ 직관적 UI)
+- **1인 솔로 선택 시**: 게임 방식을 `1인 솔로 방어 모드`로 자동 구성하여 복잡한 합방 옵션 없이 즉시 깔끔하게 플레이할 수 있습니다.
+- **2인 이상 합방 선택 시**: 2인 듀오, 3인 트리오, 4인 크루, 6인 대형 합방에 맞춘 `대결 배틀(Versus)` / `합방 협동(Co-op)` 및 `개별/통합 입력창` 선택 옵션이 활성화됩니다.
+- 각 스트리머별 전용 포탑과 네온 테마 색상(Cyan, Pink, Gold, Green, Purple, Orange) 및 닉네임 라벨이 Canvas에 동적으로 구성됩니다.
+
+
+### 4. 📡 실시간 방송 연동 & `!참여` 시청자 자동 참가 (메인 시스템)
+- 치지직, SOOP, 유튜브 라이브 주소를 연동하면, 시청자들이 방송 채팅창에 **`!참여`**, **`!참가`**, **`!억까`**라고 치는 즉시 자동으로 시청자 닉네임 몬스터가 출전합니다.
+- 복사-붙여넣기 같은 번거로운 작업 없이 **100% 자동 실시간 연동**으로 방송 몰입감과 채팅 화력을 극대화합니다.
+
+### 5. 📝 자유 커스텀 밈 & 억까 단어장 등록 (보조 기능)
+- 스트리머 독자적인 흑역사 단어나 방송 전용 밈을 사전에 등록하여 몬스터 제시어로 등장시킬 수 있습니다.
+
+### 6. 📺 OBS Studio 투명 오버레이 모드 (크로마키)
+- 상단 `[📺 OBS 크로마키]` 버튼 클릭 시 배경이 투명해져 스트리머 캠이나 방송 화면 위에 오버레이로 얹어서 진행할 수 있습니다.
+
+### 7. ⌨️ 개별 입력창 vs 통합 입력창 선택
+- **개별 입력창**: 각 스트리머별 전용 타자창이 하단에 배치되어 입력 시 자기 전용 포탑이 발사됩니다.
+- **통합 입력창**: MC나 관전 스트리머 1명이 전체 포탑을 통제하며 몬스터를 타격합니다.
+
+### 8. 🏆 스트리머별 MVP & 전과표 결과 랭킹
+- 게임 오버 시 최종 점수뿐만 아니라 **각 스트리머별 처치 몬스터 수, 득점(Pts) 랭킹 및 MVP 뱃지**를 한눈에 보여줍니다.
+
+
+---
+
+## 📁 파일 구조 (`D:\git_test\word-typing-defense\`)
+
+- `index.html` : 메인 레이아웃, N인 선택 UI, 다중 입력바 및 결과 랭킹 모달 ([index.html](file:///D:/git_test/word-typing-defense/index.html))
+- `style.css` : 사이버펑크 네온 글로우 CSS, N인 그리드 및 OBS 오버레이 스타일 ([style.css](file:///D:/git_test/word-typing-defense/style.css))
+- `js/game.js` : Canvas 2D 파티클, 2단 몬스터 UI 렌더링, 동적 N인 포탑 엔진 ([game.js](file:///D:/git_test/word-typing-defense/js/game.js))
+- `js/audio.js` : Web Audio API 사운드 합성기 (레이저, 폭발음, 피버음) ([audio.js](file:///D:/git_test/word-typing-defense/js/audio.js))
+- `js/wordPacks.js` : 방송 밈, 억까 단어, 2단 시청자/제시어 생성기 ([wordPacks.js](file:///D:/git_test/word-typing-defense/js/wordPacks.js))
+- `js/chatIntegration.js` : 다중 채널 동시 라이브 채팅 연동기 ([chatIntegration.js](file:///D:/git_test/word-typing-defense/js/chatIntegration.js))
+- `README.md` : 게임 설명서
+- `implementation_plan.md` : 상세 기술 구현 계획서
+
+---
+
+## 🌐 1분 무료 웹 배포 주소 (GitHub Pages)
+
+- **웹 게임 즉시 접속 주소**: [https://golddragon0926.github.io/word-typing-defense/](https://golddragon0926.github.io/word-typing-defense/)
+- **GitHub 레포지토리**: [https://github.com/golddragon0926/word-typing-defense](https://github.com/golddragon0926/word-typing-defense)
+
+> **💡 스트리머 사용 팁**:
+> - 웹 브라우저에서 위 주소를 접속하여 클릭 한 번으로 바로 플레이할 수 있습니다.
+> - OBS 화면 캡처 시 `오버레이 URL`로 해당 주소를 넣으면 배경이 투명하게 합성됩니다.
+
+
+

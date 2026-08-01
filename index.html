@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스트리머 타자 방어 몬스터 디펜스 (Streamer Word Defense)</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- OBS 크로마키 / 투명 오버레이 레이어 컨테이너 -->
+  <div id="app" class="app-container">
+    
+    <!-- 최상단 방송 컨트롤바 (OBS 캡처 시 숨기기 가능) -->
+    <header id="top-bar" class="top-bar">
+      <div class="brand">
+        <span class="logo-icon">⚡</span>
+        <h1 class="logo-title">WORD DEFENSE</h1>
+        <span class="version-tag">STREAMER EDITION</span>
+      </div>
+
+      <div class="quick-controls">
+        <button id="btn-chat-modal" class="btn btn-neon green">📡 방송 채팅 연동</button>
+        <button id="btn-word-modal" class="btn btn-neon purple">📝 단어/닉네임 팩</button>
+        <button id="btn-obs-toggle" class="btn btn-neon cyan">📺 OBS 크로마키 (배경 투명)</button>
+        <button id="btn-sfx-toggle" class="btn btn-neon gold">🔊 사운드: ON</button>
+      </div>
+    </header>
+
+    <!-- 인게임 메인 화면 / Canvas 레이어 -->
+    <main class="game-viewport">
+      <!-- 배경 Canvas (스타/파티클 이펙트) -->
+      <canvas id="bg-canvas"></canvas>
+      
+      <!-- 게임 메인 Canvas (몬스터, 포탑, 레이저) -->
+      <canvas id="game-canvas"></canvas>
+
+      <!-- 인게임 상단 스탯 HUD -->
+      <div id="game-hud" class="hud-overlay hidden">
+        <div class="hud-card score-card">
+          <span class="hud-label">SCORE</span>
+          <span id="hud-score" class="hud-value">0</span>
+        </div>
+
+        <div class="hud-card wpm-card">
+          <span class="hud-label">WPM (타수)</span>
+          <span id="hud-wpm" class="hud-value">0</span>
+        </div>
+
+        <div class="hud-card combo-card">
+          <span class="hud-label">COMBO</span>
+          <span id="hud-combo" class="hud-value">0</span>
+        </div>
+
+        <div class="hud-card hp-card">
+          <span class="hud-label">기지 체력</span>
+          <div class="hp-bar-bg">
+            <div id="hud-hp-fill" class="hp-bar-fill" style="width: 100%;"></div>
+          </div>
+          <span id="hud-hp-text" class="hp-text">100 / 100</span>
+        </div>
+
+        <div class="hud-card fever-card">
+          <span class="hud-label">FEVER</span>
+          <div class="fever-bar-bg">
+            <div id="hud-fever-fill" class="fever-bar-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 중앙 시작 / 결과 / 모달 창들 -->
+      <!-- 1. 메인 타이틀 화면 -->
+      <div id="screen-main" class="screen-overlay">
+        <div class="main-menu-card">
+          <h1 class="glow-text">MONSTER TYPING DEFENSE</h1>
+          <p class="subtitle">시청자 닉네임 & 채팅으로 몰려오는 몬스터를 타자로 방어하라!</p>
+
+          <!-- 1. 스트리머 인원 수 선택 -->
+          <div class="mode-selector">
+            <h3>👥 참여 스트리머 인원 수 선택</h3>
+            <div class="player-count-selector">
+              <button class="btn btn-count active" data-count="1">1인 (솔로)</button>
+              <button class="btn btn-count" data-count="2">2인 (듀오)</button>
+              <button class="btn btn-count" data-count="3">3인 (트리오)</button>
+              <button class="btn btn-count" data-count="4">4인 (크루)</button>
+              <button class="btn btn-count" data-count="6">6인 (대형 합방)</button>
+            </div>
+          </div>
+
+          <!-- 2인 이상 선택 시 나타나는 합방 전용 옵션 영역 -->
+          <div id="section-multi-options" class="multi-options-container hidden">
+            <!-- 2. 게임 방식 선택 -->
+            <div class="mode-selector">
+              <h3>🎮 게임 모드 및 방식</h3>
+              <div class="mode-buttons-grid">
+                <button id="btn-rule-vs" class="btn btn-mode active" data-rule="vs">
+                  <span class="mode-icon">⚔️</span>
+                  <span class="mode-name">대결 배틀 모드 (Versus)</span>
+                  <span class="mode-desc">포탑별 개별 점수 경쟁 및 타자 스피드 배틀</span>
+                </button>
+
+                <button id="btn-rule-coop" class="btn btn-mode" data-rule="coop">
+                  <span class="mode-icon">🛡️</span>
+                  <span class="mode-name">합방 협동 모드 (Co-op)</span>
+                  <span class="mode-desc">모든 스트리머가 공동 기지를 함께 방어</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. 입력 방식 선택 -->
+            <div class="mode-selector">
+              <h3>⌨️ 입력창 구성 선택</h3>
+              <div class="input-mode-selector">
+                <label class="radio-label">
+                  <input type="radio" name="input-mode" value="multi" checked />
+                  <span>개별 입력창 (각 스트리머별 전용 타자창)</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="input-mode" value="single" />
+                  <span>통합 1개 입력창 (MC/관전 스트리머가 통매칭)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. 스트리머 닉네임 커스터마이징 -->
+          <div class="mode-selector">
+            <h3>🎨 스트리머 닉네임 설정</h3>
+            <div id="player-settings-list" class="player-nicknames-grid">
+              <!-- JS에서 동적 생성됨 -->
+            </div>
+          </div>
+
+          <div class="platform-indicators">
+            <span>지원 플랫폼:</span>
+            <span class="badge chzzk">🟢 치지직(Chzzk)</span>
+            <span class="badge soop">🔵 SOOP(숲/아프리카)</span>
+            <span class="badge youtube">🔴 유튜브 라이브</span>
+            <span class="badge twitch">💜 트위치</span>
+          </div>
+
+          <button id="btn-start-game" class="btn btn-primary btn-giant">🔥 게임 시작 (START)</button>
+        </div>
+      </div>
+
+      <!-- 2. 게임 오버 / 결과 화면 -->
+      <div id="screen-gameover" class="screen-overlay hidden">
+        <div class="result-card">
+          <h2 class="danger-text">BASE DESTROYED!</h2>
+          <p class="result-subtitle">몬스터의 침공으로 기지가 파괴되었습니다.</p>
+
+          <div class="stats-grid">
+            <div class="stat-box">
+              <span class="stat-title">총 점수</span>
+              <span id="result-score" class="stat-val">0</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-title">최고 타수 (WPM)</span>
+              <span id="result-wpm" class="stat-val">0</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-title">최대 콤보</span>
+              <span id="result-combo" class="stat-val">0</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-title">총 처치 몬스터</span>
+              <span id="result-kills" class="stat-val">0</span>
+            </div>
+          </div>
+
+          <!-- 플레이어별 MVP & 스탯 비교표 -->
+          <div class="player-results-container">
+            <h3>🏆 스트리머별 전과표</h3>
+            <div id="player-ranking-list" class="player-ranking-grid">
+              <!-- JS 동적 생성 -->
+            </div>
+          </div>
+
+          <div class="result-actions">
+            <button id="btn-restart" class="btn btn-primary btn-large">🔄 다시 도전하기</button>
+            <button id="btn-return-main" class="btn btn-secondary btn-large">🏠 메인 화면으로</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 하단 스트리머 타자 입력창 & 포탑 UI (동적 N인 입력창) -->
+      <div id="typing-input-bar" class="typing-bar hidden">
+        <div id="multi-input-container" class="multi-input-grid">
+          <!-- JS에서 플레이어 수에 맞게 입력창 동적 생성 -->
+        </div>
+      </div>
+    </main>
+
+    <!-- 모달 1: 방송 채팅 연동 설정 모달 -->
+    <div id="modal-chat" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>📡 플랫폼 방송 채팅 실시간 연동 (다중 채널 연동 지원)</h2>
+          <button class="btn-close" data-close="modal-chat">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">원하시는 방송 플랫폼을 선택하고 채널 ID 또는 방송 URL을 입력하세요. 여러 스트리머의 채팅을 동시에 몬스터로 출전시킬 수 있습니다!</p>
+
+          <div class="platform-tabs">
+            <button class="tab-btn active" data-tab="tab-chzzk">🟢 치지직 (Chzzk)</button>
+            <button class="tab-btn" data-tab="tab-soop">🔵 SOOP (숲/아프리카)</button>
+            <button class="tab-btn" data-tab="tab-youtube">🔴 유튜브 라이브</button>
+            <button class="tab-btn" data-tab="tab-custom">💬 시뮬레이션 / 직접 테스트</button>
+          </div>
+
+          <div class="tab-contents">
+            <!-- 치지직 설정 -->
+            <div id="tab-chzzk" class="tab-content active">
+              <label>치지직 채널 ID (또는 스튜디오 주소 Hash):</label>
+              <div class="input-with-btn">
+                <input type="text" id="input-chzzk-id" placeholder="예: 4b29a88... 또는 채널 주소의 알파벳/숫자" />
+                <button id="btn-add-chzzk" class="btn btn-neon green">+ 채널 추가</button>
+              </div>
+              <small>치지직 채널 URL(chzzk.naver.com/채널ID)에서 채널 ID를 입력하세요.</small>
+            </div>
+
+            <!-- SOOP 설정 -->
+            <div id="tab-soop" class="tab-content">
+              <label>SOOP (아프리카TV) BJ 아이디:</label>
+              <div class="input-with-btn">
+                <input type="text" id="input-soop-id" placeholder="예: bjafreeca" />
+                <button id="btn-add-soop" class="btn btn-neon cyan">+ BJ 추가</button>
+              </div>
+              <small>BJ의 방송국 ID를 입력하면 라이브 채팅과 자동 연결됩니다.</small>
+            </div>
+
+            <!-- 유튜브 설정 -->
+            <div id="tab-youtube" class="tab-content">
+              <label>유튜브 라이브 영상 URL 또는 Video ID:</label>
+              <div class="input-with-btn">
+                <input type="text" id="input-yt-url" placeholder="예: https://www.youtube.com/watch?v=XXXXXX" />
+                <button id="btn-add-yt" class="btn btn-neon red">+ 방송 추가</button>
+              </div>
+              <small>현재 진행 중인 유튜브 라이브 주소를 복사해 입력하세요.</small>
+            </div>
+
+            <!-- 커스텀/시뮬레이션 -->
+            <div id="tab-custom" class="tab-content">
+              <label>시청자 채팅 자동 생성 시뮬레이션 speed:</label>
+              <select id="select-sim-speed">
+                <option value="off">자동 생성 끄기</option>
+                <option value="slow">느림 (5초마다 시청자 소환)</option>
+                <option value="normal" selected>보통 (2.5초마다 시청자 소환)</option>
+                <option value="fast">폭발적 (1초마다 시청자 폭풍 소환)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 연동된 방송 채널 목록 -->
+          <div class="connected-channels-section">
+            <label>📡 현재 연동 목록:</label>
+            <div id="active-channels-list" class="channel-chips-container">
+              <!-- JS에서 연동된 채널 칩스 표시 -->
+            </div>
+          </div>
+
+          <div class="chat-options">
+            <label><input type="checkbox" id="chk-keyword-only" checked /> 🎯 '!참여' / '!참가' / '!억까' 명령어 입력 시청자만 자동 참가 (추천)</label>
+            <label><input type="checkbox" id="chk-nickname-only" checked /> 닉네임만 몬스터로 소환 (채팅 내용 제외)</label>
+            <label><input type="checkbox" id="chk-badwords-filter" checked /> 비속어/욕설 자동 필터링 적용</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-connect-chat" class="btn btn-primary">⚡ 연동 시작 (Connect)</button>
+          <button class="btn btn-secondary" data-close="modal-chat">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 모달 2: 단어 & 닉네임 팩 관리 모달 -->
+    <div id="modal-words" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>📝 단어 & 닉네임 팩 설정</h2>
+          <button class="btn-close" data-close="modal-words">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="word-pack-selector">
+            <label>기본 내장 팩 선택:</label>
+            <select id="select-word-pack">
+              <option value="mixed">🔀 종합 믹스 팩 (추천)</option>
+              <option value="memes">🔥 스트리머 방송 밈 & 유행어 팩</option>
+              <option value="hardcore">💀 오타 유발 억까 매운맛 팩 (C++, 뷁, 뙈...)</option>
+              <option value="spelling">💡 자주 틀리는 맞춤법 퀴즈 팩</option>
+              <option value="english">🔤 영문 알파벳 & IT 기술 팩</option>
+            </select>
+          </div>
+
+          <hr class="divider" />
+
+          <div class="custom-word-input">
+            <label>✏️ 스트리머 자율 커스텀 단어장 (줄바꿈으로 여러 개 입력):</label>
+            <textarea id="txt-custom-words" rows="6" placeholder="여기에 원하는 시청자 닉네임이나 단어를 줄바꿈(Enter)으로 적거나 복사-붙여넣기하세요!&#10;예시:&#10;김유튜브&#10;치지직짱짱맨&#10;구독과좋아요&#10;오타내지마라"></textarea>
+            <button id="btn-apply-custom-words" class="btn btn-neon purple">📌 이 단어들을 몬스터로 즉시 등록</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" data-close="modal-words">적용 완료</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/wordPacks.js"></script>
+  <script src="js/chatIntegration.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
