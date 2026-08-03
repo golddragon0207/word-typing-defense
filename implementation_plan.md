@@ -18,10 +18,10 @@
    - **2인 이상 합방 선택 시**: **대결 모드(Versus Battle)** 또는 **협동 모드(Co-op Raid)** 및 **입력창 방식 선택** 옵션을 동적으로 노출.
    - 각 플레이어별 닉네임 및 포탑 전용 네온 색상 개별 지정.
 
-
-4. **💥 동적 다중 포탑 (Multi-Turret Engine)**:
+4. **💥 동적 다중 포탑 및 최적 조준 엔진 (Multi-Turret Engine)**:
    - 선택된 인원 수에 따라 Canvas 화면 하단에 포탑 N개가 자동으로 균등 배치.
    - 각 포탑 상단/하단에 스트리머 닉네임 뱃지 및 개별 레이저/파티클 렌더링.
+   - 통합 입력창 사용 시 낙하 몬스터의 X좌표와 가장 가까운 포탑이 자동으로 조준 사격.
 
 5. **⌨️ 다중 입력 방식 지원 (Multi-Input System)**:
    - **개별 입력모드**: 화면 하단에 P1 ~ PN 플레이어별 개별 입력창이 생성되어 각 스트리머가 자기 전용 포탑으로 타격.
@@ -30,14 +30,13 @@
 6. **📡 실시간 방송 연동 & `!참여` 명령어 자동 참가 (메인 시스템)**:
    - 복사-붙여넣기 없이 스트리머 방송 URL/채널ID 연동으로 시청자가 `!참여`, `!참가`, `!억까` 입력 시 자동 출전. 기본 활성화 처리.
 
-
+7. **🎯 한글 자모 획수(Stroke) 타수 (CPM) 및 HiDPI 고해상도 최적화**:
+   - 한글 초성/중성/종성 획수를 감안한 정밀 타수(CPM) 계산 및 WPM 동시 제공.
+   - `devicePixelRatio` 스케일링으로 4K/Retina 화면에서도 선명한 텍스처 출력 및 Canvas 클릭 포커스 자동 유지.
 
 8. **🌐 GitHub Pages 무료 웹 배포 주소 연동**:
    - Repository: `https://github.com/golddragon0207/word-typing-defense.git`
    - Live Web URL: `https://golddragon0207.github.io/word-typing-defense/`
-
-
-
 
 ---
 
@@ -48,21 +47,27 @@
 - 하단 입력 바에 **동적 플레이어 입력창 그리드 (P1~PN)** 지원 컨테이너 추가.
 - 방송 채팅 연동 모달에 **다중 채널 등록(리스트 추가/삭제)** UI 추가.
 - 결과 화면에 **플레이어별 MVP 랭킹 카드** 추가.
+- HUD 레이블 `타수 (CPM/WPM)` 표시 보강.
 
 ### 2. `style.css`
 - 플레이어 수에 맞춰 1~6개의 입력창이 깔끔하게 정렬되는 Responsive Grid CSS 추가.
 - 다중 포탑 네온 컬러 테마 (Cyan, Pink, Gold, Green, Purple, Orange) CSS 변수 및 라벨 스타일 추가.
+- 입력창 포커스 네온 글로우 피드백 추가.
 
 ### 3. `js/game.js`
 - 2단 몬스터 구조(시청자 닉네임 Tag + 제시어 Box) Canvas 렌더링.
 - `playerCount`, `players[]`, `turrets[]` 배열 기반의 동적 계산 처리.
-- `resizeCanvas()` 시 포탑 X 좌표 `(i + 0.5) / playerCount * width` 로 분할 렌더링.
-- 개별 입력창 키다운 이벤트를 각 플레이어 포탑에 바인딩.
+- `resizeCanvas()` 시 `devicePixelRatio` 스케일링으로 4K 고해상도 선명도 적용.
+- 통합 입력창 사용 시 nearest turret 동적 레이저 사격.
+- 화면 클릭 시 active input 자동 재포커스 처리.
 - 플레이어별 Kills, Score, Combo 개별 스탯 추적.
 
 ### 4. `js/wordPacks.js`
 - `getNextMonsterData()`를 추가하여 시청자 닉네임과 clean 제시어 쌍을 2단 구조로 공급.
+- `getHangulStrokeCount()` 한글 자모 획수 분석 유틸리티 추가.
 
-### 5. `js/chatIntegration.js`
+### 5. `js/audio.js`
+- `playError()` 타격 매칭 실패 / 오타 입력 경고음 추가.
+
+### 6. `js/chatIntegration.js`
 - 단일 채널 연동 방식에서 **배열 기반 다중 채널 동시 연동 엔진 (`channels[]`)**으로 개선.
-
