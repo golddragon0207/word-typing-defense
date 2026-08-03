@@ -54,8 +54,8 @@
 
 ## 🌐 1분 무료 웹 배포 주소 (GitHub Pages)
 
-- **웹 게임 즉시 접속 주소**: [https://golddragon0926.github.io/word-typing-defense/](https://golddragon0926.github.io/word-typing-defense/)
-- **GitHub 레포지토리**: [https://github.com/golddragon0926/word-typing-defense](https://github.com/golddragon0926/word-typing-defense)
+- **웹 게임 즉시 접속 주소**: [https://golddragon0207.github.io/word-typing-defense/](https://golddragon0207.github.io/word-typing-defense/)
+- **GitHub 레포지토리**: [https://github.com/golddragon0207/word-typing-defense](https://github.com/golddragon0207/word-typing-defense)
 
 > **💡 스트리머 사용 팁**:
 > - 웹 브라우저에서 위 주소를 접속하여 클릭 한 번으로 바로 플레이할 수 있습니다.

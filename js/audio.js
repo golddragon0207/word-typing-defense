@@ -170,6 +170,28 @@ class SoundSynthesizer {
       osc.stop(this.ctx.currentTime + idx * 0.15 + 0.3);
     });
   }
+
+  // 7. 오타 / 매칭 실패 경고음 (Typing Miss SFX)
+  playError() {
+    if (!this.enabled) return;
+    this.init();
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(160, this.ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(100, this.ctx.currentTime + 0.1);
+
+    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.1);
+  }
 }
 
 const audioSynth = new SoundSynthesizer();

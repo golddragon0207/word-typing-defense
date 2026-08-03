@@ -33,8 +33,8 @@
 
 
 8. **🌐 GitHub Pages 무료 웹 배포 주소 연동**:
-   - Repository: `https://github.com/golddragon0926/word-typing-defense.git`
-   - Live Web URL: `https://golddragon0926.github.io/word-typing-defense/`
+   - Repository: `https://github.com/golddragon0207/word-typing-defense.git`
+   - Live Web URL: `https://golddragon0207.github.io/word-typing-defense/`
 
 
 

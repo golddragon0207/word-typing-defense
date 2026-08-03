@@ -148,6 +148,36 @@ class WordPackManager {
   getRandomWord() {
     return this.getNextMonsterData().targetWord;
   }
+
+  // 한글 자모 및 타수(Stroke/CPM) 계산 정밀 알고리즘
+  getHangulStrokeCount(text) {
+    if (!text) return 0;
+    let totalStrokes = 0;
+    const doubleCho = [1, 4, 8, 10, 13]; // ㄲ, ㄸ, ㅃ, ㅆ, ㅉ
+    const doubleJung = [9, 10, 11, 14, 15, 16, 19]; // ㅘ, ㅙ, ㅚ, ㅝ, ㅞ, ㅟ, ㅢ
+    const doubleJong = [3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18]; // ㄳ, ㄵ, ㄶ, ㄺ, ㄻ, ㄼ, ㄽ, ㄾ, ㄿ, ㅀ, ㅄ
+
+    for (let i = 0; i < text.length; i++) {
+      const code = text.charCodeAt(i);
+      if (code >= 0xAC00 && code <= 0xD7A3) {
+        const syllableIndex = code - 0xAC00;
+        const cho = Math.floor(syllableIndex / 588);
+        const jung = Math.floor((syllableIndex % 588) / 28);
+        const jong = syllableIndex % 28;
+
+        let strokes = 2; // 기본 초성(1) + 중성(1)
+        if (doubleCho.includes(cho)) strokes += 1;
+        if (doubleJung.includes(jung)) strokes += 1;
+        if (jong > 0) {
+          strokes += doubleJong.includes(jong) ? 2 : 1;
+        }
+        totalStrokes += strokes;
+      } else {
+        totalStrokes += 1;
+      }
+    }
+    return totalStrokes;
+  }
 }
 
 const wordManager = new WordPackManager();

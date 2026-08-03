@@ -48,6 +48,7 @@ class GameEngine {
 
     // Metrics
     this.totalTypedChars = 0;
+    this.totalTypedStrokes = 0;
     this.startTime = 0;
 
     // Entities
@@ -139,8 +140,18 @@ class GameEngine {
   }
 
   resizeCanvas() {
-    this.width = this.gameCanvas.width = this.bgCanvas.width = window.innerWidth;
-    this.height = this.gameCanvas.height = this.bgCanvas.height = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+
+    this.gameCanvas.width = Math.floor(this.width * dpr);
+    this.gameCanvas.height = Math.floor(this.height * dpr);
+    this.bgCanvas.width = Math.floor(this.width * dpr);
+    this.bgCanvas.height = Math.floor(this.height * dpr);
+
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
     this.rebuildTurrets();
   }
 
@@ -260,6 +271,26 @@ class GameEngine {
       document.getElementById('modal-words').classList.add('hidden');
       alert(`✨ 채팅 텍스트 지능형 정제 완료!\n- 시청자 닉네임 ${res.nickCount}개 소환 등록\n- 타깃 제시어 ${res.wordCount}개 몬스터 등록`);
     });
+
+    // 화면 클릭 시 입력창 자동 포커스 유지
+    document.addEventListener('click', (e) => {
+      if (this.isRunning && !e.target.closest('.modal-backdrop') && !e.target.closest('#top-bar') && !e.target.closest('.quick-controls')) {
+        this.focusActiveInput();
+      }
+    });
+  }
+
+  focusActiveInput() {
+    if (!this.isRunning) return;
+    if (this.inputMode === 'single') {
+      const inp = document.getElementById('shared-input');
+      if (inp && document.activeElement !== inp) inp.focus();
+    } else {
+      const inp = document.getElementById('p-input-0');
+      if (inp && document.activeElement !== inp && (!document.activeElement || !document.activeElement.id || !document.activeElement.id.startsWith('p-input-'))) {
+        inp.focus();
+      }
+    }
   }
 
   renderChannelChips() {
@@ -304,6 +335,7 @@ class GameEngine {
     this.isFeverMode = false;
     this.kills = 0;
     this.totalTypedChars = 0;
+    this.totalTypedStrokes = 0;
     this.startTime = Date.now();
     this.monsters = [];
     this.particles = [];
@@ -441,8 +473,24 @@ class GameEngine {
 
     if (targetIdx !== -1) {
       const target = this.monsters[targetIdx];
-      const shooterTurret = this.turrets[playerId] || this.turrets[0];
-      const player = this.players[playerId] || this.players[0];
+      
+      let shooterTurret = this.turrets[playerId] || this.turrets[0];
+      let shooterId = playerId;
+
+      // 통합 입력 모드이면서 다중 포탑 배치 시, 몬스터와 X좌표가 가장 가까운 포탑 조준 발사
+      if (this.inputMode === 'single' && this.turrets.length > 1) {
+        let minDist = Infinity;
+        this.turrets.forEach((t, idx) => {
+          const dist = Math.abs(t.x - target.x);
+          if (dist < minDist) {
+            minDist = dist;
+            shooterTurret = t;
+            shooterId = idx;
+          }
+        });
+      }
+
+      const player = this.players[shooterId] || this.players[0];
 
       this.fireLaser(shooterTurret, target);
       this.createExplosion(target.x, target.y, shooterTurret.color);
@@ -463,8 +511,12 @@ class GameEngine {
       player.score += pts;
       this.totalTypedChars += target.text.length;
 
+      // 한글 자모 획수(Stroke) 타수 정밀 계산
+      const strokes = wordManager.getHangulStrokeCount(target.text);
+      this.totalTypedStrokes += strokes;
+
       // Update Individual Player UI Score Card
-      const pScoreElem = document.getElementById(`p-score-${playerId}`);
+      const pScoreElem = document.getElementById(`p-score-${shooterId}`);
       if (pScoreElem) pScoreElem.innerText = `${player.score.toLocaleString()} Pts`;
 
       // Fever Charge
@@ -477,6 +529,7 @@ class GameEngine {
     } else {
       this.combo = 0;
       if (this.players[playerId]) this.players[playerId].combo = 0;
+      audioSynth.playError();
     }
 
     this.updateHUD();
@@ -524,8 +577,11 @@ class GameEngine {
     this.hudHpText.innerText = `${Math.ceil(this.hp)} / 100`;
 
     const elapsedMinutes = (Date.now() - this.startTime) / 60000;
+    const cpm = elapsedMinutes > 0 ? Math.round(this.totalTypedStrokes / elapsedMinutes) : 0;
     const wpm = elapsedMinutes > 0 ? Math.round((this.totalTypedChars / 5) / elapsedMinutes) : 0;
-    this.hudWpm.innerText = wpm;
+
+    this.hudWpm.innerText = cpm;
+    this.hudWpm.title = `실시간 타수: ${cpm} CPM | WPM: ${wpm}`;
 
     this.hudFeverFill.style.width = `${this.fever}%`;
   }

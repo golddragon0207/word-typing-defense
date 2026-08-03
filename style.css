@@ -721,6 +721,12 @@ body.obs-transparent-mode #top-bar:hover {
   border-radius: 10px;
   padding: 6px 12px;
   box-shadow: 0 0 12px var(--p-color, var(--neon-cyan));
+  transition: all 0.2s ease;
+}
+
+.player-input-card:focus-within {
+  box-shadow: 0 0 25px var(--p-color, var(--neon-cyan)), inset 0 0 10px rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
 }
 
 .player-input-header {
