@@ -9,17 +9,11 @@ class ChatIntegrationEngine {
     this.simTimers = [];
     this.badWords = ["비속어", "욕설1", "욕설2", "시발", "개새끼", "미친"];
 
-    // 시뮬레이션용 가상 닉네임 샘플
-    this.simNicknames = [
-      "치지직시청자A", "SOOP팬클럽1등", "유튜브구독자", "트위치난민",
-      "타자왕김스트리머", "억까의신", "네온마스터", "치킨은후라이드",
-      "오늘방송레전드", "슈퍼챗1만원", "별풍선100개", "알림설정완료",
-      "합방천재김스트리머", "억까방지위원회", "레전드타자스피드"
-    ];
-
+    // 봇 닉네임은 wordManager.fallbackNicknames([BOT] 태그 포함)를 공유해서 사용
+    // 봇 시뮬레이션용 참가 키워드 채팅 (시청자 참가 행동 시뮬레이션)
     this.simChatTexts = [
-      "!참여 오늘 방송 개꿀잼ㅋㅋㅋ", "!참가 타자 속도 실화냐", "제 닉네임 잡지마세요",
-      "!억까 몬스터 간다!", "피버 모드 켜라", "!도전 구독과 좋아요 누름", "화이팅!"
+      "!참여", "!참가", "!참여", "!참가",
+      "!참여 ㅋㅋ", "!참가 화이팅", "!참여", "!참가"
     ];
   }
 
@@ -102,25 +96,20 @@ class ChatIntegrationEngine {
       const chkKeywordOnly = document.getElementById('chk-keyword-only');
       const keywordMode = chkKeywordOnly ? chkKeywordOnly.checked : false;
 
-      const randomNick = this.simNicknames[Math.floor(Math.random() * this.simNicknames.length)];
+      // [BOT] 닉네임 풀은 wordManager.fallbackNicknames 공유 사용
+      const botNicknames = (typeof wordManager !== 'undefined' && wordManager.fallbackNicknames)
+        ? wordManager.fallbackNicknames
+        : ["🟢 [BOT] 억까의신", "🔵 [BOT] SOOP팬클럽1등", "🔴 [BOT] 유튜브구독자"];
+
+      const randomNick = botNicknames[Math.floor(Math.random() * botNicknames.length)];
       const randomMsg = this.simChatTexts[Math.floor(Math.random() * this.simChatTexts.length)];
 
-      // 키워드 참여 모드 활성화 시 '!참여', '!참가', '!억까', '!도전' 포함 채팅만 선별 소환
-      const hasKeyword = (
-        randomMsg.includes('!참여') ||
-        randomMsg.includes('!참가') ||
-        randomMsg.includes('!억까') ||
-        randomMsg.includes('!도전')
-      );
+      // 키워드 참여 모드일 때 !참여/!참가 포함 채팅만 통과
+      const hasKeyword = randomMsg.includes('!참여') || randomMsg.includes('!참가');
+      if (keywordMode && !hasKeyword) return;
 
-      if (keywordMode && !hasKeyword) {
-        return; // Skip non-participating chatters
-      }
-
-      const cleanNick = this.filterText(randomNick);
-      const cleanMsg = this.filterText(randomMsg.replace(/!(참여|참가|억까|도전)/gi, '').trim());
-
-      const fullNick = prefix ? `${prefix} ${cleanNick}` : cleanNick;
+      const cleanMsg = randomMsg.replace(/!(참여|참가)/gi, '').trim();
+      const fullNick = prefix ? `${prefix} ${randomNick}` : randomNick;
 
       wordManager.addViewerNickname(fullNick, cleanMsg);
     }, interval);
