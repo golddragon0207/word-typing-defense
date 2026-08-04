@@ -267,41 +267,23 @@ class GameEngine {
     const btnResultSupport = document.getElementById('btn-result-support');
     if (btnResultSupport) btnResultSupport.addEventListener('click', openSupportModal);
 
-    // ── 후원 금액 프리셋 버튼 클릭 → 입력란 자동 채우기 ──────────────────
-    document.querySelectorAll('.donate-preset').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.donate-preset').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        const amountInput = document.getElementById('donation-amount');
-        if (amountInput) amountInput.value = btn.dataset.amount;
-      });
-    });
-
-    // ── 토스(Toss) 후원하기 버튼 ─────────────────────────────────────────
+    // ── Buy Me a Coffee 후원하기 버튼 ────────────────────────────────────
     const btnDonate = document.getElementById('btn-donate');
     if (btnDonate) {
       btnDonate.addEventListener('click', () => {
-        const amountInput = document.getElementById('donation-amount');
-        const amount = amountInput ? parseInt(amountInput.value, 10) : 0;
+        const bmacId = (typeof CONFIG !== 'undefined' && CONFIG.BMAC_ID && CONFIG.BMAC_ID !== 'YOUR_BMAC_ID')
+          ? CONFIG.BMAC_ID : null;
 
-        if (!amount || amount < 1000) {
-          alert('최소 후원 금액은 1,000원입니다. 금액을 입력해 주세요!');
+        if (!bmacId) {
+          alert('Buy Me a Coffee 아이디가 아직 설정되지 않았습니다.\njs/config.js 파일에서 BMAC_ID를 입력해 주세요.');
           return;
         }
 
-        // CONFIG.TOSS_ID 가 설정되어 있으면 해당 링크로, 아니면 toss.me 메인으로 이동
-        const tossId = (typeof CONFIG !== 'undefined' && CONFIG.TOSS_ID && CONFIG.TOSS_ID !== 'YOUR_TOSS_ID')
-          ? CONFIG.TOSS_ID : null;
-
-        if (!tossId) {
-          alert('토스 아이디가 아직 설정되지 않았습니다.\njs/config.js 파일에서 TOSS_ID를 입력해 주세요.');
-          return;
-        }
-
-        const tossUrl = `https://toss.me/${tossId}/${amount}`;
-        window.open(tossUrl, '_blank', 'noopener,noreferrer');
+        const bmacUrl = `https://www.buymeacoffee.com/${bmacId}`;
+        window.open(bmacUrl, '_blank', 'noopener,noreferrer');
       });
     }
+
 
 
     document.querySelectorAll('[data-close]').forEach(btn => {

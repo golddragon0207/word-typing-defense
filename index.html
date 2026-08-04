@@ -412,38 +412,33 @@
       </div>
     </div>
 
-    <!-- 모달 4: 게임 & 개발자 후원 안내 모달 -->
+    <!-- 모달 4: 개발자 후원 (Buy Me a Coffee) -->
     <div id="modal-support" class="modal-backdrop hidden">
       <div class="modal-card">
         <div class="modal-header">
-          <h2>☕ 개발자 응원 후원하기 (Donate)</h2>
+          <h2>☕ 개발자 응원하기 (Buy Me a Coffee)</h2>
           <button class="btn-close" data-close="modal-support">✕</button>
         </div>
         <div class="modal-body">
-          <p class="modal-desc">재미있게 플레이하셨나요? 따뜻한 후원은 더 좋은 게임 개발에 큰 힘이 됩니다! 💖<br>후원 금액을 선택하거나 직접 입력하면 토스(Toss)로 바로 연결됩니다.</p>
+          <p class="modal-desc">재미있게 플레이하셨나요? 따뜻한 응원은 더 좋은 게임 개발에 큰 힘이 됩니다! 💖</p>
 
-          <!-- 빠른 금액 선택 버튼 -->
-          <div class="donation-preset-grid">
-            <button class="btn btn-neon cyan donate-preset" data-amount="1000">₩1,000</button>
-            <button class="btn btn-neon cyan donate-preset" data-amount="3000">₩3,000</button>
-            <button class="btn btn-neon cyan donate-preset" data-amount="5000">₩5,000</button>
-            <button class="btn btn-neon gold donate-preset" data-amount="10000">₩10,000</button>
-            <button class="btn btn-neon gold donate-preset" data-amount="30000">₩30,000</button>
-            <button class="btn btn-neon purple donate-preset" data-amount="50000">₩50,000</button>
-          </div>
-
-          <!-- 직접 입력 -->
-          <div class="donation-custom-row">
-            <span class="donation-currency">₩</span>
-            <input type="number" id="donation-amount" min="1000" step="1000"
-              placeholder="직접 입력 (최소 1,000원)" class="donation-input" />
+          <!-- Buy Me a Coffee 안내 카드 -->
+          <div class="bmac-card">
+            <div class="bmac-icon">☕</div>
+            <div class="bmac-info">
+              <div class="bmac-title">Buy Me a Coffee</div>
+              <div class="bmac-desc">개인정보(계좌번호·이름) 노출 없이<br>카드로 안전하게 후원할 수 있습니다.</div>
+            </div>
           </div>
 
           <!-- 후원하기 버튼 -->
-          <button id="btn-donate" class="btn btn-primary btn-large" style="width:100%; margin-top:4px;">
-            💳 토스(Toss)로 후원하기
+          <button id="btn-donate" class="btn btn-primary btn-large bmac-btn">
+            ☕ Buy Me a Coffee로 후원하기
           </button>
-          <p class="donation-notice">* 버튼 클릭 시 토스 앱(또는 웹)으로 이동합니다.<br>* 계좌번호 등 개인정보는 일절 저장되지 않습니다.</p>
+          <p class="donation-notice">
+            * 버튼 클릭 시 buymeacoffee.com 페이지로 이동합니다.<br>
+            * 계좌번호 등 개인정보는 일절 저장·노출되지 않습니다.
+          </p>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" data-close="modal-support">닫기</button>
