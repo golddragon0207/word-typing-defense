@@ -46,6 +46,10 @@ body.obs-transparent-mode #top-bar:hover {
   opacity: 1;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .app-container {
   width: 100%;
   height: 100%;
