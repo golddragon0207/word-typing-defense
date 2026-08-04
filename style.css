@@ -65,11 +65,13 @@ body.obs-transparent-mode #top-bar:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 28px;
+  padding: clamp(8px, 1.5vh, 14px) clamp(12px, 2vw, 28px);
   background: rgba(12, 16, 28, 0.9);
   border-bottom: 1px solid rgba(0, 243, 255, 0.2);
   backdrop-filter: blur(10px);
   z-index: 100;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .brand {
@@ -85,7 +87,7 @@ body.obs-transparent-mode #top-bar:hover {
 
 .logo-title {
   font-family: var(--font-title);
-  font-size: 22px;
+  font-size: clamp(16px, 1.8vw, 22px);
   font-weight: 900;
   letter-spacing: 2px;
   background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
@@ -107,7 +109,8 @@ body.obs-transparent-mode #top-bar:hover {
 .quick-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* --------------------------------------------------------------------------
@@ -202,11 +205,14 @@ body.obs-transparent-mode #top-bar:hover {
    -------------------------------------------------------------------------- */
 .hud-overlay {
   position: absolute;
-  top: 30px;
+  top: clamp(8px, 2vh, 24px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(6px, 1vw, 14px);
+  max-width: 96vw;
   z-index: 10;
   pointer-events: none;
 }
@@ -215,13 +221,13 @@ body.obs-transparent-mode #top-bar:hover {
   background: rgba(12, 16, 28, 0.9);
   border: 1px solid rgba(0, 243, 255, 0.35);
   border-radius: 12px;
-  padding: 10px 16px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 130px;
-  gap: 4px;
+  min-width: clamp(90px, 11vw, 130px);
+  gap: 3px;
   backdrop-filter: blur(10px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
 }
@@ -236,10 +242,33 @@ body.obs-transparent-mode #top-bar:hover {
 
 .hud-value {
   font-family: var(--font-title);
-  font-size: 22px;
+  font-size: clamp(16px, 1.8vw, 22px);
   font-weight: 800;
   color: var(--neon-cyan);
   text-shadow: 0 0 10px var(--neon-cyan);
+}
+
+/* Custom Sleek Scrollbars */
+.main-menu-card::-webkit-scrollbar,
+.result-card::-webkit-scrollbar,
+.modal-card::-webkit-scrollbar,
+.screen-overlay::-webkit-scrollbar {
+  width: 6px;
+}
+
+.main-menu-card::-webkit-scrollbar-thumb,
+.result-card::-webkit-scrollbar-thumb,
+.modal-card::-webkit-scrollbar-thumb,
+.screen-overlay::-webkit-scrollbar-thumb {
+  background: rgba(0, 243, 255, 0.4);
+  border-radius: 3px;
+}
+
+.main-menu-card::-webkit-scrollbar-track,
+.result-card::-webkit-scrollbar-track,
+.modal-card::-webkit-scrollbar-track,
+.screen-overlay::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .hp-bar-bg, .fever-bar-bg {
@@ -351,17 +380,16 @@ body.obs-transparent-mode #top-bar:hover {
   background: rgba(6, 8, 14, 0.85);
   backdrop-filter: blur(12px);
   overflow-y: auto;
-  padding: 20px 12px;
+  padding: 12px 8px;
 }
 
 .main-menu-card, .result-card {
   background: var(--bg-card);
   border: 1px solid rgba(0, 243, 255, 0.3);
   border-radius: 20px;
-  padding: 44px 40px;
-  width: 90%;
-  max-width: 680px;
-  max-height: 92vh;
+  padding: clamp(20px, 3.5vh, 40px) clamp(16px, 3vw, 36px);
+  width: min(94%, 680px);
+  max-height: 88vh;
   overflow-y: auto;
   text-align: center;
   box-shadow: 0 0 40px rgba(0, 243, 255, 0.25);
@@ -375,9 +403,9 @@ body.obs-transparent-mode #top-bar:hover {
 
 .glow-text {
   font-family: var(--font-title);
-  font-size: 32px;
+  font-size: clamp(22px, 3.2vw, 32px);
   font-weight: 900;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   color: var(--neon-cyan);
   text-shadow: 0 0 20px var(--neon-cyan);
   margin-bottom: 12px;
@@ -1499,6 +1527,74 @@ body.obs-transparent-mode .ad-banner-box {
   text-align: center;
   animation: fadeIn 0.3s ease;
 }
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE MEDIA QUERIES (MOBILE / LAPTOP / SMALL HEIGHT / 4K)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .top-bar {
+    justify-content: center;
+    padding: 8px 12px;
+  }
+  .quick-controls {
+    justify-content: center;
+  }
+  .quick-controls .btn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+  .difficulty-buttons-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .player-count-selector {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .mode-buttons-grid {
+    grid-template-columns: 1fr;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .result-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .bank-number {
+    font-size: 16px;
+  }
+}
+
+@media (max-height: 750px) {
+  .main-menu-card, .result-card {
+    padding: 16px 20px;
+    max-height: 94vh;
+  }
+  .glow-text {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .mode-selector {
+    margin-bottom: 10px;
+  }
+  .mode-selector h3 {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .btn-giant {
+    margin-top: 12px;
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+}
+
 
 
 
