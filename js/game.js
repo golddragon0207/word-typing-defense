@@ -247,6 +247,17 @@ class GameEngine {
       document.getElementById('modal-words').classList.remove('hidden');
     });
 
+    document.getElementById('btn-leaderboard-modal').addEventListener('click', () => {
+      this.renderLeaderboardUI();
+      document.getElementById('modal-leaderboard').classList.remove('hidden');
+    });
+
+    document.getElementById('btn-clear-leaderboard').addEventListener('click', () => {
+      if (confirm('🏆 명예의 전당 전적 기록을 초기화하시겠습니까?')) {
+        this.clearLeaderboard();
+      }
+    });
+
     document.querySelectorAll('[data-close]').forEach(btn => {
       btn.addEventListener('click', () => {
         const targetId = btn.dataset.close;
@@ -682,6 +693,80 @@ class GameEngine {
     this.hudFeverFill.style.width = `${this.fever}%`;
   }
 
+  calculateRankGrade(score, stage, diffKey) {
+    const diffWeights = { easy: 0.8, normal: 1.0, hard: 1.25, hell: 1.5 };
+    const weight = diffWeights[diffKey] || 1.0;
+    const calcPts = (score + stage * 500) * weight;
+
+    if (calcPts >= 12000 || stage >= 15) return { code: 'grade-sss', text: '👑 SSS RANK', title: 'GOD SPEED' };
+    if (calcPts >= 8000  || stage >= 12) return { code: 'grade-ss',  text: '💎 SS RANK',  title: 'SUPER DEFENDER' };
+    if (calcPts >= 5000  || stage >= 9)  return { code: 'grade-s',   text: '⭐ S RANK',   title: 'EXCELLENT' };
+    if (calcPts >= 3000  || stage >= 6)  return { code: 'grade-a',   text: '🥇 A RANK',   title: 'GREAT' };
+    if (calcPts >= 1500  || stage >= 4)  return { code: 'grade-b',   text: '🥈 B RANK',   title: 'GOOD' };
+    if (calcPts >= 600   || stage >= 2)  return { code: 'grade-c',   text: '🥉 C RANK',   title: 'NORMAL' };
+    return { code: 'grade-d', text: '🌱 D RANK', title: 'BEGINNER' };
+  }
+
+  getLeaderboard() {
+    try {
+      const data = localStorage.getItem('streamer_word_defense_leaderboard');
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  saveLeaderboardRecord(record) {
+    const list = this.getLeaderboard();
+    list.push(record);
+    list.sort((a, b) => b.score - a.score);
+    const top5 = list.slice(0, 5);
+    try {
+      localStorage.setItem('streamer_word_defense_leaderboard', JSON.stringify(top5));
+    } catch (e) {}
+    return top5.some(item => item.id === record.id);
+  }
+
+  renderLeaderboardUI() {
+    const container = document.getElementById('leaderboard-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const list = this.getLeaderboard();
+    if (list.length === 0) {
+      container.innerHTML = '<div class="leaderboard-empty">💡 아직 기록된 명예의 전당 전적이 없습니다. 세운 기록이 여기에 저장됩니다!</div>';
+      return;
+    }
+
+    const diffLabels = { easy: '🟢 쉬움', normal: '🟡 보통', hard: '🔴 어려움', hell: '💀 헬' };
+
+    list.forEach((rec, idx) => {
+      const row = document.createElement('div');
+      row.className = `leaderboard-row top-${idx + 1}`;
+      const dateStr = new Date(rec.date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const diffText = diffLabels[rec.difficulty] || '보통';
+
+      row.innerHTML = `
+        <span class="leaderboard-rank-tag">${idx === 0 ? '🥇 1위' : (idx === 1 ? '🥈 2위' : (idx === 2 ? '🥉 3위' : `${idx + 1}위`))}</span>
+        <div class="leaderboard-info">
+          <span class="leaderboard-mvp">${rec.mvp} (${rec.playerCount}인 / ${rec.rankGrade})</span>
+          <span class="leaderboard-meta">STAGE ${rec.stage} | ${diffText} | ${dateStr}</span>
+        </div>
+        <div class="leaderboard-score-box">
+          <span class="leaderboard-score-val">${rec.score.toLocaleString()} Pts</span>
+        </div>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  clearLeaderboard() {
+    try {
+      localStorage.removeItem('streamer_word_defense_leaderboard');
+      this.renderLeaderboardUI();
+    } catch (e) {}
+  }
+
   gameOver() {
     this.isRunning = false;
     audioSynth.playGameOver();
@@ -693,12 +778,20 @@ class GameEngine {
     document.getElementById('result-combo').innerText = this.maxCombo;
     document.getElementById('result-kills').innerText = this.kills;
 
+    // Calculate Rank Grade Badge
+    const grade = this.calculateRankGrade(this.totalScore, this.stage, this.difficulty);
+    const badgeElem = document.getElementById('result-rank-badge');
+    if (badgeElem) {
+      badgeElem.className = `rank-grade-badge ${grade.code}`;
+      badgeElem.innerText = grade.text;
+    }
+
     // Render Player MVP Ranking Cards
     const rankContainer = document.getElementById('player-ranking-list');
+    const sortedPlayers = [...this.players].sort((a, b) => b.score - a.score);
+
     if (rankContainer) {
       rankContainer.innerHTML = '';
-      const sortedPlayers = [...this.players].sort((a, b) => b.score - a.score);
-
       sortedPlayers.forEach((p, idx) => {
         const card = document.createElement('div');
         card.className = `player-rank-card ${idx === 0 ? 'mvp' : ''}`;
@@ -711,6 +804,30 @@ class GameEngine {
         `;
         rankContainer.appendChild(card);
       });
+    }
+
+    // Leaderboard TOP 5 Entry & New Record Check
+    const mvpName = sortedPlayers.length > 0 ? sortedPlayers[0].name : '스트리머 A';
+    const record = {
+      id: Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      date: Date.now(),
+      score: this.totalScore,
+      stage: this.stage,
+      difficulty: this.difficulty,
+      mvp: mvpName,
+      playerCount: this.playerCount,
+      rankGrade: grade.text
+    };
+
+    const isNewRecord = this.saveLeaderboardRecord(record);
+    const newRecordBadge = document.getElementById('result-new-record');
+    if (newRecordBadge) {
+      if (isNewRecord) {
+        newRecordBadge.classList.remove('hidden');
+        audioSynth.playStageUp();
+      } else {
+        newRecordBadge.classList.add('hidden');
+      }
     }
 
     this.screenGameOver.classList.remove('hidden');

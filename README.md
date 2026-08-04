@@ -42,29 +42,34 @@
 ### 10. 🏆 스트리머별 MVP & 전과표 결과 랭킹
 - 게임 오버 시 최종 점수뿐만 아니라 **각 스트리머별 처치 몬스터 수, 득점(Pts) 랭킹 및 MVP 뱃지**를 한눈에 보여줍니다.
 
-### 11. 🎯 게임 난이도 4단계 선택 (Easy, Normal, Hard, Hell)
-- **🟢 쉬움 (Easy)**: 초보 스트리머용. 몬스터 속도 0.7x, 기지 HP 120, 여유로운 스폰 간격
-- **🟡 보통 (Normal)**: 표준 디펜스 밸런스, 기지 HP 100
-- **🔴 어려움 (Hard)**: 빠른 타수 필요. 몬스터 속도 1.35x, 기지 HP 80, 촘촘한 스폰 간격
-- **💀 헬 (Hell)**: 타자 고수용. 몬스터 속도 1.7x, 기지 HP 60, 보스 몬스터 대폭 소환
+### 13. 👑 결과 성과 등급 (Grade Rank: SSS ~ D)
+- 최종 점수, 도달 스테이지, 난이도 보정치를 종합 환산하여 결과 화면에 네온 뱃지로 등급을 수여합니다:
+  - `👑 SSS RANK` (God Speed / Stage 15+ 또는 12,000+ Pts)
+  - `💎 SS RANK` (Super Defender)
+  - `⭐ S RANK` (Excellent)
+  - `🥇 A RANK` (Great)
+  - `🥈 B RANK` (Good)
+  - `🥉 C RANK` (Normal)
+  - `🌱 D RANK` (Beginner)
 
-### 12. 🌊 실시간 웨이브 스테이지 (Stage 1~N) & 보스 웨이브
-- 몬스터를 12마리 이상 처치할 때마다 **`STAGE 1 ➔ STAGE 2 ➔ STAGE 3...`**로 자동 진행됩니다.
-- Stage 상승 시 화면 중앙에 **`STAGE X START!`** 연출 팝업 배너와 팡파르 상승음이 발동하며, 몬스터 이동 속도와 출격 빈도가 증가합니다.
-- 매 5 스테이지(5, 10, 15...)마다 **`⚠️ BOSS WAVE`** 특수 이벤트가 발동하여 대형 보스 몬스터가 대거 출격합니다.
+### 14. 🏆 로컬 명예의 전당 TOP 5 리더보드 (Local Leaderboard)
+- 브라우저 `localStorage` 기반으로 역대 최고 전적 TOP 5(날짜, 난이도, 최종 스테이지, 점수, MVP 스트리머)가 자동 저장됩니다.
+- 상단 `[🏆 명예의 전당]` 버튼 클릭 시 명예의 전당 랭킹 모달이 열립니다.
+- 새로운 TOP 5 신기록 달성 시 결과 화면에 **`🎉 NEW RECORD!`** 축하 뱃지와 이펙트가 출현합니다.
 
 ---
 
 ## 📁 파일 구조
 
-- [`index.html`](./index.html) : 메인 레이아웃, N인 선택 UI, 난이도 선택, 다중 입력바 및 결과 랭킹 모달
-- [`style.css`](./style.css) : 사이버펑크 네온 글로우 CSS, N인 그리드, 난이도 뱃지 및 Stage 연출 배너 스타일
-- [`js/game.js`](./js/game.js) : Canvas 2D 파티클, 몬스터 UI 렌더링, Stage/웨이브 엔진, 난이도 계수, CPM 계산
+- [`index.html`](./index.html) : 메인 레이아웃, N인 선택 UI, 난이도 선택, 명예의 전당 모달, 등급 뱃지 및 결과 랭킹
+- [`style.css`](./style.css) : 사이버펑크 네온 글로우 CSS, N인 그리드, 등급 뱃지 글로우 및 리더보드 카드 스타일
+- [`js/game.js`](./js/game.js) : Canvas 2D 파티클, Stage/웨이브 엔진, 등급 산정 함수, localStorage 명예의 전당 리더보드
 - [`js/audio.js`](./js/audio.js) : Web Audio API 사운드 합성기 (레이저, 폭발음, 피버음, 오타 경고음, Stage Up 팡파르)
 - [`js/wordPacks.js`](./js/wordPacks.js) : 방송 밈, 억까 단어, 2단 시청자/제시어 생성기, 한글 자모 획수 분석기
 - [`js/chatIntegration.js`](./js/chatIntegration.js) : 다중 채널 동시 라이브 채팅 연동기
 - [`README.md`](./README.md) : 게임 설명서
 - [`implementation_plan.md`](./implementation_plan.md) : 상세 기술 구현 계획서
+
 
 ---
 

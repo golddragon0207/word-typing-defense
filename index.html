@@ -28,6 +28,7 @@
       <div class="quick-controls">
         <button id="btn-chat-modal" class="btn btn-neon green">📡 방송 채팅 연동</button>
         <button id="btn-word-modal" class="btn btn-neon purple">📝 단어/닉네임 팩</button>
+        <button id="btn-leaderboard-modal" class="btn btn-neon gold">🏆 명예의 전당 (Top 5)</button>
         <button id="btn-obs-toggle" class="btn btn-neon cyan">📺 OBS 크로마키 (배경 투명)</button>
         <button id="btn-sfx-toggle" class="btn btn-neon gold">🔊 사운드: ON</button>
       </div>
@@ -189,6 +190,10 @@
       <div id="screen-gameover" class="screen-overlay hidden">
         <div class="result-card">
           <h2 class="danger-text">BASE DESTROYED!</h2>
+          <div class="rank-result-header">
+            <span id="result-rank-badge" class="rank-grade-badge rank-s">👑 S RANK</span>
+            <span id="result-new-record" class="new-record-badge hidden">🎉 NEW RECORD!</span>
+          </div>
           <p class="result-subtitle">몬스터의 침공으로 기지가 파괴되었습니다.</p>
 
           <div class="stats-grid">
@@ -319,7 +324,7 @@
       </div>
     </div>
 
-    <!-- 모달 2: 단어 & 닉네임 팩 관리 모달 -->
+    <!-- 모달 2: 단어 & 닉네임 팩 설정 모달 -->
     <div id="modal-words" class="modal-backdrop hidden">
       <div class="modal-card">
         <div class="modal-header">
@@ -349,6 +354,26 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary" data-close="modal-words">적용 완료</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 모달 3: 로컬 명예의 전당 TOP 5 랭킹 모달 -->
+    <div id="modal-leaderboard" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>🏆 로컬 명예의 전당 (Top 5 High Scores)</h2>
+          <button class="btn-close" data-close="modal-leaderboard">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">이 브라우저에 저장된 역대 최고 전적 TOP 5 명예의 전당입니다.</p>
+          <div id="leaderboard-list" class="leaderboard-grid">
+            <!-- JS 동적 생성 -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-clear-leaderboard" class="btn btn-secondary">🗑️ 전적 초기화</button>
+          <button class="btn btn-primary" data-close="modal-leaderboard">닫기</button>
         </div>
       </div>
     </div>

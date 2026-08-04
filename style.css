@@ -1189,4 +1189,159 @@ body.obs-transparent-mode #top-bar:hover {
   }
 }
 
+/* --------------------------------------------------------------------------
+   RANK GRADE BADGES & LEADERBOARD MODAL STYLES
+   -------------------------------------------------------------------------- */
+.rank-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.rank-grade-badge {
+  font-family: var(--font-title);
+  font-size: 22px;
+  font-weight: 900;
+  padding: 6px 18px;
+  border-radius: 12px;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px currentColor;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.rank-grade-badge.grade-sss {
+  color: #ffd700;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 0, 127, 0.3));
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+}
+.rank-grade-badge.grade-ss {
+  color: #00f3ff;
+  background: linear-gradient(135deg, rgba(0, 243, 255, 0.3), rgba(176, 38, 255, 0.3));
+  border: 2px solid #00f3ff;
+}
+.rank-grade-badge.grade-s {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.18);
+  border: 2px solid #00ff88;
+}
+.rank-grade-badge.grade-a {
+  color: #38ef7d;
+  background: rgba(56, 239, 125, 0.15);
+  border: 1px solid #38ef7d;
+}
+.rank-grade-badge.grade-b {
+  color: #4facfe;
+  background: rgba(79, 172, 254, 0.15);
+  border: 1px solid #4facfe;
+}
+.rank-grade-badge.grade-c {
+  color: #ffb199;
+  background: rgba(255, 177, 153, 0.15);
+  border: 1px solid #ffb199;
+}
+.rank-grade-badge.grade-d {
+  color: #a0a0a0;
+  background: rgba(160, 160, 160, 0.15);
+  border: 1px solid #a0a0a0;
+}
+
+.new-record-badge {
+  font-family: var(--font-title);
+  font-size: 13px;
+  font-weight: 800;
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.2);
+  border: 1px solid #00ff88;
+  padding: 6px 14px;
+  border-radius: 20px;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+  animation: pulseNewRecord 1s infinite alternate;
+}
+
+@keyframes pulseNewRecord {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  100% { transform: scale(1.05); opacity: 1; }
+}
+
+/* Leaderboard Grid in Modal */
+.leaderboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  transition: transform 0.2s ease;
+}
+
+.leaderboard-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(4px);
+}
+
+.leaderboard-row.top-1 {
+  border-color: rgba(255, 215, 0, 0.5);
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.02));
+}
+
+.leaderboard-rank-tag {
+  font-family: var(--font-title);
+  font-size: 16px;
+  font-weight: 900;
+  min-width: 45px;
+  color: var(--neon-cyan);
+}
+.leaderboard-row.top-1 .leaderboard-rank-tag { color: #ffd700; }
+.leaderboard-row.top-2 .leaderboard-rank-tag { color: #e0e0e0; }
+.leaderboard-row.top-3 .leaderboard-rank-tag { color: #cd7f32; }
+
+.leaderboard-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  padding: 0 12px;
+}
+
+.leaderboard-mvp {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.leaderboard-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.leaderboard-score-box {
+  text-align: right;
+}
+
+.leaderboard-score-val {
+  font-family: var(--font-title);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--neon-gold);
+}
+
+.leaderboard-empty {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+
 

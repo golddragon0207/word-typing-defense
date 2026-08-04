@@ -39,7 +39,11 @@
    - **Stage 진행**: 몬스터 처치 시 `STAGE 1 ➔ STAGE 2...` 연출 배너 및 팡파르 상승음 재생.
    - **Boss Wave**: 5 스테이지 단위마다 대형 보스 몬스터 집중 소환 및 WARNING 연출.
 
-9. **🌐 GitHub Pages 무료 웹 배포 주소 연동**:
+9. **👑 성과 등급 뱃지(SSS~D) 및 🏆 로컬 명예의 전당 TOP 5 리더보드**:
+   - **Rank Grade**: 점수/스테이지/난이도 종합 환산 `SSS`, `SS`, `S`, `A`, `B`, `C`, `D` 뱃지 렌더링.
+   - **Local Leaderboard**: 브라우저 `localStorage` 전적 저장 및 TOP 5 갱신 시 `NEW RECORD!` 축하 이펙트.
+
+10. **🌐 GitHub Pages 무료 웹 배포 주소 연동**:
    - Repository: `https://github.com/golddragon0207/word-typing-defense.git`
    - Live Web URL: `https://golddragon0207.github.io/word-typing-defense/`
 
@@ -49,27 +53,22 @@
 
 ### 1. `index.html`
 - 메인 화면에 **참여 인원 조절 카운터 (1P ~ 6P+)**, **난이도 선택(Easy, Normal, Hard, Hell)** 및 플레이어 닉네임 설정 UI 추가.
-- 하단 입력 바에 **동적 플레이어 입력창 그리드 (P1~PN)** 지원 컨테이너 추가.
-- 상단 HUD에 **`STAGE`** 항목 및 화면 중앙 스테이지 연출 배너 오버레이 추가.
-- 방송 채팅 연동 모달에 **다중 채널 등록(리스트 추가/삭제)** UI 추가.
-- 결과 화면에 **플레이어별 MVP 랭킹 카드** 및 **최종 도달 스테이지** 추가.
+- 상단 컨트롤바에 **`🏆 명예의 전당 (Top 5)`** 모달 버튼 추가.
+- 결과 화면에 **`👑 SSS~D RANK 뱃지`**, **`🎉 NEW RECORD!`** 태그 및 **최종 도달 스테이지** 추가.
+- **`#modal-leaderboard`** 역대 최고 기록 TOP 5 리더보드 모달 추가.
 
 ### 2. `style.css`
 - 플레이어 수에 맞춰 1~6개의 입력창이 깔끔하게 정렬되는 Responsive Grid CSS 추가.
 - 난이도 선택 버튼 네온 스타일링 및 활성화 뱃지 추가.
-- 스테이지 업 연출 배너 오버레이 및 `@keyframes stageBannerPulse` 팝업 애니메이션 추가.
-- 다중 포탑 네온 컬러 테마 (Cyan, Pink, Gold, Green, Purple, Orange) CSS 변수 및 라벨 스타일 추가.
-- 입력창 포커스 네온 글로우 피드백 추가.
+- 성과 등급 뱃지(`rank-grade-badge.grade-sss` 등) 네온 파동 글로우 스타일 추가.
+- 명예의 전당 TOP 1, 2, 3위 행 배경 및 메달 아이콘 CSS 스타일 구현.
 
 ### 3. `js/game.js`
 - 2단 몬스터 구조(시청자 닉네임 Tag + 제시어 Box) Canvas 렌더링.
-- `difficulty` (easy, normal, hard, hell) 및 `DIFFICULTY_CONFIG` 계수 (HP, Speed, SpawnInterval, BossRate) 적용.
-- `stage` 시스템 (목표 처치 달성 시 `triggerStageUp()` 발동 및 스폰 간격 축소, 보스 웨이브 판별).
-- `playerCount`, `players[]`, `turrets[]` 배열 기반의 동적 계산 처리.
-- `resizeCanvas()` 시 `devicePixelRatio` 스케일링으로 4K 고해상도 선명도 적용.
-- 통합 입력창 사용 시 nearest turret 동적 레이저 사격.
-- 화면 클릭 시 active input 자동 재포커스 처리.
-- 플레이어별 Kills, Score, Combo 개별 스탯 추적.
+- `calculateRankGrade()` 등급 환산 로직 및 `saveLeaderboardRecord()` 로컬스토리지 전적 관리 구현.
+- `renderLeaderboardUI()` 리더보드 동적 렌더링 및 `clearLeaderboard()` 초기화 기능 추가.
+- `gameOver()` 실행 시 성과 등급 산정 및 TOP 5 신기록 달성 감지 연출.
+
 
 ### 4. `js/wordPacks.js`
 - `getNextMonsterData()`를 추가하여 시청자 닉네임과 clean 제시어 쌍을 2단 구조로 공급.
