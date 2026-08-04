@@ -34,7 +34,12 @@
    - 한글 초성/중성/종성 획수를 감안한 정밀 타수(CPM) 계산 및 WPM 동시 제공.
    - `devicePixelRatio` 스케일링으로 4K/Retina 화면에서도 선명한 텍스처 출력 및 Canvas 클릭 포커스 자동 유지.
 
-8. **🌐 GitHub Pages 무료 웹 배포 주소 연동**:
+8. **🎯 난이도 4단계 선택 및 🌊 웨이브 스테이지(Stage) 시스템**:
+   - **난이도 4종**: 쉬움(Easy), 보통(Normal), 어려움(Hard), 헬(Hell) 계수 적용.
+   - **Stage 진행**: 몬스터 처치 시 `STAGE 1 ➔ STAGE 2...` 연출 배너 및 팡파르 상승음 재생.
+   - **Boss Wave**: 5 스테이지 단위마다 대형 보스 몬스터 집중 소환 및 WARNING 연출.
+
+9. **🌐 GitHub Pages 무료 웹 배포 주소 연동**:
    - Repository: `https://github.com/golddragon0207/word-typing-defense.git`
    - Live Web URL: `https://golddragon0207.github.io/word-typing-defense/`
 
@@ -43,19 +48,23 @@
 ## 📁 변경 대상 파일
 
 ### 1. `index.html`
-- 메인 화면에 **참여 인원 조절 카운터 (1P ~ 6P+)** 및 플레이어 닉네임 설정 UI 추가.
+- 메인 화면에 **참여 인원 조절 카운터 (1P ~ 6P+)**, **난이도 선택(Easy, Normal, Hard, Hell)** 및 플레이어 닉네임 설정 UI 추가.
 - 하단 입력 바에 **동적 플레이어 입력창 그리드 (P1~PN)** 지원 컨테이너 추가.
+- 상단 HUD에 **`STAGE`** 항목 및 화면 중앙 스테이지 연출 배너 오버레이 추가.
 - 방송 채팅 연동 모달에 **다중 채널 등록(리스트 추가/삭제)** UI 추가.
-- 결과 화면에 **플레이어별 MVP 랭킹 카드** 추가.
-- HUD 레이블 `타수 (CPM/WPM)` 표시 보강.
+- 결과 화면에 **플레이어별 MVP 랭킹 카드** 및 **최종 도달 스테이지** 추가.
 
 ### 2. `style.css`
 - 플레이어 수에 맞춰 1~6개의 입력창이 깔끔하게 정렬되는 Responsive Grid CSS 추가.
+- 난이도 선택 버튼 네온 스타일링 및 활성화 뱃지 추가.
+- 스테이지 업 연출 배너 오버레이 및 `@keyframes stageBannerPulse` 팝업 애니메이션 추가.
 - 다중 포탑 네온 컬러 테마 (Cyan, Pink, Gold, Green, Purple, Orange) CSS 변수 및 라벨 스타일 추가.
 - 입력창 포커스 네온 글로우 피드백 추가.
 
 ### 3. `js/game.js`
 - 2단 몬스터 구조(시청자 닉네임 Tag + 제시어 Box) Canvas 렌더링.
+- `difficulty` (easy, normal, hard, hell) 및 `DIFFICULTY_CONFIG` 계수 (HP, Speed, SpawnInterval, BossRate) 적용.
+- `stage` 시스템 (목표 처치 달성 시 `triggerStageUp()` 발동 및 스폰 간격 축소, 보스 웨이브 판별).
 - `playerCount`, `players[]`, `turrets[]` 배열 기반의 동적 계산 처리.
 - `resizeCanvas()` 시 `devicePixelRatio` 스케일링으로 4K 고해상도 선명도 적용.
 - 통합 입력창 사용 시 nearest turret 동적 레이저 사격.
@@ -68,6 +77,8 @@
 
 ### 5. `js/audio.js`
 - `playError()` 타격 매칭 실패 / 오타 입력 경고음 추가.
+- `playStageUp()` 스테이지 달성 팡파르 상승 합성음 추가.
 
 ### 6. `js/chatIntegration.js`
 - 단일 채널 연동 방식에서 **배열 기반 다중 채널 동시 연동 엔진 (`channels[]`)**으로 개선.
+
