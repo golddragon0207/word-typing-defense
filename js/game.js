@@ -3,10 +3,10 @@
    ========================================================================== */
 
 const DIFFICULTY_CONFIG = {
-  easy:   { speedMult: 0.7,  baseHp: 120, baseSpawnInterval: 140, bossRate: 0.08, fastRate: 0.15 },
-  normal: { speedMult: 1.0,  baseHp: 100, baseSpawnInterval: 110, bossRate: 0.15, fastRate: 0.20 },
-  hard:   { speedMult: 1.35, baseHp: 80,  baseSpawnInterval: 85,  bossRate: 0.25, fastRate: 0.30 },
-  hell:   { speedMult: 1.7,  baseHp: 60,  baseSpawnInterval: 60,  bossRate: 0.35, fastRate: 0.40 }
+  easy: { speedMult: 0.7, baseHp: 120, baseSpawnInterval: 140, bossRate: 0.08, fastRate: 0.15 },
+  normal: { speedMult: 1.0, baseHp: 100, baseSpawnInterval: 110, bossRate: 0.15, fastRate: 0.20 },
+  hard: { speedMult: 1.35, baseHp: 80, baseSpawnInterval: 85, bossRate: 0.25, fastRate: 0.30 },
+  hell: { speedMult: 1.7, baseHp: 60, baseSpawnInterval: 60, bossRate: 0.35, fastRate: 0.40 }
 };
 
 class GameEngine {
@@ -267,25 +267,6 @@ class GameEngine {
     const btnResultSupport = document.getElementById('btn-result-support');
     if (btnResultSupport) btnResultSupport.addEventListener('click', openSupportModal);
 
-    // ── Buy Me a Coffee 후원하기 버튼 ────────────────────────────────────
-    const btnDonate = document.getElementById('btn-donate');
-    if (btnDonate) {
-      btnDonate.addEventListener('click', () => {
-        const bmacId = (typeof CONFIG !== 'undefined' && CONFIG.BMAC_ID && CONFIG.BMAC_ID !== 'YOUR_BMAC_ID')
-          ? CONFIG.BMAC_ID : null;
-
-        if (!bmacId) {
-          alert('Buy Me a Coffee 아이디가 아직 설정되지 않았습니다.\njs/config.js 파일에서 BMAC_ID를 입력해 주세요.');
-          return;
-        }
-
-        const bmacUrl = `https://www.buymeacoffee.com/${bmacId}`;
-        window.open(bmacUrl, '_blank', 'noopener,noreferrer');
-      });
-    }
-
-
-
     document.querySelectorAll('[data-close]').forEach(btn => {
       btn.addEventListener('click', () => {
         const targetId = btn.dataset.close;
@@ -397,7 +378,7 @@ class GameEngine {
     this.totalScore = 0;
     this.combo = 0;
     this.maxCombo = 0;
-    
+
     // 난이도별 HP 및 스폰 속도 세팅
     const config = DIFFICULTY_CONFIG[this.difficulty] || DIFFICULTY_CONFIG.normal;
     this.maxHp = config.baseHp;
@@ -562,7 +543,7 @@ class GameEngine {
 
     if (targetIdx !== -1) {
       const target = this.monsters[targetIdx];
-      
+
       let shooterTurret = this.turrets[playerId] || this.turrets[0];
       let shooterId = playerId;
 
@@ -706,7 +687,7 @@ class GameEngine {
     if (this.hudStage) this.hudStage.innerText = `STAGE ${this.stage}`;
     this.hudScore.innerText = this.totalScore.toLocaleString();
     this.hudCombo.innerText = this.combo;
-    
+
     const hpPercent = Math.max(0, (this.hp / this.maxHp) * 100);
     this.hudHpFill.style.width = `${hpPercent}%`;
     this.hudHpText.innerText = `${Math.ceil(this.hp)} / ${this.maxHp}`;
@@ -727,11 +708,11 @@ class GameEngine {
     const calcPts = (score + stage * 500) * weight;
 
     if (calcPts >= 12000 || stage >= 15) return { code: 'grade-sss', text: '👑 SSS RANK', title: 'GOD SPEED' };
-    if (calcPts >= 8000  || stage >= 12) return { code: 'grade-ss',  text: '💎 SS RANK',  title: 'SUPER DEFENDER' };
-    if (calcPts >= 5000  || stage >= 9)  return { code: 'grade-s',   text: '⭐ S RANK',   title: 'EXCELLENT' };
-    if (calcPts >= 3000  || stage >= 6)  return { code: 'grade-a',   text: '🥇 A RANK',   title: 'GREAT' };
-    if (calcPts >= 1500  || stage >= 4)  return { code: 'grade-b',   text: '🥈 B RANK',   title: 'GOOD' };
-    if (calcPts >= 600   || stage >= 2)  return { code: 'grade-c',   text: '🥉 C RANK',   title: 'NORMAL' };
+    if (calcPts >= 8000 || stage >= 12) return { code: 'grade-ss', text: '💎 SS RANK', title: 'SUPER DEFENDER' };
+    if (calcPts >= 5000 || stage >= 9) return { code: 'grade-s', text: '⭐ S RANK', title: 'EXCELLENT' };
+    if (calcPts >= 3000 || stage >= 6) return { code: 'grade-a', text: '🥇 A RANK', title: 'GREAT' };
+    if (calcPts >= 1500 || stage >= 4) return { code: 'grade-b', text: '🥈 B RANK', title: 'GOOD' };
+    if (calcPts >= 600 || stage >= 2) return { code: 'grade-c', text: '🥉 C RANK', title: 'NORMAL' };
     return { code: 'grade-d', text: '🌱 D RANK', title: 'BEGINNER' };
   }
 
@@ -751,7 +732,7 @@ class GameEngine {
     const top5 = list.slice(0, 5);
     try {
       localStorage.setItem('streamer_word_defense_leaderboard', JSON.stringify(top5));
-    } catch (e) {}
+    } catch (e) { }
     return top5.some(item => item.id === record.id);
   }
 
@@ -792,7 +773,7 @@ class GameEngine {
     try {
       localStorage.removeItem('streamer_word_defense_leaderboard');
       this.renderLeaderboardUI();
-    } catch (e) {}
+    } catch (e) { }
   }
 
   gameOver() {
@@ -1086,6 +1067,13 @@ class GameEngine {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  // ✅ 모달을 body 직접 자식으로 이동 (position:fixed가 #app 컨테이너 영향 받는 문제 해결)
+  ['modal-chat', 'modal-words', 'modal-leaderboard', 'modal-support'].forEach(id => {
+    const modal = document.getElementById(id);
+    if (modal) document.body.appendChild(modal);
+  });
+
   window.gameEngine = new GameEngine();
 });
+
 
