@@ -1,0 +1,12 @@
+# ============================================================
+#  보안 설정 — GitHub에 올리지 않을 파일
+#  (Toss ID는 공개 링크라 config.js는 GitHub에 올려도 안전합니다)
+# ============================================================
+# js/config.js  ← Toss ID는 공개 정보이므로 gitignore 해제
+
+# OS / Editor 임시 파일
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/settings.json

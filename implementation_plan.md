@@ -43,10 +43,10 @@
    - **Rank Grade**: 점수/스테이지/난이도 종합 환산 `SSS`, `SS`, `S`, `A`, `B`, `C`, `D` 뱃지 렌더링.
    - **Local Leaderboard**: 브라우저 `localStorage` 전적 저장 및 TOP 5 갱신 시 `NEW RECORD!` 축하 이펙트.
 
-10. **💰 웹 게임 수익화 (카카오 애드핏 배너 연동 & ☕ 카카오뱅크 후원 모달)**:
-   - **Kakao AdFit**: `DAN-DtBvl47G2a1Jbre4` 실시간 광고 스크립트 메인, 결과 창, 명예의 전당 배너 슬롯 3곳 탑재.
-   - **Google AdSense**: `ca-pub-1454462720476509` 소유권 인증 스크립트 연동.
-   - **Support Modal**: 상단바 `[☕ 후원]` 버튼 클릭 시 **카카오뱅크 `3333-28-2684443` (예금주: 김영석)** 계좌 카드 및 `[📋 계좌번호 복사]` 버튼과 복사 안내 토스트 출력.
+10. **💰 웹 게임 수익화 (카카오 애드핏 배너 연동 & ☕ 토스(Toss) 후원 모달)**:
+   - **Kakao AdFit**: 실시간 광고 스크립트 메인, 결과 창, 명예의 전당 배너 슬롯 3곳 탑재. (ID는 `js/config.js`에서 관리)
+   - **Google AdSense**: 소유권 인증 스크립트 연동. (ID는 `js/config.js`에서 관리)
+   - **후원 모달**: 상단바 `[☕ 후원]` 버튼 클릭 시 금액 프리셋(6종) 및 직접 입력 후 토스 송금 링크(`toss.me/{id}/{amount}`)로 이동. 계좌번호 등 개인정보 일절 노출 없음.
 
 11. **📱 반응형 UI & 멀티 디스플레이 바운드 최적화 (Responsive Bounds)**:
    - **Fluid Typography**: `clamp()` 타이포그래피로 4K 및 소형 디스플레이 가독성 보장.
@@ -78,7 +78,7 @@
 - 2단 몬스터 구조(시청자 닉네임 Tag + 제시어 Box) Canvas 렌더링.
 - `calculateRankGrade()` 등급 환산 로직 및 `saveLeaderboardRecord()` 로컬스토리지 전적 관리 구현.
 - `renderLeaderboardUI()` 리더보드 동적 렌더링 및 `clearLeaderboard()` 초기화 기능 추가.
-- 카카오뱅크 계좌번호(`3333-28-2684443`) 복사(`navigator.clipboard.writeText`) 핸들러 및 토스트 출력 기능 추가.
+- 토스(Toss) 후원 링크(`toss.me/{id}/{amount}`) 핸들러 및 금액 프리셋 선택 이벤트 추가. (`CONFIG.TOSS_ID` 사용)
 - `gameOver()` 실행 시 성과 등급 산정 및 TOP 5 신기록 달성 감지 연출.
 
 

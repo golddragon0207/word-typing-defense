@@ -1476,51 +1476,77 @@ body.obs-transparent-mode .ad-banner-box {
   color: var(--text-muted);
 }
 
-/* KakaoBank Account Card */
-.bank-account-card {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 230, 0, 0.03));
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  border-radius: 14px;
-  padding: 16px 20px;
-  margin-bottom: 16px;
-  display: flex;
-  flex-direction: column;
+
+/* ============================================================
+   DONATION MODAL STYLES (Toss Payment Link)
+   ============================================================ */
+
+/* 빠른 금액 선택 그리드 */
+.donation-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  box-shadow: 0 0 25px rgba(255, 215, 0, 0.15);
+  margin: 14px 0;
 }
 
-.bank-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.bank-badge {
-  font-family: var(--font-title);
+.donate-preset {
+  font-size: 15px;
   font-weight: 800;
-  font-size: 14px;
-  color: #ffd700;
+  padding: 12px 8px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
 }
 
-.bank-owner {
-  font-size: 13px;
-  font-weight: 700;
-  color: #ffffff;
+.donate-preset:hover,
+.donate-preset.selected {
+  transform: translateY(-3px);
+  box-shadow: 0 0 20px currentColor;
 }
 
-.bank-number-row {
+/* 직접 입력 행 */
+.donation-custom-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
 }
 
-.bank-number {
+.donation-currency {
   font-family: var(--font-title);
   font-size: 20px;
   font-weight: 900;
-  letter-spacing: 1px;
-  color: #ffffff;
+  color: var(--neon-cyan);
+  flex-shrink: 0;
+}
+
+.donation-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.donation-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+/* 안내 문구 */
+.donation-notice {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 10px;
+  line-height: 1.7;
 }
 
 .copy-toast-msg {
@@ -1528,6 +1554,7 @@ body.obs-transparent-mode .ad-banner-box {
   font-weight: 700;
   color: #00ff88;
   text-align: center;
+
   animation: fadeIn 0.3s ease;
 }
 
