@@ -267,6 +267,22 @@ class GameEngine {
     const btnResultSupport = document.getElementById('btn-result-support');
     if (btnResultSupport) btnResultSupport.addEventListener('click', openSupportModal);
 
+    const btnCopyAccount = document.getElementById('btn-copy-account');
+    if (btnCopyAccount) {
+      btnCopyAccount.addEventListener('click', () => {
+        const accountNumber = '3333-28-2684443';
+        navigator.clipboard.writeText(accountNumber).then(() => {
+          const toast = document.getElementById('copy-toast');
+          if (toast) {
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+          }
+        }).catch(() => {
+          alert('카카오뱅크 3333-28-2684443 (예금주: 김영석)');
+        });
+      });
+    }
+
     document.querySelectorAll('[data-close]').forEach(btn => {
       btn.addEventListener('click', () => {
         const targetId = btn.dataset.close;

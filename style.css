@@ -1445,6 +1445,62 @@ body.obs-transparent-mode .ad-banner-box {
   color: var(--text-muted);
 }
 
+/* KakaoBank Account Card */
+.bank-account-card {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 230, 0, 0.03));
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.15);
+}
+
+.bank-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bank-badge {
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 14px;
+  color: #ffd700;
+}
+
+.bank-owner {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.bank-number-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bank-number {
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #ffffff;
+}
+
+.copy-toast-msg {
+  font-size: 12px;
+  font-weight: 700;
+  color: #00ff88;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+
 
 
 
