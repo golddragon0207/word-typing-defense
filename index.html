@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,12 +8,15 @@
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;700;900&display=swap"
+    rel="stylesheet">
 </head>
+
 <body>
   <!-- OBS 크로마키 / 투명 오버레이 레이어 컨테이너 -->
   <div id="app" class="app-container">
-    
+
     <!-- 최상단 방송 컨트롤바 (OBS 캡처 시 숨기기 가능) -->
     <header id="top-bar" class="top-bar">
       <div class="brand">
@@ -33,7 +37,7 @@
     <main class="game-viewport">
       <!-- 배경 Canvas (스타/파티클 이펙트) -->
       <canvas id="bg-canvas"></canvas>
-      
+
       <!-- 게임 메인 Canvas (몬스터, 포탑, 레이저) -->
       <canvas id="game-canvas"></canvas>
 
@@ -262,7 +266,8 @@
           </div>
 
           <div class="chat-options">
-            <label><input type="checkbox" id="chk-keyword-only" checked /> 🎯 '!참여' / '!참가' / '!억까' 명령어 입력 시청자만 자동 참가 (추천)</label>
+            <label><input type="checkbox" id="chk-keyword-only" checked /> 🎯 '!참여' / '!참가' / '!억까' 명령어 입력 시청자만 자동 참가
+              (추천)</label>
             <label><input type="checkbox" id="chk-nickname-only" checked /> 닉네임만 몬스터로 소환 (채팅 내용 제외)</label>
             <label><input type="checkbox" id="chk-badwords-filter" checked /> 비속어/욕설 자동 필터링 적용</label>
           </div>
@@ -297,7 +302,8 @@
 
           <div class="custom-word-input">
             <label>✏️ 스트리머 자율 커스텀 단어장 (줄바꿈으로 여러 개 입력):</label>
-            <textarea id="txt-custom-words" rows="6" placeholder="여기에 원하는 시청자 닉네임이나 단어를 줄바꿈(Enter)으로 적거나 복사-붙여넣기하세요!&#10;예시:&#10;김유튜브&#10;치지직짱짱맨&#10;구독과좋아요&#10;오타내지마라"></textarea>
+            <textarea id="txt-custom-words" rows="6"
+              placeholder="여기에 원하는 시청자 닉네임이나 단어를 줄바꿈(Enter)으로 적거나 복사-붙여넣기하세요!&#10;예시:&#10;김유튜브&#10;치지직짱짱맨&#10;구독과좋아요&#10;오타내지마라"></textarea>
             <button id="btn-apply-custom-words" class="btn btn-neon purple">📌 이 단어들을 몬스터로 즉시 등록</button>
           </div>
         </div>
@@ -314,4 +320,5 @@
   <script src="js/chatIntegration.js"></script>
   <script src="js/game.js"></script>
 </body>
+
 </html>
