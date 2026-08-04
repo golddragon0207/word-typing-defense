@@ -205,13 +205,13 @@ body.obs-transparent-mode #top-bar:hover {
    -------------------------------------------------------------------------- */
 .hud-overlay {
   position: absolute;
-  top: clamp(8px, 2vh, 24px);
+  top: clamp(6px, 1.5vh, 18px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: clamp(6px, 1vw, 14px);
+  gap: clamp(4px, 1vw, 10px);
   max-width: 96vw;
   z-index: 10;
   pointer-events: none;
@@ -220,20 +220,20 @@ body.obs-transparent-mode #top-bar:hover {
 .hud-card {
   background: rgba(12, 16, 28, 0.9);
   border: 1px solid rgba(0, 243, 255, 0.35);
-  border-radius: 12px;
-  padding: 8px 12px;
+  border-radius: 10px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: clamp(90px, 11vw, 130px);
-  gap: 3px;
+  min-width: clamp(80px, 10vw, 115px);
+  gap: 2px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
 
 .hud-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--text-muted);
   letter-spacing: 1px;
@@ -242,7 +242,7 @@ body.obs-transparent-mode #top-bar:hover {
 
 .hud-value {
   font-family: var(--font-title);
-  font-size: clamp(16px, 1.8vw, 22px);
+  font-size: clamp(15px, 1.6vw, 20px);
   font-weight: 800;
   color: var(--neon-cyan);
   text-shadow: 0 0 10px var(--neon-cyan);
@@ -272,12 +272,12 @@ body.obs-transparent-mode #top-bar:hover {
 }
 
 .hp-bar-bg, .fever-bar-bg {
-  width: 110px;
-  height: 10px;
+  width: 90px;
+  height: 8px;
   background: rgba(255, 255, 255, 0.12);
-  border-radius: 5px;
+  border-radius: 4px;
   overflow: hidden;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .hp-bar-fill {
@@ -295,8 +295,8 @@ body.obs-transparent-mode #top-bar:hover {
 }
 
 .hp-text {
-  font-size: 11px;
-  margin-top: 4px;
+  font-size: 10px;
+  margin-top: 2px;
   color: var(--text-muted);
 }
 
@@ -306,30 +306,31 @@ body.obs-transparent-mode #top-bar:hover {
 .typing-bar {
   position: relative;
   z-index: 20;
-  padding: 18px 28px;
+  padding: clamp(8px, 1.5vh, 16px) clamp(12px, 2vw, 24px);
   background: rgba(12, 16, 28, 0.95);
   border-top: 2px solid var(--neon-cyan);
   display: flex;
   justify-content: center;
   backdrop-filter: blur(10px);
   box-shadow: 0 -5px 25px rgba(0, 243, 255, 0.2);
+  flex-shrink: 0;
 }
 
-.input-wrapper {
+.input-wrapper, .single-input-wrapper {
   width: 100%;
   max-width: 700px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: rgba(0, 0, 0, 0.5);
   border: 2px solid var(--neon-cyan);
   border-radius: 12px;
-  padding: 6px 16px;
+  padding: 5px 14px;
   box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
 }
 
 .input-icon {
-  font-size: 22px;
+  font-size: 18px;
 }
 
 #target-input {
@@ -339,14 +340,14 @@ body.obs-transparent-mode #top-bar:hover {
   outline: none;
   color: var(--neon-green);
   font-family: var(--font-body);
-  font-size: 22px;
+  font-size: clamp(16px, 1.8vw, 22px);
   font-weight: 700;
   letter-spacing: 1px;
 }
 
 #target-input::placeholder {
   color: rgba(255, 255, 255, 0.3);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
 }
 
@@ -355,7 +356,7 @@ body.obs-transparent-mode #top-bar:hover {
   color: #fff;
   border: none;
   font-weight: 900;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
   box-shadow: 0 0 15px var(--neon-pink);
@@ -380,20 +381,21 @@ body.obs-transparent-mode #top-bar:hover {
   background: rgba(6, 8, 14, 0.85);
   backdrop-filter: blur(12px);
   overflow-y: auto;
-  padding: 12px 8px;
+  padding: 10px 8px;
 }
 
 .main-menu-card, .result-card {
   background: var(--bg-card);
   border: 1px solid rgba(0, 243, 255, 0.3);
-  border-radius: 20px;
-  padding: clamp(20px, 3.5vh, 40px) clamp(16px, 3vw, 36px);
-  width: min(94%, 680px);
-  max-height: 88vh;
+  border-radius: 18px;
+  padding: clamp(16px, 2.5vh, 32px) clamp(14px, 2.5vw, 32px);
+  width: min(94%, 660px);
+  max-height: calc(100vh - 80px);
   overflow-y: auto;
   text-align: center;
   box-shadow: 0 0 40px rgba(0, 243, 255, 0.25);
   animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin: auto;
 }
 
 @keyframes popIn {
@@ -403,12 +405,12 @@ body.obs-transparent-mode #top-bar:hover {
 
 .glow-text {
   font-family: var(--font-title);
-  font-size: clamp(22px, 3.2vw, 32px);
+  font-size: clamp(20px, 2.8vw, 30px);
   font-weight: 900;
   letter-spacing: 2px;
   color: var(--neon-cyan);
   text-shadow: 0 0 20px var(--neon-cyan);
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .subtitle {
