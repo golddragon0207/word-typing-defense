@@ -43,11 +43,17 @@
    - **Rank Grade**: 점수/스테이지/난이도 종합 환산 `SSS`, `SS`, `S`, `A`, `B`, `C`, `D` 뱃지 렌더링.
    - **Local Leaderboard**: 브라우저 `localStorage` 전적 저장 및 TOP 5 갱신 시 `NEW RECORD!` 축하 이펙트.
 
-10. **💰 웹 게임 수익화 (애드센스/애드핏 배너 슬롯 & ☕ 개발자/방송 후원 모달)**:
-   - **Ad Banner Slots**: 메인 화면, 결과 창, 리더보드 모달 하단에 구글 애드센스 / 카카오 애드핏 연동 전용 반응형 네온 슬롯 배치.
-   - **Support Modal**: 상단바 `[☕ 후원]` 버튼을 통해 투네이션, 치지직, Buy Me a Coffee 후원 연동 제공.
+10. **💰 웹 게임 수익화 (카카오 애드핏 배너 연동 & ☕ 카카오뱅크 후원 모달)**:
+   - **Kakao AdFit**: `DAN-DtBvl47G2a1Jbre4` 실시간 광고 스크립트 메인, 결과 창, 명예의 전당 배너 슬롯 3곳 탑재.
+   - **Google AdSense**: `ca-pub-1454462720476509` 소유권 인증 스크립트 연동.
+   - **Support Modal**: 상단바 `[☕ 후원]` 버튼 클릭 시 **카카오뱅크 `3333-28-2684443` (예금주: 김영석)** 계좌 카드 및 `[📋 계좌번호 복사]` 버튼과 복사 안내 토스트 출력.
 
-11. **🌐 GitHub Pages 무료 웹 배포 주소 연동**:
+11. **📱 반응형 UI & 멀티 디스플레이 바운드 최적화 (Responsive Bounds)**:
+   - **Fluid Typography**: `clamp()` 타이포그래피로 4K 및 소형 디스플레이 가독성 보장.
+   - **Modal Flex Box**: `flex-shrink: 0` 푸터 고정 및 `modal-body` 독립 스크롤 처리로 버튼 잘림 완전 방지.
+   - **Typing Bar & Screen Overlay**: 소형 노트북(1280x800) 및 모바일 뷰포트 오버플로우 방지.
+
+12. **🌐 GitHub Pages 무료 웹 배포 주소 연동**:
    - Repository: `https://github.com/golddragon0207/word-typing-defense.git`
    - Live Web URL: `https://golddragon0207.github.io/word-typing-defense/`
 
@@ -58,23 +64,23 @@
 ### 1. `index.html`
 - 메인 화면에 **참여 인원 조절 카운터 (1P ~ 6P+)**, **난이도 선택(Easy, Normal, Hard, Hell)** 및 플레이어 닉네임 설정 UI 추가.
 - 상단 컨트롤바에 **`🏆 명예의 전당 (Top 5)`** 및 **`☕ 후원`** 모달 버튼 추가.
-- 메인 타이틀, 결과 창, 리더보드 모달에 **`#ad-container-main` / `#ad-container-gameover` 광고 배너 슬롯** 추가.
+- 메인 타이틀, 결과 창, 리더보드 모달에 **`#ad-container-main` / `#ad-container-gameover` 카카오 애드핏 광고 배너 슬롯** 추가.
 - 결과 화면에 **`👑 SSS~D RANK 뱃지`**, **`🎉 NEW RECORD!`** 태그 및 **최종 도달 스테이지** 추가.
-- **`#modal-leaderboard`** 역대 최고 기록 TOP 5 리더보드 모달 및 **`#modal-support`** 후원 안내 모달 추가.
+- **`#modal-leaderboard`** 역대 최고 기록 TOP 5 리더보드 모달 및 **`#modal-support`** 카카오뱅크 계좌 후원 모달 추가.
 
 ### 2. `style.css`
 - 플레이어 수에 맞춰 1~6개의 입력창이 깔끔하게 정렬되는 Responsive Grid CSS 추가.
-- 난이도 선택 버튼 네온 스타일링 및 활성화 뱃지 추가.
 - `.ad-banner-box` 광고 영역 네온 테두리 및 OBS 크로마키 투명 오버레이 처리 스타일 추가.
-- 성과 등급 뱃지(`rank-grade-badge.grade-sss` 등) 네온 파동 글로우 스타일 추가.
-- 명예의 전당 TOP 1, 2, 3위 행 배경 및 메달 아이콘 CSS 스타일 구현.
+- `.modal-card` flex 구조 및 `modal-body` 독립 스크롤바, `modal-footer` 고정 스타일 추가.
+- 반응형 미디어 쿼리(`@media (max-width: 768px)`, `@media (max-height: 800px)`) 추가.
 
 ### 3. `js/game.js`
 - 2단 몬스터 구조(시청자 닉네임 Tag + 제시어 Box) Canvas 렌더링.
 - `calculateRankGrade()` 등급 환산 로직 및 `saveLeaderboardRecord()` 로컬스토리지 전적 관리 구현.
 - `renderLeaderboardUI()` 리더보드 동적 렌더링 및 `clearLeaderboard()` 초기화 기능 추가.
-- 후원 모달 오픈 버튼(`#btn-support-modal`) 이벤트 등록.
+- 카카오뱅크 계좌번호(`3333-28-2684443`) 복사(`navigator.clipboard.writeText`) 핸들러 및 토스트 출력 기능 추가.
 - `gameOver()` 실행 시 성과 등급 산정 및 TOP 5 신기록 달성 감지 연출.
+
 
 
 
