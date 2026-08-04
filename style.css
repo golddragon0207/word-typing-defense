@@ -1343,5 +1343,104 @@ body.obs-transparent-mode #top-bar:hover {
   font-size: 14px;
 }
 
+/* --------------------------------------------------------------------------
+   MONETIZATION AD BANNER SLOTS & SUPPORT MODAL STYLES
+   -------------------------------------------------------------------------- */
+.ad-banner-box {
+  margin-top: 14px;
+  width: 100%;
+  min-height: 55px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px dashed rgba(0, 243, 255, 0.25);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  transition: border-color 0.3s ease;
+}
+
+.ad-banner-box:hover {
+  border-color: var(--neon-cyan);
+}
+
+.ad-placeholder-label {
+  font-family: var(--font-title);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+/* OBS 크로마키 투명 오버레이 모드 시 광고 영역 가시성 처리 */
+body.obs-transparent-mode .ad-banner-box {
+  opacity: 0.3;
+}
+
+/* Support Modal Cards Grid */
+.support-links-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.support-link-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  text-decoration: none;
+  color: #ffffff;
+  transition: all 0.25s ease;
+}
+
+.support-link-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+}
+
+.support-link-card.chzzk:hover {
+  border-color: #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.support-link-card.soop:hover {
+  border-color: #00f3ff;
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+}
+
+.support-link-card.coffee:hover {
+  border-color: #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.support-icon {
+  font-size: 26px;
+}
+
+.support-text-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.support-title {
+  font-weight: 800;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.support-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+
 
 

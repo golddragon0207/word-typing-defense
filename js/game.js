@@ -258,6 +258,15 @@ class GameEngine {
       }
     });
 
+    const openSupportModal = () => {
+      document.getElementById('modal-support').classList.remove('hidden');
+    };
+    const btnSupport = document.getElementById('btn-support-modal');
+    if (btnSupport) btnSupport.addEventListener('click', openSupportModal);
+
+    const btnResultSupport = document.getElementById('btn-result-support');
+    if (btnResultSupport) btnResultSupport.addEventListener('click', openSupportModal);
+
     document.querySelectorAll('[data-close]').forEach(btn => {
       btn.addEventListener('click', () => {
         const targetId = btn.dataset.close;

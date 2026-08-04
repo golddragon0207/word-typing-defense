@@ -29,6 +29,7 @@
         <button id="btn-chat-modal" class="btn btn-neon green">📡 방송 채팅 연동</button>
         <button id="btn-word-modal" class="btn btn-neon purple">📝 단어/닉네임 팩</button>
         <button id="btn-leaderboard-modal" class="btn btn-neon gold">🏆 명예의 전당 (Top 5)</button>
+        <button id="btn-support-modal" class="btn btn-neon gold">☕ 후원 (Donate)</button>
         <button id="btn-obs-toggle" class="btn btn-neon cyan">📺 OBS 크로마키 (배경 투명)</button>
         <button id="btn-sfx-toggle" class="btn btn-neon gold">🔊 사운드: ON</button>
       </div>
@@ -183,6 +184,11 @@
           </div>
 
           <button id="btn-start-game" class="btn btn-primary btn-giant">🔥 게임 시작 (START)</button>
+
+          <!-- 광고 배너 슬롯 1: 메인 타이틀 화면 하단 -->
+          <div id="ad-container-main" class="ad-banner-box">
+            <div class="ad-placeholder-label">📢 AD SPONSOR (Google AdSense / Kakao AdFit)</div>
+          </div>
         </div>
       </div>
 
@@ -229,7 +235,13 @@
 
           <div class="result-actions">
             <button id="btn-restart" class="btn btn-primary btn-large">🔄 다시 도전하기</button>
+            <button id="btn-result-support" class="btn btn-neon gold btn-large">☕ 게임 응원하기</button>
             <button id="btn-return-main" class="btn btn-secondary btn-large">🏠 메인 화면으로</button>
+          </div>
+
+          <!-- 광고 배너 슬롯 2: 결과 화면 하단 -->
+          <div id="ad-container-gameover" class="ad-banner-box">
+            <div class="ad-placeholder-label">📢 AD SPONSOR (Google AdSense / Kakao AdFit)</div>
           </div>
         </div>
       </div>
@@ -370,10 +382,54 @@
           <div id="leaderboard-list" class="leaderboard-grid">
             <!-- JS 동적 생성 -->
           </div>
+
+          <!-- 광고 배너 슬롯 3: 리더보드 모달 하단 -->
+          <div id="ad-container-leaderboard" class="ad-banner-box">
+            <div class="ad-placeholder-label">📢 AD SPONSOR (Google AdSense / Kakao AdFit)</div>
+          </div>
         </div>
         <div class="modal-footer">
           <button id="btn-clear-leaderboard" class="btn btn-secondary">🗑️ 전적 초기화</button>
           <button class="btn btn-primary" data-close="modal-leaderboard">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 모달 4: 게임 & 개발자 후원 안내 모달 -->
+    <div id="modal-support" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>☕ 게임 & 개발자 후원하기 (Support)</h2>
+          <button class="btn-close" data-close="modal-support">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">재미있게 플레이하셨나요? 따뜻한 후원과 응원은 더 좋은 신규 게임 기능 개발에 큰 힘이 됩니다! 💖</p>
+          <div class="support-links-grid">
+            <a href="https://chzzk.naver.com" target="_blank" rel="noopener noreferrer" class="support-link-card chzzk">
+              <span class="support-icon">🟢</span>
+              <div class="support-text-box">
+                <span class="support-title">치지직 / 투네이션 후원</span>
+                <span class="support-sub">방송 후원 및 메시지 전달</span>
+              </div>
+            </a>
+            <a href="https://afreecatv.com" target="_blank" rel="noopener noreferrer" class="support-link-card soop">
+              <span class="support-icon">🔵</span>
+              <div class="support-text-box">
+                <span class="support-title">SOOP / 아프리카TV 후원</span>
+                <span class="support-sub">별풍선 & 서포터 응원</span>
+              </div>
+            </a>
+            <a href="https://buymeacoffee.com" target="_blank" rel="noopener noreferrer" class="support-link-card coffee">
+              <span class="support-icon">☕</span>
+              <div class="support-text-box">
+                <span class="support-title">Buy Me a Coffee 후원</span>
+                <span class="support-sub">커피 한 잔 후원하기</span>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" data-close="modal-support">닫기</button>
         </div>
       </div>
     </div>
