@@ -1056,3 +1056,137 @@ body.obs-transparent-mode #top-bar:hover {
   }
 }
 
+/* --------------------------------------------------------------------------
+   STAGE & DIFFICULTY SELECTION SYSTEM STYLES
+   -------------------------------------------------------------------------- */
+.difficulty-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.btn-diff {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btn-diff .diff-title {
+  font-family: var(--font-title);
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.btn-diff .diff-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.btn-diff:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.btn-diff.active {
+  background: rgba(0, 243, 255, 0.12);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+  color: #ffffff;
+}
+.btn-diff[data-diff="hard"].active {
+  background: rgba(255, 0, 127, 0.15);
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+}
+.btn-diff[data-diff="hell"].active {
+  background: rgba(176, 38, 255, 0.18);
+  border-color: #b026ff;
+  box-shadow: 0 0 20px rgba(176, 38, 255, 0.5);
+}
+
+.highlight-stage {
+  color: #00ff88 !important;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+}
+
+/* 스테이지 클리어 / 업 알림 연출 오버레이 */
+.stage-banner-overlay {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 90;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.stage-banner-card {
+  background: rgba(10, 14, 25, 0.92);
+  border: 2px solid var(--neon-gold);
+  border-radius: 20px;
+  padding: 24px 48px;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3);
+  backdrop-filter: blur(10px);
+  animation: stageBannerPulse 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.stage-banner-card h2 {
+  font-family: var(--font-title);
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--neon-gold);
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+}
+
+.stage-banner-card p {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+@keyframes stageBannerPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .difficulty-buttons-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stage-banner-card {
+    padding: 16px 28px;
+  }
+  .stage-banner-card h2 {
+    font-size: 24px;
+  }
+  .stage-banner-card p {
+    font-size: 13px;
+  }
+}
+
+

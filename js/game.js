@@ -2,6 +2,13 @@
    STREAMER WORD DEFENSE - CORE CANVAS GAME ENGINE (MULTI-PLAYER EXTENDED)
    ========================================================================== */
 
+const DIFFICULTY_CONFIG = {
+  easy:   { speedMult: 0.7,  baseHp: 120, baseSpawnInterval: 140, bossRate: 0.08, fastRate: 0.15 },
+  normal: { speedMult: 1.0,  baseHp: 100, baseSpawnInterval: 110, bossRate: 0.15, fastRate: 0.20 },
+  hard:   { speedMult: 1.35, baseHp: 80,  baseSpawnInterval: 85,  bossRate: 0.25, fastRate: 0.30 },
+  hell:   { speedMult: 1.7,  baseHp: 60,  baseSpawnInterval: 60,  bossRate: 0.35, fastRate: 0.40 }
+};
+
 class GameEngine {
   constructor() {
     // Canvas & Context
@@ -11,6 +18,7 @@ class GameEngine {
     this.ctx = this.gameCanvas.getContext('2d');
 
     // UI Elements
+    this.hudStage = document.getElementById('hud-stage');
     this.hudScore = document.getElementById('hud-score');
     this.hudWpm = document.getElementById('hud-wpm');
     this.hudCombo = document.getElementById('hud-combo');
@@ -18,17 +26,28 @@ class GameEngine {
     this.hudHpText = document.getElementById('hud-hp-text');
     this.hudFeverFill = document.getElementById('hud-fever-fill');
 
+    this.stageBanner = document.getElementById('stage-banner');
+    this.stageBannerTitle = document.getElementById('stage-banner-title');
+    this.stageBannerDesc = document.getElementById('stage-banner-desc');
+    this.stageBannerTimer = null;
+
     // Screens
     this.screenMain = document.getElementById('screen-main');
     this.screenGameOver = document.getElementById('screen-gameover');
     this.gameHud = document.getElementById('game-hud');
     this.typingBar = document.getElementById('typing-input-bar');
 
-    // Multi-Player System State
+    // Multi-Player & Game Config State
     this.presetColors = ['#00f3ff', '#ff007f', '#ffd700', '#00ff88', '#b026ff', '#ff6600'];
     this.playerCount = 1;
     this.gameRule = 'vs'; // 'vs' (개별 점수 경쟁) or 'coop' (협동 방어)
     this.inputMode = 'multi'; // 'multi' (플레이어별 개별 입력창) or 'single' (통합 1개)
+    this.difficulty = 'normal'; // 'easy' | 'normal' | 'hard' | 'hell'
+
+    // Stage System
+    this.stage = 1;
+    this.stageKills = 0;
+    this.stageKillsTarget = 12;
 
     this.players = [
       { id: 0, name: '스트리머 A', color: '#00f3ff', score: 0, kills: 0, combo: 0 }
@@ -195,6 +214,15 @@ class GameEngine {
       });
     });
 
+    // 4. 게임 난이도 선택 버튼
+    document.querySelectorAll('[data-diff]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-diff]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.difficulty = btn.dataset.diff;
+      });
+    });
+
     // 게임 시작 및 화면 이동
     document.getElementById('btn-start-game').addEventListener('click', () => this.startGame());
     document.getElementById('btn-restart').addEventListener('click', () => this.startGame());
@@ -330,7 +358,20 @@ class GameEngine {
     this.totalScore = 0;
     this.combo = 0;
     this.maxCombo = 0;
-    this.hp = 100;
+    
+    // 난이도별 HP 및 스폰 속도 세팅
+    const config = DIFFICULTY_CONFIG[this.difficulty] || DIFFICULTY_CONFIG.normal;
+    this.maxHp = config.baseHp;
+    this.hp = config.baseHp;
+    this.spawnInterval = config.baseSpawnInterval;
+    this.spawnTimer = 0;
+
+    // Stage 시스템 초기화
+    this.stage = 1;
+    this.stageKills = 0;
+    this.stageKillsTarget = 12;
+    if (this.stageBanner) this.stageBanner.classList.add('hidden');
+
     this.fever = 0;
     this.isFeverMode = false;
     this.kills = 0;
@@ -350,6 +391,7 @@ class GameEngine {
 
     this.rebuildTurrets();
     this.renderInputBar();
+    this.updateHUD();
 
     this.screenMain.classList.add('hidden');
     this.screenGameOver.classList.add('hidden');
@@ -436,14 +478,22 @@ class GameEngine {
     const viewerNick = data.viewerNick;
     const text = data.targetWord;
     const x = Math.random() * (this.width - 240) + 120;
-    const speed = Math.random() * 0.8 + 0.5;
+
+    const diffConfig = DIFFICULTY_CONFIG[this.difficulty] || DIFFICULTY_CONFIG.normal;
+    const stageSpeedMult = 1 + (this.stage - 1) * 0.12;
+    const baseSpeed = (Math.random() * 0.7 + 0.5) * diffConfig.speedMult * stageSpeedMult;
+
+    // 보스 웨이브(5, 10, 15...)일 경우 보스 몬스터 등장 비율 +0.20 증가
+    const isBossWave = (this.stage % 5 === 0);
+    const bossChance = isBossWave ? diffConfig.bossRate + 0.20 : diffConfig.bossRate;
+    const fastChance = diffConfig.fastRate;
 
     let type = 'normal';
     let color = '#00f3ff';
-    if (text.length > 10 || Math.random() < 0.15) {
+    if (text.length > 10 || Math.random() < bossChance) {
       type = 'boss';
       color = '#ff007f';
-    } else if (Math.random() < 0.2) {
+    } else if (Math.random() < fastChance) {
       type = 'fast';
       color = '#ffd700';
     }
@@ -454,7 +504,7 @@ class GameEngine {
       typedLen: 0,
       x: x,
       y: -50,
-      speed: type === 'fast' ? speed * 1.6 : speed,
+      speed: type === 'fast' ? baseSpeed * 1.5 : (type === 'boss' ? baseSpeed * 0.85 : baseSpeed),
       type: type,
       color: color
     });
@@ -526,10 +576,53 @@ class GameEngine {
       }
 
       this.monsters.splice(targetIdx, 1);
+
+      // Stage 진행 상태 체크 (목표 처치 수 달성 시 Stage Up)
+      this.stageKills++;
+      if (this.stageKills >= this.stageKillsTarget) {
+        this.triggerStageUp();
+      }
     } else {
       this.combo = 0;
       if (this.players[playerId]) this.players[playerId].combo = 0;
       audioSynth.playError();
+    }
+
+    this.updateHUD();
+  }
+
+  triggerStageUp() {
+    this.stage++;
+    this.stageKills = 0;
+    this.stageKillsTarget = 12 + (this.stage - 1) * 2;
+    audioSynth.playStageUp();
+
+    if (this.stageBanner) {
+      if (this.stageBannerTimer) clearTimeout(this.stageBannerTimer);
+
+      const isBossWave = (this.stage % 5 === 0);
+      const card = this.stageBanner.querySelector('.stage-banner-card');
+
+      if (isBossWave) {
+        if (this.stageBannerTitle) this.stageBannerTitle.innerText = `⚠️ STAGE ${this.stage} - BOSS WAVE!`;
+        if (this.stageBannerDesc) this.stageBannerDesc.innerText = `강력한 보스 몬스터 대거 출격! 방어를 강화하세요!`;
+        if (card) {
+          card.style.borderColor = '#ff007f';
+          card.style.boxShadow = '0 0 50px rgba(255, 0, 127, 0.8)';
+        }
+      } else {
+        if (this.stageBannerTitle) this.stageBannerTitle.innerText = `STAGE ${this.stage} START!`;
+        if (this.stageBannerDesc) this.stageBannerDesc.innerText = `몬스터 이동 속도 및 등장 빈도가 상승했습니다!`;
+        if (card) {
+          card.style.borderColor = 'var(--neon-gold)';
+          card.style.boxShadow = '0 0 50px rgba(255, 215, 0, 0.6)';
+        }
+      }
+
+      this.stageBanner.classList.remove('hidden');
+      this.stageBannerTimer = setTimeout(() => {
+        this.stageBanner.classList.add('hidden');
+      }, 2500);
     }
 
     this.updateHUD();
@@ -571,10 +664,13 @@ class GameEngine {
   }
 
   updateHUD() {
+    if (this.hudStage) this.hudStage.innerText = `STAGE ${this.stage}`;
     this.hudScore.innerText = this.totalScore.toLocaleString();
     this.hudCombo.innerText = this.combo;
-    this.hudHpFill.style.width = `${Math.max(0, this.hp)}%`;
-    this.hudHpText.innerText = `${Math.ceil(this.hp)} / 100`;
+    
+    const hpPercent = Math.max(0, (this.hp / this.maxHp) * 100);
+    this.hudHpFill.style.width = `${hpPercent}%`;
+    this.hudHpText.innerText = `${Math.ceil(this.hp)} / ${this.maxHp}`;
 
     const elapsedMinutes = (Date.now() - this.startTime) / 60000;
     const cpm = elapsedMinutes > 0 ? Math.round(this.totalTypedStrokes / elapsedMinutes) : 0;
@@ -590,6 +686,8 @@ class GameEngine {
     this.isRunning = false;
     audioSynth.playGameOver();
 
+    const resStage = document.getElementById('result-stage');
+    if (resStage) resStage.innerText = `STAGE ${this.stage}`;
     document.getElementById('result-score').innerText = this.totalScore.toLocaleString();
     document.getElementById('result-wpm').innerText = this.hudWpm.innerText;
     document.getElementById('result-combo').innerText = this.maxCombo;
@@ -633,7 +731,11 @@ class GameEngine {
     if (this.spawnTimer >= this.spawnInterval) {
       this.spawnMonster();
       this.spawnTimer = 0;
-      this.spawnInterval = Math.max(40, 120 - Math.floor(this.totalScore / 300));
+
+      const diffConfig = DIFFICULTY_CONFIG[this.difficulty] || DIFFICULTY_CONFIG.normal;
+      const stageReduction = (this.stage - 1) * 8;
+      const scoreReduction = Math.floor(this.totalScore / 500);
+      this.spawnInterval = Math.max(35, diffConfig.baseSpawnInterval - stageReduction - scoreReduction);
     }
 
     if (this.isFeverMode) {

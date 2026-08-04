@@ -192,6 +192,30 @@ class SoundSynthesizer {
     osc.start();
     osc.stop(this.ctx.currentTime + 0.1);
   }
+
+  // 8. 스테이지 업 / 팡파르 상승음 (Stage Up Fanfare SFX)
+  playStageUp() {
+    if (!this.enabled) return;
+    this.init();
+
+    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5, E5, G5, C6, E6
+    notes.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+
+      gain.gain.setValueAtTime(0.3, this.ctx.currentTime + idx * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.08 + 0.25);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(this.ctx.currentTime + idx * 0.08);
+      osc.stop(this.ctx.currentTime + idx * 0.08 + 0.25);
+    });
+  }
 }
 
 const audioSynth = new SoundSynthesizer();

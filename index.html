@@ -43,6 +43,11 @@
 
       <!-- 인게임 상단 스탯 HUD -->
       <div id="game-hud" class="hud-overlay hidden">
+        <div class="hud-card stage-card">
+          <span class="hud-label">STAGE</span>
+          <span id="hud-stage" class="hud-value highlight-stage">STAGE 1</span>
+        </div>
+
         <div class="hud-card score-card">
           <span class="hud-label">SCORE</span>
           <span id="hud-score" class="hud-value">0</span>
@@ -71,6 +76,14 @@
           <div class="fever-bar-bg">
             <div id="hud-fever-fill" class="fever-bar-fill" style="width: 0%;"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- 스테이지 클리어 / 업 연출 오버레이 배너 -->
+      <div id="stage-banner" class="stage-banner-overlay hidden">
+        <div class="stage-banner-card">
+          <h2 id="stage-banner-title">STAGE 2 START!</h2>
+          <p id="stage-banner-desc">몬스터의 이동 속도가 빨라집니다!</p>
         </div>
       </div>
 
@@ -129,7 +142,30 @@
             </div>
           </div>
 
-          <!-- 4. 스트리머 닉네임 커스터마이징 -->
+          <!-- 4. 게임 난이도 선택 -->
+          <div class="mode-selector">
+            <h3>🎯 게임 난이도 선택</h3>
+            <div class="difficulty-buttons-grid">
+              <button class="btn btn-diff" data-diff="easy">
+                <span class="diff-title">🟢 쉬움</span>
+                <span class="diff-desc">입문용 (여유로운 속도)</span>
+              </button>
+              <button class="btn btn-diff active" data-diff="normal">
+                <span class="diff-title">🟡 보통</span>
+                <span class="diff-desc">표준 밸런스</span>
+              </button>
+              <button class="btn btn-diff" data-diff="hard">
+                <span class="diff-title">🔴 어려움</span>
+                <span class="diff-desc">빠른 타수 필요</span>
+              </button>
+              <button class="btn btn-diff" data-diff="hell">
+                <span class="diff-title">💀 헬 (Hell)</span>
+                <span class="diff-desc">타자 고수 & 보스 폭격</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 5. 스트리머 닉네임 커스터마이징 -->
           <div class="mode-selector">
             <h3>🎨 스트리머 닉네임 설정</h3>
             <div id="player-settings-list" class="player-nicknames-grid">
@@ -156,6 +192,10 @@
           <p class="result-subtitle">몬스터의 침공으로 기지가 파괴되었습니다.</p>
 
           <div class="stats-grid">
+            <div class="stat-box">
+              <span class="stat-title">최종 도달 스테이지</span>
+              <span id="result-stage" class="stat-val highlight-stage">STAGE 1</span>
+            </div>
             <div class="stat-box">
               <span class="stat-title">총 점수</span>
               <span id="result-score" class="stat-val">0</span>
