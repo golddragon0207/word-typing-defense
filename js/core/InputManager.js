@@ -1,59 +1,101 @@
 /**
- * ==========================================
- * Word Typing Defense - InputManager
- * ==========================================
- * 하단 타자 입력창 관리, 한글 조합(IME) 상태 감지,
- * 엔터키(Enter) 입력 및 타수(CPM/WPM) 연산을 전담합니다.
+ * InputManager.js
+ * 플레이어 타자 입력창 바인딩 및 한글(IME) 이벤트 관리
  */
-
 class InputManager {
     constructor() {
         this.inputs = [];
+        this.onEnterCallback = null;
+        this.isComposing = false; // 한글 조합 중 Enter 중복 이벤트 방지
     }
 
     /**
-     * game.js에서 호출하는 표준 바인딩 메서드
-     * @param {NodeList|Array<HTMLInputElement>} inputElements 
-     * @param {Function} onSubmitCallback - 엔터 입력 시 실행될 콜백 (playerIdx, text)
+     * DOM 입력창 요소들과 Enter 콜백 함수 바인딩
+     * @param {Array<HTMLElement>|NodeList|HTMLElement} inputElements 
+     * @param {Function} callback - (playerIdx, text) => void
      */
-    bindInputs(inputElements, onSubmitCallback) {
-        this.inputs = inputElements;
+    bindInputs(inputElements, callback) {
+        this.onEnterCallback = callback;
+        this.inputs = [];
 
-        this.inputs.forEach(input => {
-            input.onkeydown = null;
+        if (!inputElements) return;
 
+        // 전달받은 요소를 배열 형태로 정규화
+        if (Array.isArray(inputElements)) {
+            this.inputs = inputElements;
+        } else if (inputElements instanceof NodeList || inputElements instanceof HTMLCollection) {
+            this.inputs = Array.from(inputElements);
+        } else if (inputElements instanceof HTMLElement) {
+            this.inputs = [inputElements];
+        }
+
+        // 유효한 input 요소만 필터링
+        this.inputs = this.inputs.filter(el => el && el.tagName === 'INPUT');
+
+        // 각 입력창에 이벤트 리스너 등록
+        this.inputs.forEach((input, index) => {
+            // IME(한글/일어 등) 입력 상태 감지
+            input.addEventListener('compositionstart', () => {
+                this.isComposing = true;
+            });
+
+            input.addEventListener('compositionend', () => {
+                this.isComposing = false;
+            });
+
+            // Keydown 이벤트
             input.addEventListener('keydown', (e) => {
-                // 한글 조합(IME) 중복 Enter 입력 방지 (!e.isComposing)
-                if (e.key === 'Enter' && !e.isComposing) {
-                    e.preventDefault();
+                if (e.key === 'Enter') {
+                    // 한글 조합 도중 Enter 누름으로 인한 2중 제출 방지
+                    if (this.isComposing || e.isComposing) return;
 
-                    const text = input.value.trim();
-                    const playerIdx = parseInt(input.dataset.player || 0);
+                    const text = input.value ? input.value.trim() : '';
+                    // HTML input의 data-player 속성값 사용 (없으면 index 기본값)
+                    const playerIdx = input.dataset.player !== undefined
+                        ? parseInt(input.dataset.player)
+                        : index;
 
-                    if (text.length > 0) {
-                        if (typeof onSubmitCallback === 'function') {
-                            onSubmitCallback(playerIdx, text);
-                        }
-                        input.value = '';
+                    if (text && typeof this.onEnterCallback === 'function') {
+                        // game.js 규격에 맞춰 (playerIdx, text) 순서로 전달
+                        this.onEnterCallback(playerIdx, text);
+                        input.value = ''; // 제출 후 입력창 초기화
                     }
                 }
             });
         });
     }
 
-    /**
-     * 기존 호환용 메서드 (setupInputs 호출 시에도 동일하게 작동)
-     */
-    setupInputs(inputs, callback) {
-        this.bindInputs(inputs, callback);
+    // 구버전 및 서브모듈 호환용 메서드
+    setupInputs(inputElements, callback) {
+        this.bindInputs(inputElements, callback);
     }
 
     /**
-     * 첫 번째 입력창에 포커스 부여
+     * 특정 플레이어 입력창에 포커스
      */
-    focusFirst() {
-        if (this.inputs && this.inputs.length > 0) {
-            this.inputs[0].focus();
+    focus(index = 0) {
+        if (this.inputs && this.inputs[index]) {
+            this.inputs[index].focus();
         }
     }
+
+    /**
+     * 모든 입력창 초기화
+     */
+    clearAll() {
+        if (Array.isArray(this.inputs)) {
+            this.inputs.forEach(input => {
+                if (input) input.value = '';
+            });
+        }
+    }
+}
+
+// 전역 window 등록
+if (typeof window !== 'undefined') {
+    window.InputManager = InputManager;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = InputManager;
 }

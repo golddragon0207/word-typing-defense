@@ -37,16 +37,21 @@ class GameEngine {
       return;
     }
 
-    // 2. 핵심 모듈 인스턴스화 (Canvas를 생성자에 즉시 전달)
-    this.stateManager = new StateManager();
-    this.turretManager = new TurretManager(canvas);
-    this.monsterManager = new MonsterManager(canvas);
-    this.inputManager = new InputManager();
-    this.renderer = new CanvasRenderer(canvas); // constructor로 캔버스 전달 완료!
+    // 2. 핵심 모듈 인스턴스화 (전역 클래스 안전 체크)
+    this.stateManager = typeof StateManager !== 'undefined' ? new StateManager() : null;
+    this.turretManager = typeof TurretManager !== 'undefined' ? new TurretManager(canvas) : null;
+    this.monsterManager = typeof MonsterManager !== 'undefined' ? new MonsterManager(canvas) : null;
+    this.inputManager = typeof InputManager !== 'undefined' ? new InputManager() : null;
+    this.renderer = typeof CanvasRenderer !== 'undefined' ? new CanvasRenderer(canvas) : null;
 
     // 3. 렌더러 리사이즈 및 포탑 셋업
-    this.renderer.resizeCanvas();
-    window.addEventListener('resize', () => this.renderer.resizeCanvas());
+    if (this.renderer) {
+      this.renderer.resizeCanvas();
+      window.addEventListener('resize', () => {
+        if (this.renderer) this.renderer.resizeCanvas();
+        if (this.turretManager) this.turretManager.repositionTurrets();
+      });
+    }
 
     if (this.turretManager) {
       this.turretManager.setupTurrets(this.config.playerCount, this.config.playerNames, canvas);
@@ -187,7 +192,7 @@ class GameEngine {
       div.className = 'typing-input-box';
       div.innerHTML = `
         <span class="player-tag">P${i + 1} (${pName})</span>
-        <input type="text" class="game-typing-input" data-player="${i}" placeholder="타깃 단어를 입력하고 Enter!" autofocus />
+        <input type="text" class="game-typing-input" data-player="${i}" placeholder="타깃 단어를 입력하고 Enter!" />
       `;
       container.appendChild(div);
     }
@@ -200,21 +205,32 @@ class GameEngine {
   }
 
   startGame() {
-    document.getElementById('screen-main').classList.add('hidden');
-    document.getElementById('screen-gameover').classList.add('hidden');
-    document.getElementById('game-hud').classList.remove('hidden');
-    document.getElementById('typing-input-bar').classList.remove('hidden');
+    // 1. 화면 전환 처리 (먼저 un-hide 실행)
+    const mainScreen = document.getElementById('screen-main');
+    const gameOverScreen = document.getElementById('screen-gameover');
+    const gameHud = document.getElementById('game-hud');
+    const typingBar = document.getElementById('typing-input-bar');
 
+    if (mainScreen) mainScreen.classList.add('hidden');
+    if (gameOverScreen) gameOverScreen.classList.add('hidden');
+    if (gameHud) gameHud.classList.remove('hidden');
+    if (typingBar) typingBar.classList.remove('hidden');
+
+    // 2. 화면 표시 후 입력창 바 동적 생성
     this.setupInputBars();
 
-    this.stateManager.resetGame(this.config);
-    this.turretManager.setupTurrets(this.config.playerCount, this.config.playerNames);
-    this.monsterManager.startStage(this.stateManager.currentStage, this.config.difficulty);
+    const canvas = document.getElementById('gameCanvas');
 
-    this.stateManager.changeState('PLAYING');
+    if (this.stateManager) this.stateManager.resetGame(this.config);
+    if (this.turretManager) this.turretManager.setupTurrets(this.config.playerCount, this.config.playerNames, canvas);
+    if (this.monsterManager) this.monsterManager.startStage(this.stateManager ? this.stateManager.currentStage : 1, this.config.difficulty);
 
-    const firstInput = document.querySelector('.game-typing-input');
-    if (firstInput) firstInput.focus();
+    if (this.stateManager) this.stateManager.changeState('PLAYING');
+
+    setTimeout(() => {
+      const firstInput = document.querySelector('.game-typing-input');
+      if (firstInput) firstInput.focus();
+    }, 50);
   }
 
   returnToMain() {
@@ -223,17 +239,24 @@ class GameEngine {
     document.getElementById('typing-input-bar').classList.add('hidden');
     document.getElementById('screen-main').classList.remove('hidden');
 
-    this.stateManager.changeState('MENU');
+    if (this.monsterManager) this.monsterManager.clear();
+    if (this.stateManager) this.stateManager.changeState('MENU');
   }
 
   handleTypingSubmit(playerIdx, text) {
-    if (this.stateManager.currentState !== 'PLAYING') return;
+    if (!this.stateManager || this.stateManager.currentState !== 'PLAYING') return;
 
-    const hitResult = this.monsterManager.checkHit(text);
+    const hitResult = this.monsterManager ? this.monsterManager.checkHit(text) : null;
     if (hitResult && hitResult.success) {
       const { monster, isKilled } = hitResult;
-      const turrets = this.turretManager.getTurrets();
-      const turretPos = turrets[playerIdx] || turrets[0];
+
+      let firedTurret = null;
+      if (this.turretManager) {
+        firedTurret = this.turretManager.aimAndFire(monster, playerIdx);
+      }
+
+      const turrets = this.turretManager ? this.turretManager.getTurrets() : [];
+      const turretPos = firedTurret || turrets[playerIdx] || turrets[0];
 
       if (turretPos && this.renderer) {
         this.renderer.addLaserEffect(turretPos, monster);
@@ -241,13 +264,13 @@ class GameEngine {
 
       if (isKilled && this.renderer) {
         this.renderer.addExplosionEffect(monster);
-        this.stateManager.addScore(monster.scoreValue || 100);
+        if (this.stateManager) this.stateManager.addScore(monster.scoreValue || 100);
       }
     }
   }
 
   startMainLoop() {
-    const loop = (timestamp) => {
+    const loop = () => {
       this.update(0.016);
       this.render();
       this.animationFrameId = requestAnimationFrame(loop);
@@ -256,7 +279,7 @@ class GameEngine {
   }
 
   update(deltaTime) {
-    if (this.stateManager && this.stateManager.currentState === 'PLAYING') {
+    if (this.stateManager && this.stateManager.currentState === 'PLAYING' && this.monsterManager) {
       const reachedMonsters = this.monsterManager.update(deltaTime, this.stateManager.currentStage);
       if (reachedMonsters > 0) {
         const isDead = this.stateManager.damageBase(reachedMonsters);
@@ -294,18 +317,28 @@ class GameEngine {
     if (gameOverScreen) {
       gameOverScreen.classList.remove('hidden');
 
-      document.getElementById('result-stage').innerText = `STAGE ${this.stateManager.currentStage}`;
-      document.getElementById('result-score').innerText = this.stateManager.score.toLocaleString();
-      document.getElementById('result-wpm').innerText = this.stateManager.maxWpm || 0;
-      document.getElementById('result-combo').innerText = this.stateManager.maxCombo || 0;
-      document.getElementById('result-kills').innerText = this.stateManager.totalKills || 0;
+      const stageEl = document.getElementById('result-stage');
+      const scoreEl = document.getElementById('result-score');
+      const wpmEl = document.getElementById('result-wpm');
+      const comboEl = document.getElementById('result-combo');
+      const killsEl = document.getElementById('result-kills');
+
+      if (stageEl) stageEl.innerText = `STAGE ${this.stateManager ? this.stateManager.currentStage : 1}`;
+      if (scoreEl) scoreEl.innerText = this.stateManager ? this.stateManager.score.toLocaleString() : 0;
+      if (wpmEl) wpmEl.innerText = this.stateManager ? (this.stateManager.maxWpm || 0) : 0;
+      if (comboEl) comboEl.innerText = this.stateManager ? (this.stateManager.maxCombo || 0) : 0;
+      if (killsEl) killsEl.innerText = this.stateManager ? (this.stateManager.totalKills || 0) : 0;
 
       if (window.refreshAdfitSlot) window.refreshAdfitSlot('ad-container-gameover');
     }
   }
 }
 
+// 안전한 전역 초기화
 window.gameEngine = new GameEngine();
-document.addEventListener('DOMContentLoaded', () => {
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => window.gameEngine.init());
+} else {
   window.gameEngine.init();
-});
+}

@@ -11,8 +11,7 @@ class TurretManager {
      * @param {HTMLCanvasElement|null} canvas 
      */
     constructor(canvas = null) {
-        // canvas가 들어오면 저장하고, 안 들어오면 DOM에서 찾아봄
-        this.canvas = canvas || document.getElementById('gameCanvas');
+        this.canvas = canvas || (typeof document !== 'undefined' ? document.getElementById('gameCanvas') : null);
         this.turrets = [];
         this.playerCount = 1;
 
@@ -26,7 +25,6 @@ class TurretManager {
             '#ffffff'  // 6P: Pure White
         ];
 
-        // Canvas가 확보되었을 때만 초기 셋업 진행 (없으면 셋업 대기)
         if (this.canvas) {
             this.setupTurrets(1);
         }
@@ -39,11 +37,11 @@ class TurretManager {
      * @param {HTMLCanvasElement|null} canvas - 전달할 Canvas 객체 (선택)
      */
     setupTurrets(count = 1, customNames = [], canvas = null) {
-        // 전달받은 canvas가 있다면 갱신
         if (canvas) this.canvas = canvas;
-        if (!this.canvas) this.canvas = document.getElementById('gameCanvas');
+        if (!this.canvas && typeof document !== 'undefined') {
+            this.canvas = document.getElementById('gameCanvas');
+        }
 
-        // Canvas 요소를 끝까지 못 찾은 경우 튕기지 않고 안전하게 리턴
         if (!this.canvas) {
             console.warn("TurretManager: gameCanvas 요소를 찾을 수 없어 포탑 셋업을 대기합니다.");
             return;
@@ -52,22 +50,21 @@ class TurretManager {
         this.playerCount = Math.min(Math.max(count, 1), 6);
         this.turrets = [];
 
-        // canvas.width 읽기 전 기본값 예외 처리
         const width = this.canvas.width || 1000;
         const height = this.canvas.height || 750;
 
-        // Canvas 하단 여백 및 균등 간격(X) 계산
         const paddingY = 45;
         const yPos = height - paddingY;
         const segmentWidth = width / (this.playerCount + 1);
 
         for (let i = 0; i < this.playerCount; i++) {
             const xPos = segmentWidth * (i + 1);
-            const name = customNames[i] || `P${i + 1}`;
+            const name = (customNames && customNames[i]) ? customNames[i] : `P${i + 1}`;
             const color = this.playerColors[i % this.playerColors.length];
 
             this.turrets.push({
                 id: i + 1,
+                index: i,
                 name: name,
                 x: xPos,
                 y: yPos,
@@ -102,19 +99,19 @@ class TurretManager {
     /**
      * 타깃 몬스터 조준 및 사격 처리
      * @param {Object} targetMonster - { x, y }
-     * @param {number|null} preferredPlayerId - 지정 플레이어 ID (개별 입력 모드 시)
+     * @param {number|null} preferredPlayerIdx - 지정 플레이어 인덱스 (0-based)
      * @returns {Object} 조준/사격에 사용된 포탑 객체
      */
-    aimAndFire(targetMonster, preferredPlayerId = null) {
-        if (this.turrets.length === 0) return null;
+    aimAndFire(targetMonster, preferredPlayerIdx = null) {
+        if (this.turrets.length === 0 || !targetMonster) return null;
 
         let selectedTurret = null;
 
-        // 1. 개별 입력 모드: 지정 플레이어 포탑 사용
-        if (preferredPlayerId && preferredPlayerId <= this.turrets.length) {
-            selectedTurret = this.turrets[preferredPlayerId - 1];
+        // 1. 플레이어 인덱스가 전달된 경우 (0-based 예: 0 = 1P, 1 = 2P)
+        if (typeof preferredPlayerIdx === 'number' && preferredPlayerIdx >= 0 && preferredPlayerIdx < this.turrets.length) {
+            selectedTurret = this.turrets[preferredPlayerIdx];
         } else {
-            // 2. 통합 입력 모드: 몬스터와 가장 가까운 최적의 포탑 자동 선택
+            // 2. 통합 입력 모드 또는 지정 없을 시: 몬스터와 가장 가까운 포탑 자동 선택
             let minDistance = Infinity;
 
             this.turrets.forEach(turret => {
@@ -136,9 +133,9 @@ class TurretManager {
             const angle = Math.atan2(dy, dx);
 
             selectedTurret.targetAngle = angle;
-            selectedTurret.angle = angle; // 타자 사격 특성상 즉시 조준
+            selectedTurret.angle = angle; // 사격 즉시 조준
             selectedTurret.isRecoil = true;
-            selectedTurret.recoilOffset = 8; // 사격 반동 깊이
+            selectedTurret.recoilOffset = 8; // 반동 깊이
             selectedTurret.lastFiredTime = performance.now();
         }
 
@@ -146,12 +143,21 @@ class TurretManager {
     }
 
     /**
+     * game.js 구버전 및 서브모듈 호출 호환용 래퍼 메서드
+     * @param {number} playerIdx 
+     * @param {Object} targetMonster 
+     */
+    fire(playerIdx, targetMonster) {
+        return this.aimAndFire(targetMonster, playerIdx);
+    }
+
+    /**
      * 매 프레임 포탑 회전 및 반동(Recoil) 애니메이션 업데이트
      * @param {number} deltaTime 
      */
-    update(deltaTime) {
+    update(deltaTime = 0.016) {
         this.turrets.forEach(turret => {
-            // 반동 감쇄 복원 (Spring effect)
+            // 반동 감쇄 복원
             if (turret.isRecoil) {
                 turret.recoilOffset -= deltaTime * 40;
                 if (turret.recoilOffset <= 0) {
@@ -171,6 +177,15 @@ class TurretManager {
      * 포탑 데이터 목록 반환 (CanvasRenderer 전달용)
      */
     getTurrets() {
-        return this.turrets;
+        return this.turrets || [];
     }
+}
+
+// 전역 window 및 module 등록
+if (typeof window !== 'undefined') {
+    window.TurretManager = TurretManager;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = TurretManager;
 }
