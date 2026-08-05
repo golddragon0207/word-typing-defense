@@ -1,25 +1,23 @@
 /* ==========================================================================
-   STREAMER WORD DEFENSE - CYBERPUNK NEON STYLING
+   1. 전역 변수 및 사이버펑크 네온 테마 (Global Variables)
    ========================================================================== */
-
 :root {
-  --bg-dark: #090a10;
-  --bg-card: rgba(18, 22, 36, 0.85);
-  --neon-cyan: #00f3ff;
-  --neon-pink: #ff007f;
-  --neon-purple: #9d00ff;
-  --neon-green: #00ff66;
-  --neon-gold: #ffd700;
-  --text-main: #f0f4fc;
-  --text-muted: #8a99b5;
-  --danger: #ff2a5f;
-  --border-glow: 0 0 15px rgba(0, 243, 255, 0.4);
-  --font-title: 'Orbitron', 'Noto Sans KR', sans-serif;
-  --font-body: 'Noto Sans KR', sans-serif;
-}
+  --bg-primary: #0a0a12;
+  --bg-card: rgba(18, 18, 32, 0.85);
+  --bg-modal: rgba(12, 12, 24, 0.95);
 
-html {
-  overflow: hidden;
+  --neon-cyan: #00f3ff;
+  --neon-magenta: #ff007f;
+  --neon-purple: #b026ff;
+  --neon-green: #39ff14;
+  --neon-gold: #ffd700;
+  --neon-red: #ff3333;
+
+  --text-main: #ffffff;
+  --text-muted: #a0a0c0;
+
+  --font-main: 'Noto Sans KR', sans-serif;
+  --font-display: 'Orbitron', sans-serif;
 }
 
 * {
@@ -29,159 +27,148 @@ html {
   user-select: none;
 }
 
-body {
+body,
+html {
   width: 100%;
-  height: 100vh;
-  background-color: var(--bg-dark);
-  color: var(--text-main);
-  font-family: var(--font-body);
+  height: 100%;
   overflow: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-family: var(--font-main);
 }
 
-/* OBS 투명 오버레이 모드 스타일 */
+/* OBS 크로마키 투명 오버레이 지원 */
 body.obs-transparent-mode {
   background-color: transparent !important;
 }
 
-body.obs-transparent-mode #top-bar {
-  opacity: 0.15;
-  transition: opacity 0.3s ease;
-}
-
-body.obs-transparent-mode #top-bar:hover {
-  opacity: 1;
-}
-
-.hidden {
-  display: none !important;
-}
-
 .app-container {
-  width: 100%;
-  height: 100%;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  position: relative;
 }
 
-/* --------------------------------------------------------------------------
-   HEADER & TOP CONTROL BAR
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   2. 상단 컨트롤바 (Top Bar)
+   ========================================================================== */
 .top-bar {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: clamp(8px, 1.5vh, 14px) clamp(12px, 2vw, 28px);
-  background: rgba(12, 16, 28, 0.9);
-  border-bottom: 1px solid rgba(0, 243, 255, 0.2);
-  backdrop-filter: blur(10px);
+  align-items: center;
+  padding: 10px 20px;
+  background: rgba(10, 10, 18, 0.9);
+  border-bottom: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
   z-index: 100;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.logo-icon {
-  font-size: 24px;
-  filter: drop-shadow(0 0 8px var(--neon-cyan));
+  gap: 10px;
 }
 
 .logo-title {
-  font-family: var(--font-title);
-  font-size: clamp(16px, 1.8vw, 22px);
+  font-family: var(--font-display);
+  font-size: 1.4rem;
   font-weight: 900;
-  letter-spacing: 2px;
-  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #fff;
+  text-shadow: 0 0 10px var(--neon-cyan);
 }
 
 .version-tag {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 12px;
-  background: rgba(255, 0, 127, 0.2);
-  color: var(--neon-pink);
-  border: 1px solid var(--neon-pink);
-  margin-left: 4px;
+  font-size: 0.7rem;
+  background: var(--neon-magenta);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
 }
 
 .quick-controls {
   display: flex;
-  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
-/* --------------------------------------------------------------------------
-   BUTTONS SYSTEM
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   3. 버튼 공통 네온 스타일링
+   ========================================================================== */
 .btn {
-  font-family: var(--font-body);
+  font-family: var(--font-main);
   font-weight: 700;
-  font-size: 14px;
-  padding: 9px 18px;
-  border-radius: 8px;
-  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  transition: all 0.2s ease-in-out;
 }
 
 .btn-neon {
-  background: rgba(15, 20, 35, 0.7);
-  color: var(--text-main);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
 }
 
 .btn-neon.green {
   border-color: var(--neon-green);
-  color: var(--neon-green);
+  text-shadow: 0 0 5px var(--neon-green);
+}
+
+.btn-neon.green:hover {
+  background: var(--neon-green);
+  color: #000;
+  box-shadow: 0 0 15px var(--neon-green);
 }
 
 .btn-neon.purple {
   border-color: var(--neon-purple);
-  color: #d680ff;
+  text-shadow: 0 0 5px var(--neon-purple);
 }
 
-.btn-neon.cyan {
-  border-color: var(--neon-cyan);
-  color: var(--neon-cyan);
+.btn-neon.purple:hover {
+  background: var(--neon-purple);
+  color: #fff;
+  box-shadow: 0 0 15px var(--neon-purple);
 }
 
 .btn-neon.gold {
   border-color: var(--neon-gold);
-  color: var(--neon-gold);
+  text-shadow: 0 0 5px var(--neon-gold);
 }
 
-.btn-neon:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px currentColor;
+.btn-neon.gold:hover {
+  background: var(--neon-gold);
+  color: #000;
+  box-shadow: 0 0 15px var(--neon-gold);
+}
+
+.btn-neon.cyan {
+  border-color: var(--neon-cyan);
+  text-shadow: 0 0 5px var(--neon-cyan);
+}
+
+.btn-neon.cyan:hover {
+  background: var(--neon-cyan);
+  color: #000;
+  box-shadow: 0 0 15px var(--neon-cyan);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #00d2ff, #0066ff);
+  background: linear-gradient(135deg, var(--neon-magenta), var(--neon-purple));
   color: #fff;
-  box-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+  border: none;
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.5);
 }
 
 .btn-primary:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 30px rgba(0, 210, 255, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(255, 0, 127, 0.8);
 }
 
 .btn-secondary {
   background: rgba(255, 255, 255, 0.1);
-  color: var(--text-main);
+  color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -190,28 +177,20 @@ body.obs-transparent-mode #top-bar:hover {
 }
 
 .btn-giant {
-  font-size: 20px;
-  padding: 16px 36px;
-  border-radius: 12px;
-  margin-top: 24px;
+  font-size: 1.3rem;
+  padding: 16px 32px;
   width: 100%;
+  margin-top: 15px;
 }
 
-.btn-large {
-  font-size: 16px;
-  padding: 14px 28px;
-}
-
-/* --------------------------------------------------------------------------
-   GAME VIEWPORT & CANVAS
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   4. 메인 뷰포트 & Canvas 레이어
+   ========================================================================== */
 .game-viewport {
-  flex: 1;
   position: relative;
+  flex: 1;
+  width: 100%;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
 }
 
 #bg-canvas,
@@ -231,82 +210,49 @@ body.obs-transparent-mode #top-bar:hover {
   z-index: 2;
 }
 
-/* --------------------------------------------------------------------------
-   IN-GAME HUD
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   5. 인게임 HUD & 배너
+   ========================================================================== */
 .hud-overlay {
   position: absolute;
-  top: clamp(6px, 1.5vh, 18px);
+  top: 15px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: clamp(4px, 1vw, 10px);
-  max-width: 96vw;
+  gap: 15px;
   z-index: 10;
   pointer-events: none;
 }
 
 .hud-card {
-  background: rgba(12, 16, 28, 0.9);
-  border: 1px solid rgba(0, 243, 255, 0.35);
-  border-radius: 10px;
-  padding: 6px 10px;
+  background: rgba(10, 10, 20, 0.8);
+  border: 1px solid var(--neon-cyan);
+  padding: 8px 16px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-width: clamp(80px, 10vw, 115px);
-  gap: 2px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
 }
 
 .hud-label {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 0.7rem;
   color: var(--text-muted);
-  letter-spacing: 1px;
-  white-space: nowrap;
+  font-weight: bold;
 }
 
 .hud-value {
-  font-family: var(--font-title);
-  font-size: clamp(15px, 1.6vw, 20px);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
   font-weight: 800;
   color: var(--neon-cyan);
-  text-shadow: 0 0 10px var(--neon-cyan);
-}
-
-/* Custom Sleek Scrollbars */
-.main-menu-card::-webkit-scrollbar,
-.result-card::-webkit-scrollbar,
-.modal-card::-webkit-scrollbar,
-.screen-overlay::-webkit-scrollbar {
-  width: 6px;
-}
-
-.main-menu-card::-webkit-scrollbar-thumb,
-.result-card::-webkit-scrollbar-thumb,
-.modal-card::-webkit-scrollbar-thumb,
-.screen-overlay::-webkit-scrollbar-thumb {
-  background: rgba(0, 243, 255, 0.4);
-  border-radius: 3px;
-}
-
-.main-menu-card::-webkit-scrollbar-track,
-.result-card::-webkit-scrollbar-track,
-.modal-card::-webkit-scrollbar-track,
-.screen-overlay::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
 }
 
 .hp-bar-bg,
 .fever-bar-bg {
-  width: 90px;
+  width: 100px;
   height: 8px;
-  background: rgba(255, 255, 255, 0.12);
+  background: #222;
   border-radius: 4px;
   overflow: hidden;
   margin-top: 4px;
@@ -314,1445 +260,164 @@ body.obs-transparent-mode #top-bar:hover {
 
 .hp-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ff0055, #ff5500);
-  transition: width 0.3s ease;
-  box-shadow: 0 0 10px #ff0055;
+  background: var(--neon-green);
+  transition: width 0.3s;
 }
 
 .fever-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink), var(--neon-gold));
-  transition: width 0.2s ease;
-  box-shadow: 0 0 10px var(--neon-pink);
+  background: var(--neon-magenta);
+  transition: width 0.3s;
 }
 
-.hp-text {
-  font-size: 10px;
-  margin-top: 2px;
-  color: var(--text-muted);
-}
-
-/* --------------------------------------------------------------------------
-   TYPING INPUT BAR (BOTTOM)
-   -------------------------------------------------------------------------- */
-.typing-bar {
-  position: relative;
-  z-index: 20;
-  padding: clamp(8px, 1.5vh, 16px) clamp(12px, 2vw, 24px);
-  background: rgba(12, 16, 28, 0.95);
-  border-top: 2px solid var(--neon-cyan);
-  display: flex;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 -5px 25px rgba(0, 243, 255, 0.2);
-  flex-shrink: 0;
-}
-
-.input-wrapper,
-.single-input-wrapper {
-  width: 100%;
-  max-width: 700px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 2px solid var(--neon-cyan);
-  border-radius: 12px;
-  padding: 5px 14px;
-  box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-}
-
-.input-icon {
-  font-size: 18px;
-}
-
-#target-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--neon-green);
-  font-family: var(--font-body);
-  font-size: clamp(16px, 1.8vw, 22px);
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-
-#target-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 14px;
-  font-weight: 400;
-}
-
-.btn-fire {
-  background: var(--neon-pink);
-  color: #fff;
-  border: none;
-  font-weight: 900;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  box-shadow: 0 0 15px var(--neon-pink);
-}
-
-.btn-fire:hover {
-  transform: scale(1.05);
-}
-
-/* --------------------------------------------------------------------------
-   SCREEN OVERLAYS (MAIN MENU & RESULTS)
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   6. 오버레이 스크린 & 카드 레이아웃 (1024x768 / 800px 최적화)
+   ========================================================================== */
 .screen-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 30;
+  background: rgba(5, 5, 10, 0.85);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  background: rgba(6, 8, 14, 0.85);
-  backdrop-filter: blur(12px);
+  align-items: center;
+  z-index: 20;
+  padding: 20px;
   overflow-y: auto;
-  padding: 10px 8px;
 }
 
+/* 800px 고정형 카드 규격 적용 */
 .main-menu-card,
-.result-card {
+.result-card,
+.modal-card {
+  width: min(96%, 800px);
+  max-width: 800px;
   background: var(--bg-card);
-  border: 1px solid rgba(0, 243, 255, 0.3);
-  border-radius: 18px;
-  padding: clamp(16px, 2.5vh, 32px) clamp(14px, 2.5vw, 32px);
-  width: min(94%, 660px);
-  max-height: calc(100vh - 80px);
-  overflow-y: auto;
-  text-align: center;
-  box-shadow: 0 0 40px rgba(0, 243, 255, 0.25);
-  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  margin: auto;
-}
-
-@keyframes popIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  border: 2px solid var(--neon-purple);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 0 30px rgba(176, 38, 255, 0.3);
+  backdrop-filter: blur(10px);
 }
 
 .glow-text {
-  font-family: var(--font-title);
-  font-size: clamp(20px, 2.8vw, 30px);
-  font-weight: 900;
-  letter-spacing: 2px;
-  color: var(--neon-cyan);
-  text-shadow: 0 0 20px var(--neon-cyan);
-  margin-bottom: 6px;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 0 15px var(--neon-cyan);
 }
 
 .subtitle {
+  text-align: center;
   color: var(--text-muted);
-  font-size: 15px;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
 }
 
+/* 설정 그리드 스타일 */
 .mode-selector {
-  text-align: left;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
 .mode-selector h3 {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-}
-
-.multi-options-container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-top: 18px;
-  margin-bottom: 18px;
-  border-top: 1px dashed rgba(0, 243, 255, 0.2);
-  border-bottom: 1px dashed rgba(0, 243, 255, 0.2);
-  padding: 18px 0;
-}
-
-.mode-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.btn-mode {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 14px 20px;
-  border-radius: 10px;
-  color: var(--text-main);
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-mode.active,
-.btn-mode:hover {
-  background: rgba(0, 243, 255, 0.1);
-  border-color: var(--neon-cyan);
-  box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
-}
-
-.mode-icon {
-  font-size: 18px;
-  margin-bottom: 4px;
-}
-
-.mode-name {
-  font-weight: 700;
-  font-size: 16px;
-  color: #fff;
-}
-
-.mode-desc {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
-.platform-indicators {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 24px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-.badge {
-  padding: 5px 12px;
-  border-radius: 14px;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
-
-.badge.chzzk {
-  background: rgba(0, 255, 102, 0.15);
-  color: #00ff66;
-  border: 1px solid #00ff66;
-}
-
-.badge.soop {
-  background: rgba(0, 153, 255, 0.15);
-  color: #3399ff;
-  border: 1px solid #3399ff;
-}
-
-.badge.youtube {
-  background: rgba(255, 0, 85, 0.15);
-  color: #ff0055;
-  border: 1px solid #ff0055;
-}
-
-.badge.twitch {
-  background: rgba(157, 0, 255, 0.15);
-  color: #b359ff;
-  border: 1px solid #b359ff;
-}
-
-/* RESULTS STYLES */
-.danger-text {
-  font-family: var(--font-title);
-  font-size: 34px;
-  color: var(--danger);
-  text-shadow: 0 0 20px var(--danger);
+  font-size: 0.95rem;
+  color: var(--neon-cyan);
   margin-bottom: 8px;
 }
 
-.result-subtitle {
-  color: var(--text-muted);
-  font-size: 14px;
-  margin-bottom: 20px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin: 24px 0;
-}
-
-.stat-box {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 18px 16px;
-  border-radius: 12px;
+.player-count-selector,
+.difficulty-buttons-grid {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
-.stat-title {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.stat-val {
-  font-family: var(--font-title);
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--neon-gold);
-}
-
-.result-actions {
-  display: flex;
-  gap: 16px;
-  margin-top: 24px;
-}
-
-.result-actions button {
+.btn-count,
+.btn-diff {
   flex: 1;
+  padding: 10px;
+  background: rgba(20, 20, 40, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-/* --------------------------------------------------------------------------
-   MODAL WINDOWS
-   -------------------------------------------------------------------------- */
+.btn-count.active,
+.btn-diff.active {
+  border-color: var(--neon-cyan);
+  background: rgba(0, 243, 255, 0.15);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+}
+
+/* ==========================================================================
+   7. 모달 레이어 (Modal Layer & 세로 스크롤 통제)
+   ========================================================================== */
 .modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  z-index: 200;
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  z-index: 200;
+  padding: 20px;
 }
 
 .modal-card {
-  background: #111524;
-  border: 1px solid rgba(0, 243, 255, 0.3);
-  border-radius: 16px;
-  width: min(92%, 600px);
-  max-height: 82vh;
+  max-height: 85vh;
+  /* 세로 768px 모니터 잘림 차단 */
   display: flex;
   flex-direction: column;
-  box-shadow: 0 0 35px rgba(0, 243, 255, 0.3);
-  overflow: hidden;
-  margin: auto;
 }
 
 .modal-header {
-  padding: 14px 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  flex-shrink: 0;
-}
-
-.modal-header h2 {
-  font-size: 16px;
-  color: var(--neon-cyan);
-}
-
-.btn-close {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 20px;
-  cursor: pointer;
-  padding: 4px;
-}
-
-.btn-close:hover {
-  color: #fff;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+  margin-bottom: 15px;
 }
 
 .modal-body {
-  padding: 18px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  overflow-y: auto;
   flex: 1;
-  min-height: 0;
-}
-
-.modal-desc {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.platform-tabs {
-  display: flex;
-  gap: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 8px;
-  margin-bottom: 6px;
-  flex-wrap: wrap;
-}
-
-.tab-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-weight: 700;
-  font-size: 12px;
-  padding: 7px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.tab-btn.active,
-.tab-btn:hover {
-  background: rgba(0, 243, 255, 0.15);
-  color: var(--neon-cyan);
-}
-
-.tab-content {
-  display: none;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.tab-content.active {
-  display: flex;
-}
-
-.tab-content label {
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 2px;
-}
-
-.tab-content input,
-.tab-content select,
-.custom-word-input textarea {
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(0, 243, 255, 0.3);
-  padding: 10px 14px;
-  border-radius: 8px;
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: 14px;
-  outline: none;
-}
-
-.tab-content small {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.custom-word-input {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.custom-word-input label {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.custom-word-input button {
-  margin-top: 10px;
-  width: 100%;
-}
-
-.chat-options {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
-  font-size: 13px;
-  align-items: flex-start;
-  width: 100%;
-}
-
-.chat-options label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-align: left;
-  cursor: pointer;
-  width: 100%;
-}
-
-.chat-options input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  cursor: pointer;
-  accent-color: var(--neon-cyan);
-}
-
-.divider {
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  margin: 12px 0;
+  overflow-y: auto;
+  /* 내부 독립 스크롤 */
+  padding-right: 5px;
 }
 
 .modal-footer {
-  padding: 12px 20px;
-  background: rgba(0, 0, 0, 0.3);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  /* 버튼 고정 */
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  flex-shrink: 0;
 }
 
-/* --------------------------------------------------------------------------
-   MULTI-PLAYER N-PERSON EXTENSIONS (1P ~ 6P)
-   -------------------------------------------------------------------------- */
-.player-count-selector {
+/* ==========================================================================
+   8. 광고 배너 슬롯 (Layout Shift 꿀렁임 방지)
+   ========================================================================== */
+.ad-banner-box {
+  width: 100%;
+  min-height: 106px;
+  /* 728x90 광고 로딩 시 레이아웃 밀림 방지 */
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
-.btn-count {
-  flex: 1;
-  min-width: 84px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(0, 243, 255, 0.2);
-  color: var(--text-muted);
-  font-weight: 700;
-  padding: 10px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-count:hover,
-.btn-count.active {
-  background: rgba(0, 243, 255, 0.2);
-  border-color: var(--neon-cyan);
-  color: var(--neon-cyan);
-  box-shadow: 0 0 12px rgba(0, 243, 255, 0.4);
-}
-
-.mode-buttons-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.input-mode-selector {
-  display: flex;
-  gap: 24px;
-  margin-top: 8px;
-}
-
-.radio-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  cursor: pointer;
-  color: var(--text-main);
-}
-
-.radio-label input {
-  accent-color: var(--neon-cyan);
-}
-
-.player-nicknames-grid {
-  display: flex;
-  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 12px;
-  max-height: 160px;
-  overflow-y: auto;
-  padding: 4px 2px;
-  width: 100%;
-}
-
-.player-name-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin: 12px 0;
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
-  padding: 8px 14px;
-  flex: 1 1 180px;
-  max-width: 220px;
-}
-
-.player-badge-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  box-shadow: 0 0 8px currentColor;
-  flex-shrink: 0;
-}
-
-.player-name-card input {
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  outline: none;
-  width: 100%;
-}
-
-/* Dynamic Multi-Input Bar Grid */
-.multi-input-grid {
-  width: 100%;
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding: 4px 8px;
-}
-
-.player-input-card {
-  flex: 1;
-  min-width: 190px;
-  max-width: 320px;
-  display: flex;
-  flex-direction: column;
-  background: rgba(8, 12, 22, 0.92);
-  border: 2px solid var(--p-color, var(--neon-cyan));
-  border-radius: 10px;
-  padding: 8px 14px;
-  box-shadow: 0 0 12px var(--p-color, var(--neon-cyan));
-  transition: all 0.2s ease;
-  gap: 4px;
-}
-
-.player-input-card:focus-within {
-  box-shadow: 0 0 25px var(--p-color, var(--neon-cyan)), inset 0 0 10px rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-}
-
-.player-input-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--p-color, var(--neon-cyan));
-  margin-bottom: 4px;
-}
-
-.player-input-body {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.player-input-body input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.player-input-body input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 12px;
-}
-
-/* Channels Connected Chips */
-.input-with-btn {
-  display: flex;
-  gap: 8px;
-}
-
-.input-with-btn input {
-  flex: 1;
-}
-
-.connected-channels-section {
-  margin-top: 14px;
-}
-
-.connected-channels-section label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
-}
-
-.channel-chips-container {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-
-.channel-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(0, 243, 255, 0.1);
-  border: 1px solid var(--neon-cyan);
-  color: var(--neon-cyan);
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.channel-chip .btn-remove-chip {
-  background: transparent;
-  border: none;
-  color: var(--danger);
-  cursor: pointer;
-  font-weight: 900;
-}
-
-/* Player Ranking Results Breakdown */
-.player-results-container {
-  margin-top: 20px;
-  text-align: left;
-}
-
-.player-results-container h3 {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
-.player-ranking-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
-}
-
-.player-rank-card {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--p-color, rgba(255, 255, 255, 0.1));
-  border-radius: 10px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-}
-
-.player-rank-card.mvp {
-  border-color: var(--neon-gold);
-  box-shadow: 0 0 15px var(--neon-gold);
-}
-
-.mvp-badge {
-  position: absolute;
-  top: -10px;
-  right: -5px;
-  background: var(--neon-gold);
-  color: #000;
-  font-size: 10px;
-  font-weight: 900;
-  padding: 2px 6px;
-  border-radius: 10px;
-}
-
-.player-rank-name {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--p-color, #fff);
-}
-
-.player-rank-score {
-  font-family: var(--font-title);
-  font-size: 18px;
-  font-weight: 900;
-  color: var(--neon-cyan);
-}
-
-.player-rank-kills {
-  font-size: 11px;
-  color: var(--text-muted);
 }
 
 .hidden {
   display: none !important;
-}
-
-/* --------------------------------------------------------------------------
-   RESPONSIVE MEDIA QUERIES FOR SMALL SCREENS & LOW HEIGHT VIEWPORTS
-   -------------------------------------------------------------------------- */
-@media (max-width: 768px) {
-  .top-bar {
-    padding: 10px 16px;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .logo-title {
-    font-size: 18px;
-  }
-
-  .quick-controls {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .btn-neon {
-    font-size: 11px;
-    padding: 6px 10px;
-  }
-
-  .main-menu-card,
-  .result-card {
-    padding: 24px 16px;
-    width: 96%;
-    border-radius: 14px;
-  }
-
-  .glow-text {
-    font-size: 24px;
-    letter-spacing: 1px;
-  }
-
-  .subtitle {
-    font-size: 13px;
-    margin-bottom: 18px;
-  }
-
-  .btn-giant {
-    font-size: 16px;
-    padding: 14px 20px;
-    margin-top: 16px;
-  }
-
-  .mode-buttons-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .player-count-selector .btn-count {
-    min-width: 60px;
-    font-size: 12px;
-    padding: 8px;
-  }
-
-  .hud-overlay {
-    top: 14px;
-    gap: 8px;
-    max-width: 98vw;
-    overflow-x: auto;
-  }
-
-  .hud-card {
-    min-width: 90px;
-    padding: 6px 10px;
-  }
-
-  .hud-label {
-    font-size: 9px;
-  }
-
-  .hud-value {
-    font-size: 16px;
-  }
-
-  .hp-bar-bg,
-  .fever-bar-bg {
-    width: 70px;
-    height: 8px;
-  }
-
-  .typing-bar {
-    padding: 12px 14px;
-  }
-
-  .input-wrapper {
-    padding: 6px 12px;
-  }
-
-  #target-input {
-    font-size: 16px;
-  }
-}
-
-@media (max-height: 750px) {
-
-  .main-menu-card,
-  .result-card {
-    padding: 20px 24px;
-    max-height: 94vh;
-  }
-
-  .glow-text {
-    font-size: 22px;
-    margin-bottom: 6px;
-  }
-
-  .subtitle {
-    margin-bottom: 14px;
-    font-size: 12px;
-  }
-
-  .mode-selector {
-    margin-bottom: 14px;
-  }
-
-  .multi-options-container {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    padding: 10px 0;
-    gap: 12px;
-  }
-
-  .platform-indicators {
-    margin-top: 14px;
-    margin-bottom: 4px;
-  }
-
-  .btn-giant {
-    margin-top: 14px;
-    padding: 12px 20px;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   STAGE & DIFFICULTY SELECTION SYSTEM STYLES
-   -------------------------------------------------------------------------- */
-.difficulty-buttons-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-.btn-diff {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.btn-diff .diff-title {
-  font-family: var(--font-title);
-  font-size: 14px;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-
-.btn-diff .diff-desc {
-  font-size: 10px;
-  color: var(--text-muted);
-  opacity: 0.8;
-}
-
-.btn-diff:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-2px);
-}
-
-.btn-diff.active {
-  background: rgba(0, 243, 255, 0.12);
-  border-color: var(--neon-cyan);
-  box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-  color: #ffffff;
-}
-
-.btn-diff[data-diff="hard"].active {
-  background: rgba(255, 0, 127, 0.15);
-  border-color: var(--neon-pink);
-  box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
-}
-
-.btn-diff[data-diff="hell"].active {
-  background: rgba(176, 38, 255, 0.18);
-  border-color: #b026ff;
-  box-shadow: 0 0 20px rgba(176, 38, 255, 0.5);
-}
-
-.highlight-stage {
-  color: #00ff88 !important;
-  text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
-}
-
-/* 스테이지 클리어 / 업 알림 연출 오버레이 */
-.stage-banner-overlay {
-  position: absolute;
-  top: 30%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 90;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.stage-banner-card {
-  background: rgba(10, 14, 25, 0.92);
-  border: 2px solid var(--neon-gold);
-  border-radius: 20px;
-  padding: 24px 48px;
-  text-align: center;
-  box-shadow: 0 0 50px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.3);
-  backdrop-filter: blur(10px);
-  animation: stageBannerPulse 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-.stage-banner-card h2 {
-  font-family: var(--font-title);
-  font-size: 36px;
-  font-weight: 900;
-  color: var(--neon-gold);
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
-  margin-bottom: 8px;
-  letter-spacing: 2px;
-}
-
-.stage-banner-card p {
-  font-size: 16px;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-@keyframes stageBannerPulse {
-  0% {
-    opacity: 0;
-    transform: scale(0.6);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@media (max-width: 768px) {
-  .difficulty-buttons-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .stage-banner-card {
-    padding: 16px 28px;
-  }
-
-  .stage-banner-card h2 {
-    font-size: 24px;
-  }
-
-  .stage-banner-card p {
-    font-size: 13px;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   RANK GRADE BADGES & LEADERBOARD MODAL STYLES
-   -------------------------------------------------------------------------- */
-.rank-result-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 8px;
-  margin-bottom: 12px;
-}
-
-.rank-grade-badge {
-  font-family: var(--font-title);
-  font-size: 22px;
-  font-weight: 900;
-  padding: 6px 18px;
-  border-radius: 12px;
-  letter-spacing: 1px;
-  text-shadow: 0 0 10px currentColor;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-.rank-grade-badge.grade-sss {
-  color: #ffd700;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 0, 127, 0.3));
-  border: 2px solid #ffd700;
-  box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
-}
-
-.rank-grade-badge.grade-ss {
-  color: #00f3ff;
-  background: linear-gradient(135deg, rgba(0, 243, 255, 0.3), rgba(176, 38, 255, 0.3));
-  border: 2px solid #00f3ff;
-}
-
-.rank-grade-badge.grade-s {
-  color: #00ff88;
-  background: rgba(0, 255, 136, 0.18);
-  border: 2px solid #00ff88;
-}
-
-.rank-grade-badge.grade-a {
-  color: #38ef7d;
-  background: rgba(56, 239, 125, 0.15);
-  border: 1px solid #38ef7d;
-}
-
-.rank-grade-badge.grade-b {
-  color: #4facfe;
-  background: rgba(79, 172, 254, 0.15);
-  border: 1px solid #4facfe;
-}
-
-.rank-grade-badge.grade-c {
-  color: #ffb199;
-  background: rgba(255, 177, 153, 0.15);
-  border: 1px solid #ffb199;
-}
-
-.rank-grade-badge.grade-d {
-  color: #a0a0a0;
-  background: rgba(160, 160, 160, 0.15);
-  border: 1px solid #a0a0a0;
-}
-
-.new-record-badge {
-  font-family: var(--font-title);
-  font-size: 13px;
-  font-weight: 800;
-  color: #00ff88;
-  background: rgba(0, 255, 136, 0.2);
-  border: 1px solid #00ff88;
-  padding: 6px 14px;
-  border-radius: 20px;
-  box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
-  animation: pulseNewRecord 1s infinite alternate;
-}
-
-@keyframes pulseNewRecord {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-
-  100% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-}
-
-/* Leaderboard Grid in Modal */
-.leaderboard-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.leaderboard-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  transition: transform 0.2s ease;
-}
-
-.leaderboard-row:hover {
-  background: rgba(255, 255, 255, 0.06);
-  transform: translateX(4px);
-}
-
-.leaderboard-row.top-1 {
-  border-color: rgba(255, 215, 0, 0.5);
-  background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.02));
-}
-
-.leaderboard-rank-tag {
-  font-family: var(--font-title);
-  font-size: 16px;
-  font-weight: 900;
-  min-width: 45px;
-  color: var(--neon-cyan);
-}
-
-.leaderboard-row.top-1 .leaderboard-rank-tag {
-  color: #ffd700;
-}
-
-.leaderboard-row.top-2 .leaderboard-rank-tag {
-  color: #e0e0e0;
-}
-
-.leaderboard-row.top-3 .leaderboard-rank-tag {
-  color: #cd7f32;
-}
-
-.leaderboard-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  padding: 0 12px;
-}
-
-.leaderboard-mvp {
-  font-size: 14px;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.leaderboard-meta {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.leaderboard-score-box {
-  text-align: right;
-}
-
-.leaderboard-score-val {
-  font-family: var(--font-title);
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--neon-gold);
-}
-
-.leaderboard-empty {
-  text-align: center;
-  padding: 30px;
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-/* --------------------------------------------------------------------------
-   MONETIZATION AD BANNER SLOTS & SUPPORT MODAL STYLES
-   -------------------------------------------------------------------------- */
-.ad-banner-box {
-  margin-top: 14px;
-  width: 100%;
-  min-height: 116px;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px dashed rgba(0, 243, 255, 0.25);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  transition: border-color 0.3s ease;
-}
-
-.ad-banner-box:hover {
-  border-color: var(--neon-cyan);
-}
-
-.ad-placeholder-label {
-  font-family: var(--font-title);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-  opacity: 0.7;
-}
-
-/* OBS 크로마키 투명 오버레이 모드 시 광고 영역 가시성 처리 */
-body.obs-transparent-mode .ad-banner-box {
-  opacity: 0.3;
-}
-
-/* Support Modal Cards Grid */
-.support-links-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.support-link-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  text-decoration: none;
-  color: #ffffff;
-  transition: all 0.25s ease;
-}
-
-.support-link-card:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
-}
-
-.support-link-card.chzzk:hover {
-  border-color: #00ff88;
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
-}
-
-.support-link-card.soop:hover {
-  border-color: #00f3ff;
-  box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
-}
-
-.support-link-card.coffee:hover {
-  border-color: #ffd700;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-}
-
-.support-icon {
-  font-size: 26px;
-}
-
-.support-text-box {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.support-title {
-  font-weight: 800;
-  font-size: 15px;
-  color: #ffffff;
-}
-
-.support-sub {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-/* --------------------------------------------------------------------------
-   RESPONSIVE MEDIA QUERIES (MOBILE / LAPTOP / SMALL HEIGHT / 4K)
-   -------------------------------------------------------------------------- */
-@media (max-width: 768px) {
-  .top-bar {
-    justify-content: center;
-    padding: 8px 12px;
-  }
-
-  .quick-controls {
-    justify-content: center;
-  }
-
-  .quick-controls .btn {
-    padding: 5px 10px;
-    font-size: 11px;
-  }
-
-  .difficulty-buttons-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .player-count-selector {
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .mode-buttons-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .result-actions {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .bank-number {
-    font-size: 16px;
-  }
-
-  .multi-input-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-}
-
-@media (max-height: 800px) {
-  .typing-bar {
-    padding: 8px 16px;
-  }
-
-  .single-input-wrapper,
-  .player-input-box {
-    padding: 4px 12px;
-  }
-
-  #target-input,
-  .player-input-box input {
-    font-size: 16px;
-  }
-
-  .btn-fire {
-    padding: 6px 14px;
-    font-size: 13px;
-  }
-
-  .main-menu-card,
-  .result-card {
-    padding: 16px 20px;
-    max-height: 82vh;
-  }
-
-  .modal-card {
-    max-height: 82vh;
-  }
-
-  .glow-text {
-    font-size: 22px;
-    margin-bottom: 4px;
-  }
-
-  .subtitle {
-    margin-bottom: 10px;
-    font-size: 12px;
-  }
-
-  .mode-selector {
-    margin-bottom: 10px;
-  }
-
-  .mode-selector h3 {
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-
-  .btn-giant {
-    margin-top: 10px;
-    padding: 10px 18px;
-    font-size: 16px;
-  }
 }

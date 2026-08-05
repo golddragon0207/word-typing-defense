@@ -11,14 +11,11 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;700;900&display=swap"
     rel="stylesheet">
-  <script id="adsense-script" async crossorigin="anonymous"></script>
 </head>
 
 <body>
-  <!-- OBS 크로마키 / 투명 오버레이 레이어 컨테이너 -->
   <div id="app" class="app-container">
 
-    <!-- 최상단 방송 컨트롤바 (OBS 캡처 시 숨기기 가능) -->
     <header id="top-bar" class="top-bar">
       <div class="brand">
         <span class="logo-icon">⚡</span>
@@ -36,15 +33,11 @@
       </div>
     </header>
 
-    <!-- 인게임 메인 화면 / Canvas 레이어 -->
     <main class="game-viewport">
-      <!-- 배경 Canvas (스타/파티클 이펙트) -->
       <canvas id="bg-canvas"></canvas>
 
-      <!-- 게임 메인 Canvas (몬스터, 포탑, 레이저) -->
       <canvas id="game-canvas"></canvas>
 
-      <!-- 인게임 상단 스탯 HUD -->
       <div id="game-hud" class="hud-overlay hidden">
         <div class="hud-card stage-card">
           <span class="hud-label">STAGE</span>
@@ -82,7 +75,6 @@
         </div>
       </div>
 
-      <!-- 스테이지 클리어 / 업 연출 오버레이 배너 -->
       <div id="stage-banner" class="stage-banner-overlay hidden">
         <div class="stage-banner-card">
           <h2 id="stage-banner-title">STAGE 2 START!</h2>
@@ -90,14 +82,17 @@
         </div>
       </div>
 
-      <!-- 중앙 시작 / 결과 / 모달 창들 -->
-      <!-- 1. 메인 타이틀 화면 -->
       <div id="screen-main" class="screen-overlay">
+        <div id="ad-container-main-top" class="ad-banner-box">
+          <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
+            data-ad-height="90"></ins>
+          <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
+        </div>
+
         <div class="main-menu-card">
           <h1 class="glow-text">MONSTER TYPING DEFENSE</h1>
           <p class="subtitle">시청자 닉네임 & 채팅으로 몰려오는 몬스터를 타자로 방어하라!</p>
 
-          <!-- 1. 스트리머 인원 수 선택 -->
           <div class="mode-selector">
             <h3>👥 참여 스트리머 인원 수 선택</h3>
             <div class="player-count-selector">
@@ -109,9 +104,7 @@
             </div>
           </div>
 
-          <!-- 2인 이상 선택 시 나타나는 합방 전용 옵션 영역 -->
           <div id="section-multi-options" class="multi-options-container hidden">
-            <!-- 2. 게임 방식 선택 -->
             <div class="mode-selector">
               <h3>🎮 게임 모드 및 방식</h3>
               <div class="mode-buttons-grid">
@@ -129,7 +122,6 @@
               </div>
             </div>
 
-            <!-- 3. 입력 방식 선택 -->
             <div class="mode-selector">
               <h3>⌨️ 입력창 구성 선택</h3>
               <div class="input-mode-selector">
@@ -145,7 +137,6 @@
             </div>
           </div>
 
-          <!-- 4. 게임 난이도 선택 -->
           <div class="mode-selector">
             <h3>🎯 게임 난이도 선택</h3>
             <div class="difficulty-buttons-grid">
@@ -168,11 +159,9 @@
             </div>
           </div>
 
-          <!-- 5. 스트리머 닉네임 커스터마이징 -->
           <div class="mode-selector">
             <h3>🎨 스트리머 닉네임 설정</h3>
             <div id="player-settings-list" class="player-nicknames-grid">
-              <!-- JS에서 동적 생성됨 -->
             </div>
           </div>
 
@@ -181,21 +170,18 @@
             <span class="badge chzzk">🟢 치지직(Chzzk)</span>
             <span class="badge soop">🔵 SOOP(숲/아프리카)</span>
             <span class="badge youtube">🔴 유튜브 라이브</span>
-            <span class="badge twitch">💜 트위치</span>
           </div>
 
           <button id="btn-start-game" class="btn btn-primary btn-giant">🔥 게임 시작 (START)</button>
+        </div>
 
-          <!-- 광고 배너 슬롯 1: 메인 타이틀 화면 하단 -->
-          <div id="ad-container-main" class="ad-banner-box">
-            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="320"
-              data-ad-height="100"></ins>
-            <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
-          </div>
+        <div id="ad-container-main" class="ad-banner-box">
+          <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
+            data-ad-height="90"></ins>
+          <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
         </div>
       </div>
 
-      <!-- 2. 게임 오버 / 결과 화면 -->
       <div id="screen-gameover" class="screen-overlay hidden">
         <div class="result-card">
           <h2 class="danger-text">BASE DESTROYED!</h2>
@@ -228,11 +214,9 @@
             </div>
           </div>
 
-          <!-- 플레이어별 MVP & 스탯 비교표 -->
           <div class="player-results-container">
             <h3>🏆 스트리머별 전과표</h3>
             <div id="player-ranking-list" class="player-ranking-grid">
-              <!-- JS 동적 생성 -->
             </div>
           </div>
 
@@ -242,24 +226,20 @@
             <button id="btn-return-main" class="btn btn-secondary btn-large">🏠 메인 화면으로</button>
           </div>
 
-          <!-- 광고 배너 슬롯 2: 결과 화면 하단 -->
           <div id="ad-container-gameover" class="ad-banner-box">
-            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="320"
-              data-ad-height="100"></ins>
+            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
+              data-ad-height="90"></ins>
             <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
           </div>
         </div>
       </div>
 
-      <!-- 하단 스트리머 타자 입력창 & 포탑 UI (동적 N인 입력창) -->
       <div id="typing-input-bar" class="typing-bar hidden">
         <div id="multi-input-container" class="multi-input-grid">
-          <!-- JS에서 플레이어 수에 맞게 입력창 동적 생성 -->
         </div>
       </div>
     </main>
 
-    <!-- 모달 1: 방송 채팅 연동 설정 모달 -->
     <div id="modal-chat" class="modal-backdrop hidden">
       <div class="modal-card">
         <div class="modal-header">
@@ -277,7 +257,6 @@
           </div>
 
           <div class="tab-contents">
-            <!-- 치지직 설정 -->
             <div id="tab-chzzk" class="tab-content active">
               <label>치지직 채널 ID (또는 스튜디오 주소 Hash):</label>
               <div class="input-with-btn">
@@ -287,7 +266,6 @@
               <small>치지직 채널 URL(chzzk.naver.com/채널ID)에서 채널 ID를 입력하세요.</small>
             </div>
 
-            <!-- SOOP 설정 -->
             <div id="tab-soop" class="tab-content">
               <label>SOOP (아프리카TV) BJ 아이디:</label>
               <div class="input-with-btn">
@@ -297,7 +275,6 @@
               <small>BJ의 방송국 ID를 입력하면 라이브 채팅과 자동 연결됩니다.</small>
             </div>
 
-            <!-- 유튜브 설정 -->
             <div id="tab-youtube" class="tab-content">
               <label>유튜브 라이브 영상 URL 또는 Video ID:</label>
               <div class="input-with-btn">
@@ -307,7 +284,6 @@
               <small>현재 진행 중인 유튜브 라이브 주소를 복사해 입력하세요.</small>
             </div>
 
-            <!-- 커스텀/시뮬레이션 -->
             <div id="tab-custom" class="tab-content">
               <label>시청자 채팅 자동 생성 시뮬레이션 speed:</label>
               <select id="select-sim-speed">
@@ -319,11 +295,9 @@
             </div>
           </div>
 
-          <!-- 연동된 방송 채널 목록 -->
           <div class="connected-channels-section">
             <label>📡 현재 연동 목록:</label>
             <div id="active-channels-list" class="channel-chips-container">
-              <!-- JS에서 연동된 채널 칩스 표시 -->
             </div>
           </div>
 
@@ -333,6 +307,12 @@
             <label><input type="checkbox" id="chk-nickname-only" checked /> 닉네임만 몬스터로 소환 (채팅 내용 제외)</label>
             <label><input type="checkbox" id="chk-badwords-filter" checked /> 비속어/욕설 자동 필터링 적용</label>
           </div>
+
+          <div id="ad-container-chat" class="ad-banner-box">
+            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
+              data-ad-height="90"></ins>
+            <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
+          </div>
         </div>
         <div class="modal-footer">
           <button id="btn-connect-chat" class="btn btn-primary">⚡ 연동 시작 (Connect)</button>
@@ -341,7 +321,6 @@
       </div>
     </div>
 
-    <!-- 모달 2: 단어 & 닉네임 팩 설정 모달 -->
     <div id="modal-words" class="modal-backdrop hidden">
       <div class="modal-card">
         <div class="modal-header">
@@ -368,6 +347,12 @@
               placeholder="여기에 원하는 시청자 닉네임이나 단어를 줄바꿈(Enter)으로 적거나 복사-붙여넣기하세요!&#10;예시:&#10;김유튜브&#10;치지직짱짱맨&#10;구독과좋아요&#10;오타내지마라"></textarea>
             <button id="btn-apply-custom-words" class="btn btn-neon purple">📌 이 단어들을 몬스터로 즉시 등록</button>
           </div>
+
+          <div id="ad-container-words" class="ad-banner-box">
+            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
+              data-ad-height="90"></ins>
+            <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary" data-close="modal-words">적용 완료</button>
@@ -375,7 +360,6 @@
       </div>
     </div>
 
-    <!-- 모달 3: 로컬 명예의 전당 TOP 5 랭킹 모달 -->
     <div id="modal-leaderboard" class="modal-backdrop hidden">
       <div class="modal-card">
         <div class="modal-header">
@@ -385,13 +369,11 @@
         <div class="modal-body">
           <p class="modal-desc">이 브라우저에 저장된 역대 최고 전적 TOP 5 명예의 전당입니다.</p>
           <div id="leaderboard-list" class="leaderboard-grid">
-            <!-- JS 동적 생성 -->
           </div>
 
-          <!-- 광고 배너 슬롯 3: 리더보드 모달 하단 -->
           <div id="ad-container-leaderboard" class="ad-banner-box">
-            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="320"
-              data-ad-height="100"></ins>
+            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
+              data-ad-height="90"></ins>
             <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
           </div>
         </div>
@@ -402,44 +384,4 @@
       </div>
     </div>
 
-    <!-- 모달 4: 개발자 후원 카카오페이 QR 코드 후원 방식 -->
-    <div id="modal-support" class="modal-backdrop hidden">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h2>☕ 개발자 응원하기 (카카오페이 송금)</h2>
-          <button class="btn-close" data-close="modal-support">✕</button>
-        </div>
-        <div class="modal-body" style="text-align: center; align-items: center;">
-          <p class="modal-desc" style="margin-bottom: 16px;">재미있게 플레이하셨나요? 따뜻한 응원은 서버 운영과 게임 업데이트에 큰 힘이 됩니다! 💖</p>
-
-          <div style="display: flex; justify-content: center; margin-bottom: 12px;">
-            <div
-              style="background: rgba(0, 0, 0, 0.5); padding: 16px; border-radius: 16px; border: 1px dashed var(--neon-cyan); display: inline-block;">
-              <img src="kakaopay_qr.jpg" alt="카카오페이 송금 QR코드" class="qr-code-img"
-                style="width: 200px; height: 200px; border-radius: 8px; box-shadow: 0 0 20px rgba(0, 243, 255, 0.4); object-fit: contain; background-color: #fff; display: block;">
-            </div>
-          </div>
-
-          <p class="donation-notice" style="color: var(--neon-cyan); font-weight: 700; font-size: 13px;">
-            스마트폰 카메라 앱으로 위 QR코드를 스캔해주세요!
-          </p>
-          <p class="donation-notice" style="margin-top: 4px;">
-            * 계좌번호, 실명 등 민감한 개인정보는 일절 노출되지 않습니다.
-          </p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" data-close="modal-support">닫기</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <script src="js/config.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/wordPacks.js"></script>
-  <script src="js/chatIntegration.js"></script>
-  <script src="js/game.js"></script>
-</body>
-
-</html>
+    <div id="modal-support"

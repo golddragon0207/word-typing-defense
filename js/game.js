@@ -250,6 +250,8 @@ class GameEngine {
     document.getElementById('btn-leaderboard-modal').addEventListener('click', () => {
       this.renderLeaderboardUI();
       document.getElementById('modal-leaderboard').classList.remove('hidden');
+      // 카카오 애드핏 리더보드 광고 재초기화 (숨겨진 상태에서 미로드된 광고 활성화)
+      refreshAdfitSlot('ad-container-leaderboard');
     });
 
     document.getElementById('btn-clear-leaderboard').addEventListener('click', () => {
@@ -841,6 +843,8 @@ class GameEngine {
 
     this.screenGameOver.classList.remove('hidden');
     this.typingBar.classList.add('hidden');
+    // 카카오 애드핏 게임오버 광고 재초기화 (숨겨진 상태에서 미로드된 광고 활성화)
+    refreshAdfitSlot('ad-container-gameover');
   }
 
   loop() {
