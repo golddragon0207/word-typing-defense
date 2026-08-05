@@ -9,16 +9,14 @@ class GameEngine {
     this.isInitialized = false;
     this.animationFrameId = null;
 
-    // 게임 설정 기본값
     this.config = {
       playerCount: 1,
-      ruleMode: 'vs',       // 'vs' | 'coop'
-      inputMode: 'multi',   // 'multi' | 'single'
-      difficulty: 'normal', // 'easy' | 'normal' | 'hard' | 'hell'
+      ruleMode: 'vs',
+      inputMode: 'multi',
+      difficulty: 'normal',
       playerNames: ['스트리머1', '스트리머2', '스트리머3', '스트리머4', '스트리머5', '스트리머6']
     };
 
-    // 서브 모듈 인스턴스
     this.stateManager = null;
     this.turretManager = null;
     this.monsterManager = null;
@@ -26,28 +24,26 @@ class GameEngine {
     this.renderer = null;
   }
 
-  /**
-   * 🚀 게임 엔진 초기화
-   */
   init() {
     if (this.isInitialized) return;
 
-    // 1. Canvas DOM 요소 확보
+    // DOM이 확실히 그려진 상태에서 안전하게 캔버스 가져오기
     const canvas = document.getElementById('gameCanvas');
     const bgCanvas = document.getElementById('bg-canvas');
+
     if (!canvas) {
-      console.error('❌ Canvas 요소를 찾을 수 없습니다 (#gameCanvas).');
+      console.error('❌ #gameCanvas 요소를 찾을 수 없습니다.');
       return;
     }
 
-    // 2. 핵심 모듈 인스턴스화 (CanvasRenderer 포함)
+    // 모듈 인스턴스 생성 (Canvas 안전 전달)
     this.stateManager = new StateManager();
     this.turretManager = new TurretManager(canvas);
     this.monsterManager = new MonsterManager(canvas);
     this.inputManager = new InputManager();
     this.renderer = new CanvasRenderer(canvas);
 
-    // 3. 렌더러 리사이즈 및 포탑 셋업
+    // 캔버스 크기 조정
     this.renderer.resizeCanvas();
     window.addEventListener('resize', () => this.renderer.resizeCanvas());
 
@@ -55,22 +51,17 @@ class GameEngine {
       this.turretManager.setupTurrets(this.config.playerCount, this.config.playerNames, canvas);
     }
 
-    // 4. UI 버튼 및 이벤트 바인딩
+    // UI 이벤트 바인딩
     this.bindUIEvents();
     this.renderPlayerNicknameInputs();
 
-    // 5. 메인 루프 시작
     this.isInitialized = true;
     this.startMainLoop();
 
     console.log("🎮 Word Defense Engine Initialized Successfully!");
   }
 
-  /**
-   * 🖱️ UI 버튼 및 모달 이벤트 바인딩
-   */
   bindUIEvents() {
-    // 상단 모달 버튼들
     const modalMap = [
       { btnId: 'btn-chat-modal', modalId: 'modal-chat' },
       { btnId: 'btn-word-modal', modalId: 'modal-words' },
@@ -92,7 +83,6 @@ class GameEngine {
       }
     });
 
-    // 모달 닫기 버튼
     document.querySelectorAll('[data-close]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const targetId = e.currentTarget.getAttribute('data-close');
@@ -101,7 +91,6 @@ class GameEngine {
       });
     });
 
-    // OBS 배경 투명 토글
     const btnObs = document.getElementById('btn-obs-toggle');
     if (btnObs) {
       btnObs.addEventListener('click', () => {
@@ -110,7 +99,6 @@ class GameEngine {
       });
     }
 
-    // 인원 수 선택 (1 ~ 6인)
     const countBtns = document.querySelectorAll('.btn-count');
     const multiOptions = document.getElementById('section-multi-options');
 
@@ -128,12 +116,10 @@ class GameEngine {
             multiOptions.classList.add('hidden');
           }
         }
-
         this.renderPlayerNicknameInputs();
       });
     });
 
-    // 난이도 선택
     const diffBtns = document.querySelectorAll('.btn-diff');
     diffBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -143,7 +129,6 @@ class GameEngine {
       });
     });
 
-    // 게임 시작 버튼
     const btnStart = document.getElementById('btn-start-game');
     if (btnStart) {
       btnStart.addEventListener('click', () => this.startGame());
@@ -218,7 +203,7 @@ class GameEngine {
     this.setupInputBars();
 
     this.stateManager.resetGame(this.config);
-    this.turretManager.setupTurrets(this.config.playerCount, this.config.playerNames, this.canvas);
+    this.turretManager.setupTurrets(this.config.playerCount, this.config.playerNames);
     this.monsterManager.startStage(this.stateManager.currentStage, this.config.difficulty);
 
     this.stateManager.changeState('PLAYING');
@@ -315,7 +300,6 @@ class GameEngine {
   }
 }
 
-// 자동 전역 실행 바인딩
 window.gameEngine = new GameEngine();
 document.addEventListener('DOMContentLoaded', () => {
   window.gameEngine.init();
