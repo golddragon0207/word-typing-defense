@@ -383,8 +383,18 @@
           <h2>☕ 개발자 후원 (Donate)</h2>
           <button class="btn-close" data-close="modal-support">✕</button>
         </div>
-        <div class="modal-body">
-          <p class="modal-desc">재밌게 플레이하고 계신가요? 개발자에게 응원의 커피 한 잔을 선물해주세요!</p>
+        <div class="modal-body" style="text-align: center;">
+          <p class="modal-desc">재밌게 플레이하고 계신가요? 카카오페이 QR 코드를 스캔하여 개발자에게 시원한 커피 한 잔을 선물해 주세요!</p>
+          <div class="qr-container" style="margin: 15px 0;">
+            <img src="kakaopay_qr.jpg" alt="카카오페이 후원 QR"
+              style="max-width: 220px; border-radius: 12px; border: 2px solid #ffaa00;" />
+          </div>
+          <small style="color: #a0a5b5;">계좌번호 노출 없이 카카오톡 앱 카메라로 즉시 송금이 가능합니다.</small>
+
+          <div id="ad-container-support" class="ad-banner-box">
+            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
+              data-ad-height="90"></ins>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary" data-close="modal-support">닫기</button>
@@ -394,7 +404,20 @@
 
   </div>
   <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
-  <script src="game.js"></script>
+
+  <script src="js/config.js"></script>
+  <script src="js/wordPacks.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/chatIntegration.js"></script>
+
+  <script src="js/core/StateManager.js"></script>
+  <script src="js/core/TurretManager.js"></script>
+  <script src="js/core/MonsterManager.js"></script>
+  <script src="js/core/InputManager.js"></script>
+
+  <script src="js/renderers/CanvasRenderer.js"></script>
+
+  <script src="js/game.js"></script>
 </body>
 
 </html>
