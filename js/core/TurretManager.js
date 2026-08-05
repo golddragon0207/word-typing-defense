@@ -7,34 +7,56 @@
  */
 
 class TurretManager {
+    /**
+     * @param {HTMLCanvasElement|null} canvas 
+     */
     constructor(canvas = null) {
+        // canvas가 들어오면 저장하고, 안 들어오면 DOM에서 찾아봄
         this.canvas = canvas || document.getElementById('gameCanvas');
         this.turrets = [];
         this.playerCount = 1;
 
+        // 플레이어별 고유 네온 테마 컬러 (1P ~ 6P)
         this.playerColors = [
-            '#00f3ff', '#ff0055', '#00ff66', '#ffaa00', '#a855f7', '#ffffff'
+            '#00f3ff', // 1P: Cyber Cyan
+            '#ff0055', // 2P: Neon Pink
+            '#00ff66', // 3P: Lime Green
+            '#ffaa00', // 4P: Neon Gold
+            '#a000ff', // 5P: Purple Electric
+            '#ffffff'  // 6P: Pure White
         ];
 
-        // canvas가 있을 때만 셋업
+        // Canvas가 확보되었을 때만 초기 셋업 진행 (없으면 셋업 대기)
         if (this.canvas) {
             this.setupTurrets(1);
         }
     }
 
+    /**
+     * 플레이어 인원 수(1~6명)에 따라 포탑 N개 균등 좌표 배치
+     * @param {number} count 
+     * @param {Array<string>} customNames - 플레이어 닉네임 목록 (선택)
+     * @param {HTMLCanvasElement|null} canvas - 전달할 Canvas 객체 (선택)
+     */
     setupTurrets(count = 1, customNames = [], canvas = null) {
+        // 전달받은 canvas가 있다면 갱신
         if (canvas) this.canvas = canvas;
         if (!this.canvas) this.canvas = document.getElementById('gameCanvas');
 
-        // Canvas를 못 찾으면 스크립트가 튕기지 않도록 안전하게 종료
-        if (!this.canvas) return;
+        // Canvas 요소를 끝까지 못 찾은 경우 튕기지 않고 안전하게 리턴
+        if (!this.canvas) {
+            console.warn("TurretManager: gameCanvas 요소를 찾을 수 없어 포탑 셋업을 대기합니다.");
+            return;
+        }
 
         this.playerCount = Math.min(Math.max(count, 1), 6);
         this.turrets = [];
 
+        // canvas.width 읽기 전 기본값 예외 처리
         const width = this.canvas.width || 1000;
         const height = this.canvas.height || 750;
 
+        // Canvas 하단 여백 및 균등 간격(X) 계산
         const paddingY = 45;
         const yPos = height - paddingY;
         const segmentWidth = width / (this.playerCount + 1);
@@ -49,10 +71,10 @@ class TurretManager {
                 name: name,
                 x: xPos,
                 y: yPos,
-                angle: -Math.PI / 2,
+                angle: -Math.PI / 2, // 초기 각도: 하늘 방향 (-90도)
                 targetAngle: -Math.PI / 2,
                 color: color,
-                isRecoil: false,
+                isRecoil: false,     // 사격 반동 이펙트 플래그
                 recoilOffset: 0,
                 lastFiredTime: 0
             });
