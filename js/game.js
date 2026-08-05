@@ -11,9 +11,9 @@ class GameEngine {
 
     this.config = {
       playerCount: 1,
-      ruleMode: 'vs',
-      inputMode: 'multi',
-      difficulty: 'normal',
+      ruleMode: 'vs',       // 'vs' | 'coop'
+      inputMode: 'multi',   // 'multi' | 'single'
+      difficulty: 'normal', // 'easy' | 'normal' | 'hard' | 'hell'
       playerNames: ['스트리머1', '스트리머2', '스트리머3', '스트리머4', '스트리머5', '스트리머6']
     };
 
@@ -24,26 +24,27 @@ class GameEngine {
     this.renderer = null;
   }
 
+  /**
+   * 🚀 게임 엔진 초기화
+   */
   init() {
     if (this.isInitialized) return;
 
-    // DOM이 확실히 그려진 상태에서 안전하게 캔버스 가져오기
+    // 1. Canvas DOM 요소 안전 확보
     const canvas = document.getElementById('gameCanvas');
-    const bgCanvas = document.getElementById('bg-canvas');
-
     if (!canvas) {
       console.error('❌ #gameCanvas 요소를 찾을 수 없습니다.');
       return;
     }
 
-    // 모듈 인스턴스 생성 (Canvas 안전 전달)
+    // 2. 핵심 모듈 인스턴스화 (Canvas를 생성자에 즉시 전달)
     this.stateManager = new StateManager();
     this.turretManager = new TurretManager(canvas);
     this.monsterManager = new MonsterManager(canvas);
     this.inputManager = new InputManager();
-    this.renderer = new CanvasRenderer(canvas);
+    this.renderer = new CanvasRenderer(canvas); // constructor로 캔버스 전달 완료!
 
-    // 캔버스 크기 조정
+    // 3. 렌더러 리사이즈 및 포탑 셋업
     this.renderer.resizeCanvas();
     window.addEventListener('resize', () => this.renderer.resizeCanvas());
 
@@ -51,16 +52,20 @@ class GameEngine {
       this.turretManager.setupTurrets(this.config.playerCount, this.config.playerNames, canvas);
     }
 
-    // UI 이벤트 바인딩
+    // 4. UI 버튼 및 이벤트 바인딩
     this.bindUIEvents();
     this.renderPlayerNicknameInputs();
 
+    // 5. 메인 루프 시작
     this.isInitialized = true;
     this.startMainLoop();
 
     console.log("🎮 Word Defense Engine Initialized Successfully!");
   }
 
+  /**
+   * 🖱️ UI 버튼 및 모달 이벤트 바인딩
+   */
   bindUIEvents() {
     const modalMap = [
       { btnId: 'btn-chat-modal', modalId: 'modal-chat' },
