@@ -9,11 +9,18 @@
 
 class CanvasRenderer {
     /**
-     * @param {HTMLCanvasElement} canvas 
+     * @param {HTMLCanvasElement|null} canvas 
      */
-    constructor(canvas) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
+    constructor(canvas = null) {
+        // canvas 인자가 안 넘어왔거나 undefined면 DOM에서 직접 찾기
+        this.canvas = canvas || document.getElementById('gameCanvas');
+
+        if (!this.canvas) {
+            console.error("❌ CanvasRenderer: #gameCanvas 요소를 찾을 수 없습니다!");
+            return;
+        }
+
+        this.ctx = this.canvas.getContext('2d');
 
         // 파티클 및 시각 이펙트 배열
         this.particles = [];
