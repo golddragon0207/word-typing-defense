@@ -1,184 +1,111 @@
-/* ==========================================================================
-   STREAMER WORD DEFENSE - WORD PACKS & CUSTOM LIST MANAGER
-   ========================================================================== */
+/**
+ * ==========================================
+ * Word Typing Defense - WordPacks & Hangul Utility
+ * ==========================================
+ * 2단 몬스터 데이터(닉네임/제시어) 분리 공급,
+ * 한글 자모 분해 및 정밀 획수 계산 유틸리티를 제공합니다.
+ */
 
-const WORD_PACKS = {
-  // 1. 방송 밈 및 유행어 팩
-  memes: [
-    "구독과좋아요", "알림설정", "치킨사주세요", "오타내지마라", "억까전문가",
-    "김유튜브", "치지직짱짱맨", "숲속의아이", "비상사태", "레전드방송",
-    "트위치그립다", "채팅화력폭발", "피버모드온", "대회우승가자", "스트리머리액션",
-    "하트뿅뿅", "슈퍼챗발사", "별풍선100개", "치즈1000개", "어이쿠실수"
+const wordPacks = {
+  // 1. 기본 게임 타깃 제시어 데이터베이스 (밈, 게임 용어, 개발 단어 등)
+  words: [
+    "치지직", "아프리카", "스트리머", "나이스샷", "크리티컬",
+    "타자왕", "디펜스", "키보드", "마우스", "레벨업",
+    "헤드샷", "클리어", "게임오버", "피버모드", "보스몬스터",
+    "알고리즘", "자바스크립트", "캔버스", "웹게임", "트래픽",
+    "구독자", "후원하기", "채팅창", "영도", "하이라이트"
   ],
 
-  // 2. 오타 유발 억까 매운맛 팩
-  hardcore: [
-    "쀍", "뙈", "똠양꿍", "C++", "querySelector", "0x1F3",
-    "뛔뛔뛔", "옾", "뷁", "낢", "쓔", "JavaScript",
-    "async/await", "flex-direction", "rgba(0,243,255)", "ㄹㅇㅋㅋ", "ㄱ깪",
-    "쀼쀼", "뽈뽈뽈", "쯧쯧", "쩨쩨", "뚬칫뚬칫"
+  // 2. 보스전 전용 단어 팩 (Stage 5, 10, 15...)
+  bossWords: [
+    "방열판작동불가", "시스템전면마비", "네트워크접속초과",
+    "최종방어선돌파", "서버데이터손실", "트래픽대폭발"
   ],
 
-  // 3. 자주 틀리는 맞춤법 & 밈 퀴즈 팩
-  spelling: [
-    "어이없다", "금세", "요새", "희한하다", "무난하다",
-    "설렘", "움켜쥐다", "웬일인지", "문안인사", "결단코",
-    "나지막이", "다디단", "설레다", "어리바리", "오뚝이"
+  // 3. 가상 시청자 닉네임 팩 ([BOT] 생성용)
+  botNicknames: [
+    "자동소환봇", "알고리즘봇", "시청자봇", "방관자봇",
+    "매니저봇", "채팅봇", "연습용봇", "도우미봇"
   ],
 
-  // 4. 영문 & 기술 용어 팩
-  english: [
-    "CYBERPUNK", "OVERLAY", "STREAMER", "VICTORY", "DEFENSE",
-    "COMBO", "FEVER", "SYNTHESIZER", "CANVAS", "TURRET",
-    "LASER", "EXPLOSION", "CHZZK", "YOUTUBE", "AFREECA"
-  ]
-};
+  /**
+   * 2단 몬스터 데이터 생성 (상단 닉네임 + 하단 제시어)
+   * @param {string|null} customNickname - 실시간 방송 채팅 연동 닉네임 (없을 시 BOT 처리)
+   * @returns {Object} { nickname, isBot, word }
+   */
+  getNextMonsterData(customNickname = null) {
+    let nickname = customNickname;
+    let isBot = false;
 
-class WordPackManager {
-  constructor() {
-    this.currentPack = 'mixed';
-    this.customWords = [];
-    this.viewerQueue = [];
-    this.fallbackNicknames = [
-      "🟢 [BOT] 억까의신", "🔵 [BOT] SOOP팬클럽1등", "🔴 [BOT] 유튜브구독자", "💬 [BOT] 방송애청자",
-      "🟢 [BOT] 치지직시청자A", "🔵 [BOT] 숲속의라이더", "🔴 [BOT] 슈퍼챗1만원", "💜 [BOT] 트위치난민",
-      "🟢 [BOT] 타자왕김스트리머", "🔵 [BOT] 오타유발자", "🔴 [BOT] 구독알림완료", "💬 [BOT] 억까전문가"
-    ];
-  }
-
-  setPack(packName) {
-    this.currentPack = packName;
-  }
-
-  setCustomWords(wordListArray) {
-    this.customWords = wordListArray.filter(w => w.trim().length > 0);
-  }
-
-  // 복사한 방송 채팅 텍스트([14:20] 닉네임: 메시지) 지능형 자동 파싱 및 정제기
-  parseAndAddCustomChatText(rawText) {
-    if (!rawText || rawText.trim().length === 0) return { nickCount: 0, wordCount: 0 };
-
-    const lines = rawText.split('\n');
-    let nickCount = 0;
-    let wordCount = 0;
-
-    lines.forEach(line => {
-      let cleanLine = line.trim();
-      if (!cleanLine) return;
-
-      // 타임스탬프 패턴([14:20], 14:20:05 등) 제거
-      cleanLine = cleanLine.replace(/^\[?\d{1,2}:\d{2}(:\d{2})?(\s?[AP]M)?\]?\s*/i, '');
-
-      // 콜론(:) 또는 대괄호(]) 구분자 추출
-      if (cleanLine.includes(':')) {
-        const parts = cleanLine.split(':');
-        const nick = parts[0].trim();
-        const msg = parts.slice(1).join(':').trim();
-
-        if (nick.length > 0) {
-          this.addViewerNickname(`💬 ${nick}`, msg);
-          nickCount++;
-        }
-        if (msg.length > 0 && msg.length <= 15) {
-          this.customWords.push(msg);
-          wordCount++;
-        }
-      } else if (cleanLine.includes(']')) {
-        const parts = cleanLine.split(']');
-        const nick = parts[0].replace('[', '').trim();
-        const msg = parts.slice(1).join(']').trim();
-
-        if (nick.length > 0) {
-          this.addViewerNickname(`💬 ${nick}`, msg);
-          nickCount++;
-        }
-        if (msg.length > 0 && msg.length <= 15) {
-          this.customWords.push(msg);
-          wordCount++;
-        }
-      } else {
-        // 일반 텍스트 라인
-        this.customWords.push(cleanLine);
-        wordCount++;
-      }
-    });
-
-    return { nickCount, wordCount };
-  }
-
-  addViewerNickname(nickname, text = "") {
-    this.viewerQueue.push({
-      nickname: nickname,
-      text: text
-    });
-  }
-
-  getNextMonsterData() {
-    let viewerNick = "";
-    // 1. 시청자 대기 큐에서 시청자 닉네임 가져오기
-    if (this.viewerQueue.length > 0 && Math.random() < 0.8) {
-      const item = this.viewerQueue.shift();
-      viewerNick = item.nickname;
-    } else {
-      viewerNick = this.fallbackNicknames[Math.floor(Math.random() * this.fallbackNicknames.length)];
+    // 시청자 닉네임이 없으면 [BOT] 표식을 붙인 가상 시청자 닉네임 부여
+    if (!nickname) {
+      const randomBotName = this.botNicknames[Math.floor(Math.random() * this.botNicknames.length)];
+      nickname = `[BOT] ${randomBotName}`;
+      isBot = true;
     }
 
-    // 2. 스트리머가 실제로 입력할 clean 타깃 제시어 구하기
-    let targetWord = "";
-    if (this.customWords.length > 0 && Math.random() < 0.6) {
-      targetWord = this.customWords[Math.floor(Math.random() * this.customWords.length)];
-    } else {
-      let pool = [];
-      if (this.currentPack === 'mixed') {
-        pool = [...WORD_PACKS.memes, ...WORD_PACKS.hardcore, ...WORD_PACKS.spelling, ...WORD_PACKS.english];
-      } else if (WORD_PACKS[this.currentPack]) {
-        pool = WORD_PACKS[this.currentPack];
-      } else {
-        pool = WORD_PACKS.memes;
-      }
-      targetWord = pool[Math.floor(Math.random() * pool.length)];
-    }
+    // 랜덤 clean 제시어 선택
+    const randomWord = this.words[Math.floor(Math.random() * this.words.length)];
 
     return {
-      viewerNick: viewerNick,
-      targetWord: targetWord
+      nickname: nickname,
+      isBot: isBot,
+      word: randomWord
     };
-  }
+  },
 
-  getRandomWord() {
-    return this.getNextMonsterData().targetWord;
-  }
+  /**
+   * 보스전 전용 제시어 반환
+   */
+  getBossWord() {
+    return this.bossWords[Math.floor(Math.random() * this.bossWords.length)];
+  },
 
-  // 한글 자모 및 타수(Stroke/CPM) 계산 정밀 알고리즘
+  /**
+   * 한글 초성/중성/종성 자모 획수 정밀 분석 유틸리티
+   * @param {string} text - 분석할 단어
+   * @returns {number} 총 자모 획수
+   */
   getHangulStrokeCount(text) {
     if (!text) return 0;
+
+    // 초성 19개 획수 (ㄱ ㄲ ㄴ ㄷ ㄸ ㄹ ㅁ ㅂ ㅃ ㅅ ㅆ ㅇ ㅈ ㅉ ㅊ ㅋ ㅌ ㅍ ㅎ)
+    const initialStrokes = [1, 2, 1, 2, 4, 3, 3, 4, 8, 2, 4, 1, 2, 4, 3, 2, 3, 4, 3];
+
+    // 중성 21개 획수 (ㅏ ㅐ ㅑ ㅐ ㅓ ㅔ ㅕ ㅖ ㅗ ㅘ ㅙ ㅚ ㅛ ㅜ ㅝ ㅞ ㅟ ㅠ ㅡ ㅢ ㅣ)
+    const medialStrokes = [2, 3, 3, 4, 2, 3, 3, 4, 2, 4, 5, 3, 3, 2, 4, 5, 3, 3, 1, 2, 1];
+
+    // 종성 28개 획수 (없음, ㄱ, ㄲ, ㄳ, ㄴ, ㄵ, ㄶ, ㄷ, ㄹ, ㄺ, ㄻ, ㄼ, ㄽ, ㄾ, ㄿ, ㅀ, ㅁ, ㅂ, ㅄ, ㅅ, ㅆ, ㅇ, ㅈ, ㅊ, ㅋ, ㅌ, ㅍ, ㅎ)
+    const finalStrokes = [0, 1, 2, 3, 1, 3, 4, 2, 3, 4, 6, 7, 5, 5, 7, 6, 3, 4, 6, 2, 4, 1, 2, 3, 2, 3, 4, 3];
+
     let totalStrokes = 0;
-    const doubleCho = [1, 4, 8, 10, 13]; // ㄲ, ㄸ, ㅃ, ㅆ, ㅉ
-    const doubleJung = [9, 10, 11, 14, 15, 16, 19]; // ㅘ, ㅙ, ㅚ, ㅝ, ㅞ, ㅟ, ㅢ
-    const doubleJong = [3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18]; // ㄳ, ㄵ, ㄶ, ㄺ, ㄻ, ㄼ, ㄽ, ㄾ, ㄿ, ㅀ, ㅄ
 
     for (let i = 0; i < text.length; i++) {
-      const code = text.charCodeAt(i);
-      if (code >= 0xAC00 && code <= 0xD7A3) {
-        const syllableIndex = code - 0xAC00;
-        const cho = Math.floor(syllableIndex / 588);
-        const jung = Math.floor((syllableIndex % 588) / 28);
-        const jong = syllableIndex % 28;
+      const charCode = text.charCodeAt(i);
 
-        let strokes = 2; // 기본 초성(1) + 중성(1)
-        if (doubleCho.includes(cho)) strokes += 1;
-        if (doubleJung.includes(jung)) strokes += 1;
-        if (jong > 0) {
-          strokes += doubleJong.includes(jong) ? 2 : 1;
-        }
-        totalStrokes += strokes;
+      // 한글 가음절 완성형 범위 (가 ~ 힣)
+      if (charCode >= 0xac00 && charCode <= 0xd7a3) {
+        const hangulIndex = charCode - 0xac00;
+
+        const initialIndex = Math.floor(hangulIndex / 588);
+        const medialIndex = Math.floor((hangulIndex % 588) / 28);
+        const finalIndex = hangulIndex % 28;
+
+        totalStrokes += initialStrokes[initialIndex] || 1;
+        totalStrokes += medialStrokes[medialIndex] || 1;
+        totalStrokes += finalStrokes[finalIndex] || 0;
+      }
+      // 알파벳, 숫자, 특수문자 기본 처리
+      else if ((charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122)) {
+        totalStrokes += 1; // 영문 1타
       } else {
-        totalStrokes += 1;
+        totalStrokes += 1; // 기본 1타
       }
     }
+
     return totalStrokes;
   }
-}
+};
 
-const wordManager = new WordPackManager();
-
+// 전역 객체 바인딩
+window.wordPacks = wordPacks;

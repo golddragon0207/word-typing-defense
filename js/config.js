@@ -1,79 +1,49 @@
 /**
  * ============================================================
- * STREAMER WORD DEFENSE — 전역 설정 파일 (config.js)
+ * STREAMER WORD DEFENSE — 전역 설정 파일 (js/config.js)
  *
- * ✅ 이 파일은 GitHub에 올려도 안전합니다.
- * - 게임 내 광고 ID 및 기본 환경 변수를 통합 관리합니다.
+ * ✅ 카카오 애드핏 배너 7개 ID 및 광고 동적 리프레시를 통합 관리합니다.
  * ============================================================
  */
 
 const CONFIG = {
-  // 💰 수익화: 카카오 애드핏 (Kakao AdFit) 설정 (추후 배너 생성 시 채워넣을 예정)
+  // 💰 수익화: 카카오 애드핏 (Kakao AdFit) 728x90 PC 전용 배너 설정
   KAKAO_ADFIT: {
-    TOP: "DAN-4hiutMEdhD30CTQ0",         // 메인_최상단_728x90 ID
-    MAIN: "DAN-sCTP6AnIeAemuGrC",        // 메인_최하단_728x90 ID
-    GAMEOVER: "DAN-wtmcwTgfJbkapFIQ",    // 결과창_카드_728x90 ID
-    CHAT: "DAN-9KbCAkkKSv4pFqAO",      // 모달_채팅연동_728x90 ID
-    WORDS: "DAN-Jdl49AhXKb3Dg6Ce",       // 모달_단어팩_728x90 ID
-    LEADERBOARD: "DAN-4f2Zy9rvtpYIdFwz",// 모달_명예의전당_728x90 ID
-    SUPPORT: "DAN-7HAZgjuUDNHfPgph",       // 모달_후원_728x90 ID
+    TOP: "DAN-4hiutMEdhD30CTQ0",          // 메인_최상단_728x90 ID
+    MAIN: "DAN-sCTP6AnIeAemuGrC",         // 메인_최하단_728x90 ID
+    GAMEOVER: "DAN-wtmcwTgfJbkapFIQ",     // 결과창_카드_728x90 ID
+    CHAT: "DAN-9KbCAkkKSv4pFqAO",         // 모달_채팅연동_728x90 ID
+    WORDS: "DAN-Jdl49AhXKb3Dg6Ce",        // 모달_단어팩_728x90 ID
+    LEADERBOARD: "DAN-4f2Zy9rvtpYIdFwz", // 모달_명예의전당_728x90 ID
+    SUPPORT: "DAN-7HAZgjuUDNHfPgph",      // 모달_후원_728x90 ID
     WIDTH: "728",
     HEIGHT: "90"
   }
 };
 
-/**
- * 🚀 초기화 함수: HTML 각 컨테이너 ID에 맞춰 해당 애드핏 ID를 자동으로 주입합니다.
- */
-function initializeAds() {
-  const adMapping = {
-    'ad-container-top': CONFIG.KAKAO_ADFIT.TOP,
-    'ad-container-main': CONFIG.KAKAO_ADFIT.MAIN,
-    'ad-container-gameover': CONFIG.KAKAO_ADFIT.GAMEOVER,
-    'ad-container-chat': CONFIG.KAKAO_ADFIT.CHAT,
-    'ad-container-words': CONFIG.KAKAO_ADFIT.WORDS,
-    'ad-container-leaderboard': CONFIG.KAKAO_ADFIT.LEADERBOARD,
-    'ad-container-support': CONFIG.KAKAO_ADFIT.SUPPORT
-  };
-
-  Object.keys(adMapping).forEach(containerId => {
-    const container = document.getElementById(containerId);
-    if (container) {
-      const ins = container.querySelector('.kakao_ad_area');
-      if (ins) {
-        ins.setAttribute('data-ad-unit', adMapping[containerId]);
-        ins.setAttribute('data-ad-width', CONFIG.KAKAO_ADFIT.WIDTH);
-        ins.setAttribute('data-ad-height', CONFIG.KAKAO_ADFIT.HEIGHT);
-      }
-    }
-  });
-}
-
-// 웹페이지(DOM) 로딩이 완료되면 광고 초기화 함수를 실행합니다.
-document.addEventListener('DOMContentLoaded', initializeAds);
+// 광고 슬롯 - 컨테이너 ID 맵핑 객체
+const AD_CONTAINER_MAP = {
+  'ad-container-top': CONFIG.KAKAO_ADFIT.TOP,
+  'ad-container-main': CONFIG.KAKAO_ADFIT.MAIN,
+  'ad-container-gameover': CONFIG.KAKAO_ADFIT.GAMEOVER,
+  'ad-container-chat': CONFIG.KAKAO_ADFIT.CHAT,
+  'ad-container-words': CONFIG.KAKAO_ADFIT.WORDS,
+  'ad-container-leaderboard': CONFIG.KAKAO_ADFIT.LEADERBOARD,
+  'ad-container-support': CONFIG.KAKAO_ADFIT.SUPPORT
+};
 
 /**
- * 숨겨진 화면/모달이 열릴 때 카카오 애드핏 광고 재초기화
- * (숨겨진 상태에서는 광고가 로드되지 않으므로 모달 표시 시 컨테이너 ID로 호출)
+ * 🚀 숨겨진 화면/모달이 열릴 때 카카오 애드핏 광고 동적 생성/리프레시
+ * @param {string} containerId - HTML 배너 상자 ID (예: 'ad-container-support')
  */
 function refreshAdfitSlot(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  const adMapping = {
-    'ad-container-top': CONFIG.KAKAO_ADFIT.TOP,
-    'ad-container-main': CONFIG.KAKAO_ADFIT.MAIN,
-    'ad-container-gameover': CONFIG.KAKAO_ADFIT.GAMEOVER,
-    'ad-container-chat': CONFIG.KAKAO_ADFIT.CHAT,
-    'ad-container-words': CONFIG.KAKAO_ADFIT.WORDS,
-    'ad-container-leaderboard': CONFIG.KAKAO_ADFIT.LEADERBOARD,
-    'ad-container-support': CONFIG.KAKAO_ADFIT.SUPPORT
-  };
-
-  const adUnitId = adMapping[containerId];
+  const adUnitId = AD_CONTAINER_MAP[containerId];
   if (!adUnitId) return;
 
-  // 기존 ins + script 제거 후 재생성
+  // 기존 자식 요소(ins, script) 제거 후 재구성
   container.innerHTML = '';
 
   const ins = document.createElement('ins');
@@ -91,3 +61,19 @@ function refreshAdfitSlot(containerId) {
   container.appendChild(ins);
   container.appendChild(script);
 }
+
+/**
+ * 🎯 메인 초기화 함수: DOM 로드 시 메인 화면에 노출되는 상/하단 배너 초기 로드
+ */
+function initializeAds() {
+  // 페이지 진입 시 눈에 보이는 메인 배너 슬롯 우선 생성
+  refreshAdfitSlot('ad-container-top');
+  refreshAdfitSlot('ad-container-main');
+}
+
+// DOM 로딩 완료 시 광고 초기화 실행
+document.addEventListener('DOMContentLoaded', initializeAds);
+
+// 전역 객체 바인딩 (모달 열림 이벤트 발생 시 외부 JS에서 refreshAdfitSlot('ID') 호출 가능)
+window.CONFIG = CONFIG;
+window.refreshAdfitSlot = refreshAdfitSlot;

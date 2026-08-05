@@ -122,37 +122,58 @@
 
 ## 📂 프로젝트 파일 구조 및 역할
 
-### 1. index.html
-- 메인 화면에 참여 인원 조절 카운터 (1P ~ 6P), 난이도 선택(Easy, Normal, Hard, Hell) 및 플레이어 닉네임 설정 UI 구축.
-- 상단 컨트롤바에 `🏆 명예의 전당 (Top 5)` 및 `☕ 후원` 모달 버튼 배치.
-- 메인 화면 상/하단, 결과창 카드, 4개 모달(명예의 전당, 채팅 설정, 단어 설정, 후원) 하단에 총 7개의 728x90 카카오 애드핏 배너 슬롯 (`class="ad-banner-box"`) 배치.
-- 구글 애드센스 관련 스크립트 완전 제거.
-- 결과 화면에 `👑 SSS~D RANK 뱃지`, `🎉 NEW RECORD!` 태그 및 최종 도달 스테이지 출력 구조 작성.
-- `#modal-support` 내부에 계좌번호 노출 없는 카카오페이 송금용 QR 이미지(`kakaopay_qr.jpg`) 출력 모달 구축.
+1. **`index.html`**
+   - 메인 화면에 참여 인원 조절 카운터 (1P ~ 6P), 난이도 선택(Easy, Normal, Hard, Hell) 및 플레이어 닉네임 설정 UI 구축.
+   - 상단 컨트롤바에 `🏆 명예의 전당 (Top 5)` 및 `☕ 후원` 모달 버튼 배치.
+   - 총 7개의 728x90 카카오 애드핏 배너 슬롯 (`class="ad-banner-box"`) 배치.
+   - 결과 화면에 `👑 SSS~D RANK 뱃지`, `🎉 NEW RECORD!` 태그 및 최종 도달 스테이지 출력 구조 작성.
+   - `#modal-support` 내부에 카카오페이 송금용 QR 이미지(`kakaopay_qr.jpg`) 모달 구축.
+   - 분리된 JavaScript 모듈 스크립트들을 의존성 순서에 맞춰 로드.
 
-### 2. style.css
-- 모바일 전용 미디어 쿼리를 전면 제거하고 1024x768 최소 PC 해상도 고정 및 소형 모니터 세로 잘림 방지(`max-height: 80vh`, `modal-body` 독립 스크롤) 적용.
-- 728x90 광고 배너 수용을 위해 메인 카드 및 모달 너비를 `width: min(96%, 800px)`로 확장.
-- `.ad-banner-box` 최소 높이를 106px로 확보하여 광고 로딩 시 UI 꿀렁임(Layout Shift) 방지.
-- OBS 크로마키 투명 오버레이 처리 스타일 추가.
+2. **`style.css`**
+   - 모바일 전용 미디어 쿼리를 전면 제거하고 1024x768 최소 PC 해상도 고정 및 세로 잘림 방지(`max-height: 80vh`, 독립 스크롤) 적용.
+   - 728x90 광고 배너 수용을 위해 카드 및 모달 너비를 `width: min(96%, 800px)`로 확장.
+   - `.ad-banner-box` 최소 높이를 106px로 확보하여 Layout Shift 방지.
+   - OBS 브라우저 소스 투명 오버레이(`body.obs-overlay`) 및 크로마키 배경 스타일 추가.
 
-### 3. js/config.js
-- `중앙 관리 & 주입`: 카카오 애드핏 728x90 배너 ID 관리 및 DOM 로드 완료 시 initializeAds() 실행 명시.
+3. **`js/config.js`**
+   - 카카오 애드핏 728x90 배너 ID 관리 및 DOM 로드 완료 시 `initializeAds()` 실행.
 
-### 4. js/game.js
-- 2단 몬스터 구조(시청자 닉네임 Tag + 제시어 Box) Canvas 렌더링.
-- 동적 다중 포탑(1~6인) 배치 및 통합 입력창 사용 시 가장 가까운 몬스터 자동 조준 사격.
-- 대형 방송 렉 방지용 최대 몬스터 Cap (15마리) 제한 및 State Machine (1. MENU / 2. SETTING / 3. READY / 4. PLAYING / 5. PAUSE / 6. GAME OVER / 7. RESULT) 제어.
-- 무한 Stage/웨이브 엔진, 5 Stage 단위 보스전(WARNING) 연출.
-- `calculateRankGrade()` 등급 환산 로직 및 `saveLeaderboardRecord()` 로컬스토리지 전적 관리 구현.
+4. **`js/wordPacks.js`**
+   - `getNextMonsterData()`를 통한 시청자 닉네임(부족 시 `[BOT]`)과 clean 제시어 쌍 분리 제공.
+   - `getHangulStrokeCount()` 한글 자모 획수 정밀 분석 유틸리티 제공.
 
-### 5. js/wordPacks.js
-- `getNextMonsterData()`를 추가하여 시청자 닉네임(부족 시 `[BOT]` 접두사 부여)과 clean 제시어 쌍을 2단 구조로 분리 공급.
-- `getHangulStrokeCount()` 한글 초성/중성/종성 자모 획수 정밀 분석 유틸리티 추가.
+5. **`js/audio.js`**
+   - Web Audio API 기반 오타 경고음, 스테이지 업 팡파르, 레이저/폭발/피버 효과음 처리.
 
-### 6. js/audio.js
-- Web Audio API 기반 오타 경고음(`playError()`), 스테이지 업 팡파르(`playStageUp()`), 레이저/폭발/피버 효과음 추가.
+6. **`js/chatIntegration.js`**
+   - 배열 기반 다중 채널 동시 연동 엔진 (`channels[]`) 관리.
+   - 시청자 부족 시 `[BOT]` 가상 시청자 자동 채우기 연동.
 
-### 7. js/chatIntegration.js
-- 단일 채널 연동 방식에서 배열 기반 다중 채널 동시 연동 엔진 (`channels[]`)으로 개선.
-- 시청자 부족/오프라인 테스트 시 `[BOT]` 표식이 붙은 가상 시청자 자동 채우기 연동.
+7. **`js/core/StateManager.js`**
+   - State Machine (MENU, SETTING, READY, PLAYING, PAUSE, GAME OVER, RESULT) 제어 및 UI 팝업 연동.
+   - 무한 Stage/웨이브 진행 상태, 점수, 플레이어 체력(HP) 변수 관리.
+   - `calculateRankGrade()` 등급 환산 및 `saveLeaderboardRecord()` 로컬스토리지 전적 저장.
+
+8. **`js/core/TurretManager.js`**
+   - 참여 인원(1~6명)에 따른 Canvas 하단 포탑 N개 좌표 계산 및 균등 배치.
+   - **통합 입력모드**: 타깃 몬스터와 가장 가까운 포탑 자동 선정, 회전 각도($\theta$) 및 사격 궤적 연산.
+   - **개별 입력모드**: P1~PN 지정 포탑별 레이저 발사 요청 처리.
+
+9. **`js/core/MonsterManager.js`**
+   - Max Monster Cap (15마리) 제한 및 스폰 대기열(Queue) 관리.
+   - 5 Stage 단위 보스전(WARNING) 및 일반 낙하 몬스터 속도/좌표 업데이트.
+   - 몬스터 바닥 도달 시 체력 차감 및 화면 제거 판정.
+
+10. **`js/core/InputManager.js`**
+    - 단일/개별 입력창 이벤트 수신 및 IME(한글 조합 완료) 감지.
+    - `wordPacks.js`와 연동하여 한글 자모 획수 기반 정밀 CPM/WPM 실시간 계산.
+
+11. **`js/renderers/CanvasRenderer.js`**
+    - `devicePixelRatio` 스케일링 적용으로 Retina/4K 대응 Canvas 고해상도 Draw.
+    - **2단 몬스터 UI 렌더링**: 상단 Pill Tag(닉네임/BOT) + 하단 Target Box(제시어) 분리 Draw.
+    - 레이저 사격 이펙트, 폭발 파티클, FEVER 모드 및 Boss WARNING 연출 전담.
+
+12. **`js/game.js`**
+    - 분리된 모듈들을 중앙에서 통제하는 **오케스트레이터(Orchestrator)**.
+    - 메인 루프(`requestAnimationFrame`)를 실행하며 매 프레임 업데이트 및 렌더링 명령 하달.
