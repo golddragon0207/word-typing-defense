@@ -9,7 +9,6 @@
 const CONFIG = {
   // 💰 수익화: 카카오 애드핏 (Kakao AdFit) 728x90 PC 전용 배너 설정
   KAKAO_ADFIT: {
-    TOP: "DAN-4hiutMEdhD30CTQ0",          // 메인_최상단_728x90 ID
     MAIN: "DAN-sCTP6AnIeAemuGrC",         // 메인_최하단_728x90 ID
     GAMEOVER: "DAN-wtmcwTgfJbkapFIQ",     // 결과창_카드_728x90 ID
     CHAT: "DAN-9KbCAkkKSv4pFqAO",         // 모달_채팅연동_728x90 ID
@@ -23,7 +22,6 @@ const CONFIG = {
 
 // 광고 슬롯 - 컨테이너 ID 맵핑 객체
 const AD_CONTAINER_MAP = {
-  'ad-container-top': CONFIG.KAKAO_ADFIT.TOP,
   'ad-container-main': CONFIG.KAKAO_ADFIT.MAIN,
   'ad-container-gameover': CONFIG.KAKAO_ADFIT.GAMEOVER,
   'ad-container-chat': CONFIG.KAKAO_ADFIT.CHAT,

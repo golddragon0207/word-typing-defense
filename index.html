@@ -35,7 +35,7 @@
 
     <main class="game-viewport">
       <canvas id="bg-canvas"></canvas>
-      <canvas id="game-canvas"></canvas>
+      <canvas id="gameCanvas"></canvas>
 
       <div id="game-hud" class="hud-overlay hidden">
         <div class="hud-card stage-card">
@@ -63,7 +63,7 @@
           <div class="hp-bar-bg">
             <div id="hud-hp-fill" class="hp-bar-fill" style="width: 100%;"></div>
           </div>
-          <span id="hud-hp-text" class="hp-text">100 / 100</span>
+          <span id="hud-hp-text" class="hp-text">10 / 10</span>
         </div>
 
         <div class="hud-card fever-card">
@@ -82,11 +82,6 @@
       </div>
 
       <div id="screen-main" class="screen-overlay">
-        <div id="ad-container-main-top" class="ad-banner-box">
-          <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
-            data-ad-height="90"></ins>
-        </div>
-
         <div class="main-menu-card">
           <h1 class="glow-text">MONSTER TYPING DEFENSE</h1>
           <p class="subtitle">시청자 닉네임 & 채팅으로 몰려오는 몬스터를 타자로 방어하라!</p>
@@ -174,8 +169,7 @@
         </div>
 
         <div id="ad-container-main" class="ad-banner-box">
-          <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
-            data-ad-height="90"></ins>
+          <ins class="kakao_ad_area" style="display:none;"></ins>
         </div>
       </div>
 
@@ -224,8 +218,7 @@
           </div>
 
           <div id="ad-container-gameover" class="ad-banner-box">
-            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
-              data-ad-height="90"></ins>
+            <ins class="kakao_ad_area" style="display:none;"></ins>
           </div>
         </div>
       </div>
@@ -305,8 +298,7 @@
           </div>
 
           <div id="ad-container-chat" class="ad-banner-box">
-            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
-              data-ad-height="90"></ins>
+            <ins class="kakao_ad_area" style="display:none;"></ins>
           </div>
         </div>
         <div class="modal-footer">
@@ -344,8 +336,7 @@
           </div>
 
           <div id="ad-container-words" class="ad-banner-box">
-            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
-              data-ad-height="90"></ins>
+            <ins class="kakao_ad_area" style="display:none;"></ins>
           </div>
         </div>
         <div class="modal-footer">
@@ -366,8 +357,7 @@
           </div>
 
           <div id="ad-container-leaderboard" class="ad-banner-box">
-            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
-              data-ad-height="90"></ins>
+            <ins class="kakao_ad_area" style="display:none;"></ins>
           </div>
         </div>
         <div class="modal-footer">
@@ -392,8 +382,7 @@
           <small style="color: #a0a5b5;">계좌번호 노출 없이 카카오톡 앱 카메라로 즉시 송금이 가능합니다.</small>
 
           <div id="ad-container-support" class="ad-banner-box">
-            <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-shkYTYTJSiergKJf" data-ad-width="728"
-              data-ad-height="90"></ins>
+            <ins class="kakao_ad_area" style="display:none;"></ins>
           </div>
         </div>
         <div class="modal-footer">
@@ -403,12 +392,12 @@
     </div>
 
   </div>
+
   <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
 
   <script src="js/config.js"></script>
   <script src="js/wordPacks.js"></script>
   <script src="js/audio.js"></script>
-  <script src="js/chatIntegration.js"></script>
 
   <script src="js/core/StateManager.js"></script>
   <script src="js/core/TurretManager.js"></script>
@@ -417,6 +406,7 @@
 
   <script src="js/renderers/CanvasRenderer.js"></script>
 
+  <script src="js/chatIntegration.js"></script>
   <script src="js/game.js"></script>
 </body>
 
