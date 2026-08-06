@@ -1,6 +1,7 @@
 /**
  * ============================================================
  * STREAMER WORD DEFENSE — 메인 오케스트레이터 (game.js)
+ * [1인 솔로 싱글 플레이어 최적화 버전]
  * ============================================================
  */
 
@@ -9,12 +10,11 @@ class GameEngine {
     this.isInitialized = false;
     this.animationFrameId = null;
 
+    // 1인 전용 고정 설정
     this.config = {
       playerCount: 1,
-      ruleMode: 'vs',       // 'vs' | 'coop'
-      inputMode: 'multi',   // 'multi' | 'single'
       difficulty: 'normal', // 'easy' | 'normal' | 'hard' | 'hell'
-      playerNames: ['스트리머1', '스트리머2', '스트리머3', '스트리머4', '스트리머5', '스트리머6']
+      playerNames: ['스트리머']
     };
 
     this.stateManager = null;
@@ -30,21 +30,21 @@ class GameEngine {
   init() {
     if (this.isInitialized) return;
 
-    // 1. Canvas DOM 요소 안전 확보
+    // 1. Canvas DOM 확보
     const canvas = document.getElementById('gameCanvas');
     if (!canvas) {
       console.error('❌ #gameCanvas 요소를 찾을 수 없습니다.');
       return;
     }
 
-    // 2. 핵심 모듈 인스턴스화 (전역 클래스 안전 체크)
+    // 2. 모듈 인스턴스화
     this.stateManager = typeof StateManager !== 'undefined' ? new StateManager() : null;
     this.turretManager = typeof TurretManager !== 'undefined' ? new TurretManager(canvas) : null;
     this.monsterManager = typeof MonsterManager !== 'undefined' ? new MonsterManager(canvas) : null;
     this.inputManager = typeof InputManager !== 'undefined' ? new InputManager() : null;
     this.renderer = typeof CanvasRenderer !== 'undefined' ? new CanvasRenderer(canvas) : null;
 
-    // 3. 렌더러 리사이즈 및 포탑 셋업
+    // 3. 렌더러 & 포탑 셋업 (1인 포탑 중앙 배치)
     if (this.renderer) {
       this.renderer.resizeCanvas();
       window.addEventListener('resize', () => {
@@ -54,24 +54,24 @@ class GameEngine {
     }
 
     if (this.turretManager) {
-      this.turretManager.setupTurrets(this.config.playerCount, this.config.playerNames, canvas);
+      this.turretManager.setupTurrets(1, this.config.playerNames, canvas);
     }
 
-    // 4. UI 버튼 및 이벤트 바인딩
+    // 4. UI 및 이벤트 바인딩
     this.bindUIEvents();
-    this.renderPlayerNicknameInputs();
 
     // 5. 메인 루프 시작
     this.isInitialized = true;
     this.startMainLoop();
 
-    console.log("🎮 Word Defense Engine Initialized Successfully!");
+    console.log("🎮 Word Defense 1인 싱글 모드 엔진 초기화 완료!");
   }
 
   /**
-   * 🖱️ UI 버튼 및 모달 이벤트 바인딩
+   * 🖱️ UI 버튼 이벤트 바인딩
    */
   bindUIEvents() {
+    // 모달 팝업 바인딩
     const modalMap = [
       { btnId: 'btn-chat-modal', modalId: 'modal-chat' },
       { btnId: 'btn-word-modal', modalId: 'modal-words' },
@@ -85,14 +85,11 @@ class GameEngine {
       if (btn && modal) {
         btn.addEventListener('click', () => {
           modal.classList.remove('hidden');
-          if (window.refreshAdfitSlot) {
-            const adBox = modal.querySelector('.ad-banner-box');
-            if (adBox && adBox.id) window.refreshAdfitSlot(adBox.id);
-          }
         });
       }
     });
 
+    // 닫기 버튼
     document.querySelectorAll('[data-close]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const targetId = e.currentTarget.getAttribute('data-close');
@@ -101,35 +98,7 @@ class GameEngine {
       });
     });
 
-    const btnObs = document.getElementById('btn-obs-toggle');
-    if (btnObs) {
-      btnObs.addEventListener('click', () => {
-        document.body.classList.toggle('obs-overlay');
-        btnObs.classList.toggle('active');
-      });
-    }
-
-    const countBtns = document.querySelectorAll('.btn-count');
-    const multiOptions = document.getElementById('section-multi-options');
-
-    countBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        countBtns.forEach(b => b.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-
-        this.config.playerCount = parseInt(e.currentTarget.dataset.count);
-
-        if (multiOptions) {
-          if (this.config.playerCount > 1) {
-            multiOptions.classList.remove('hidden');
-          } else {
-            multiOptions.classList.add('hidden');
-          }
-        }
-        this.renderPlayerNicknameInputs();
-      });
-    });
-
+    // 난이도 선택 버튼
     const diffBtns = document.querySelectorAll('.btn-diff');
     diffBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -139,63 +108,31 @@ class GameEngine {
       });
     });
 
+    // 게임 시작 / 재시작 / 메인 이동 버튼
     const btnStart = document.getElementById('btn-start-game');
-    if (btnStart) {
-      btnStart.addEventListener('click', () => this.startGame());
-    }
+    if (btnStart) btnStart.addEventListener('click', () => this.startGame());
 
     const btnRestart = document.getElementById('btn-restart');
-    if (btnRestart) {
-      btnRestart.addEventListener('click', () => this.startGame());
-    }
+    if (btnRestart) btnRestart.addEventListener('click', () => this.startGame());
 
     const btnReturnMain = document.getElementById('btn-return-main');
-    if (btnReturnMain) {
-      btnReturnMain.addEventListener('click', () => this.returnToMain());
-    }
+    if (btnReturnMain) btnReturnMain.addEventListener('click', () => this.returnToMain());
   }
 
-  renderPlayerNicknameInputs() {
-    const listContainer = document.getElementById('player-settings-list');
-    if (!listContainer) return;
-
-    listContainer.innerHTML = '';
-    for (let i = 0; i < this.config.playerCount; i++) {
-      const div = document.createElement('div');
-      div.className = 'player-nickname-item';
-      div.innerHTML = `
-        <label>P${i + 1} 닉네임:</label>
-        <input type="text" class="input-player-name" data-index="${i}" value="${this.config.playerNames[i]}" placeholder="스트리머${i + 1}" />
-      `;
-      listContainer.appendChild(div);
-    }
-
-    listContainer.querySelectorAll('.input-player-name').forEach(input => {
-      input.addEventListener('change', (e) => {
-        const idx = parseInt(e.target.dataset.index);
-        this.config.playerNames[idx] = e.target.value.trim() || `스트리머${idx + 1}`;
-      });
-    });
-  }
-
+  /**
+   * ⌨️ 1인 전용 타자 입력창 바인딩
+   */
   setupInputBars() {
     const container = document.getElementById('multi-input-container');
     if (!container) return;
 
-    container.innerHTML = '';
-    const isSingleInput = (this.config.playerCount > 1 && this.config.inputMode === 'single') || this.config.playerCount === 1;
-    const countToCreate = isSingleInput ? 1 : this.config.playerCount;
-
-    for (let i = 0; i < countToCreate; i++) {
-      const pName = isSingleInput ? '전체 공격' : this.config.playerNames[i];
-      const div = document.createElement('div');
-      div.className = 'typing-input-box';
-      div.innerHTML = `
-        <span class="player-tag">P${i + 1} (${pName})</span>
-        <input type="text" class="game-typing-input" data-player="${i}" placeholder="타깃 단어를 입력하고 Enter!" />
-      `;
-      container.appendChild(div);
-    }
+    // 1인 전용 단일 입력창 생성
+    container.innerHTML = `
+      <div class="typing-input-box solo-mode">
+        <span class="player-tag">🎯 PLAYER</span>
+        <input type="text" class="game-typing-input" data-player="0" placeholder="타깃 단어를 입력하고 Enter!" autofocus />
+      </div>
+    `;
 
     if (this.inputManager) {
       this.inputManager.bindInputs(container.querySelectorAll('.game-typing-input'), (playerIdx, text) => {
@@ -204,8 +141,11 @@ class GameEngine {
     }
   }
 
+  /**
+   * 🚀 게임 시작
+   */
   startGame() {
-    // 1. 화면 전환 처리 (먼저 un-hide 실행)
+    // 1. 화면 전환
     const mainScreen = document.getElementById('screen-main');
     const gameOverScreen = document.getElementById('screen-gameover');
     const gameHud = document.getElementById('game-hud');
@@ -216,23 +156,28 @@ class GameEngine {
     if (gameHud) gameHud.classList.remove('hidden');
     if (typingBar) typingBar.classList.remove('hidden');
 
-    // 2. 화면 표시 후 입력창 바 동적 생성
+    // 2. 입력창 셋업
     this.setupInputBars();
 
     const canvas = document.getElementById('gameCanvas');
 
+    // 3. 모듈 리셋 및 스테이지 시작 (포탑 1개)
     if (this.stateManager) this.stateManager.resetGame(this.config);
-    if (this.turretManager) this.turretManager.setupTurrets(this.config.playerCount, this.config.playerNames, canvas);
+    if (this.turretManager) this.turretManager.setupTurrets(1, this.config.playerNames, canvas);
     if (this.monsterManager) this.monsterManager.startStage(this.stateManager ? this.stateManager.currentStage : 1, this.config.difficulty);
 
     if (this.stateManager) this.stateManager.changeState('PLAYING');
 
+    // 4. 입력창 즉시 포커스
     setTimeout(() => {
       const firstInput = document.querySelector('.game-typing-input');
       if (firstInput) firstInput.focus();
     }, 50);
   }
 
+  /**
+   * 🏠 메인 화면으로 돌아가기
+   */
   returnToMain() {
     document.getElementById('screen-gameover').classList.add('hidden');
     document.getElementById('game-hud').classList.add('hidden');
@@ -243,6 +188,9 @@ class GameEngine {
     if (this.stateManager) this.stateManager.changeState('MENU');
   }
 
+  /**
+   * 🎯 타자 제출 처리 (단어 맞추었을 때)
+   */
   handleTypingSubmit(playerIdx, text) {
     if (!this.stateManager || this.stateManager.currentState !== 'PLAYING') return;
 
@@ -250,13 +198,14 @@ class GameEngine {
     if (hitResult && hitResult.success) {
       const { monster, isKilled } = hitResult;
 
+      // 중앙 대포 조준 및 발사
       let firedTurret = null;
       if (this.turretManager) {
-        firedTurret = this.turretManager.aimAndFire(monster, playerIdx);
+        firedTurret = this.turretManager.aimAndFire(monster, 0); // 0번 포탑 고정
       }
 
       const turrets = this.turretManager ? this.turretManager.getTurrets() : [];
-      const turretPos = firedTurret || turrets[playerIdx] || turrets[0];
+      const turretPos = firedTurret || turrets[0];
 
       if (turretPos && this.renderer) {
         this.renderer.addLaserEffect(turretPos, monster);
@@ -319,22 +268,14 @@ class GameEngine {
 
       const stageEl = document.getElementById('result-stage');
       const scoreEl = document.getElementById('result-score');
-      const wpmEl = document.getElementById('result-wpm');
-      const comboEl = document.getElementById('result-combo');
-      const killsEl = document.getElementById('result-kills');
 
       if (stageEl) stageEl.innerText = `STAGE ${this.stateManager ? this.stateManager.currentStage : 1}`;
       if (scoreEl) scoreEl.innerText = this.stateManager ? this.stateManager.score.toLocaleString() : 0;
-      if (wpmEl) wpmEl.innerText = this.stateManager ? (this.stateManager.maxWpm || 0) : 0;
-      if (comboEl) comboEl.innerText = this.stateManager ? (this.stateManager.maxCombo || 0) : 0;
-      if (killsEl) killsEl.innerText = this.stateManager ? (this.stateManager.totalKills || 0) : 0;
-
-      if (window.refreshAdfitSlot) window.refreshAdfitSlot('ad-container-gameover');
     }
   }
 }
 
-// 안전한 전역 초기화
+// 초기화
 window.gameEngine = new GameEngine();
 
 if (document.readyState === 'loading') {
