@@ -1369,6 +1369,32 @@ html {
   font-weight: 800;
 }
 
+/* 참여자 명단 헤더(라벨 + 초기화 버튼) 한 줄 배치 */
+.participants-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.btn-reset-participants {
+  flex-shrink: 0;
+  background: rgba(255, 0, 85, 0.12);
+  border: 1px solid #ff0055;
+  color: #ff5c85;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-reset-participants:hover {
+  background: rgba(255, 0, 85, 0.25);
+  box-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
+}
+
 .participant-chips-container {
   display: flex;
   flex-wrap: wrap;

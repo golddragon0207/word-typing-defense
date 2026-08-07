@@ -65,6 +65,9 @@ const wordPacks = {
   MAX_QUEUE_LENGTH: 30,
   // 한 시청자가 큐에 동시에 대기할 수 있는 최대 항목 수 (도배로 큐 독점 방지). [BOT]은 예외.
   MAX_QUEUE_PER_VIEWER: 2,
+  // 참여자 명단(joinedViewers) 최대 인원. 큐/화면 상한이 이미 있어 이 이상은 게임에 의미가 없고,
+  // 무제한 누적을 막기 위한 상한. 가득 차면 새 시청자의 `!참여`는 무시된다(기존 참여자는 계속 동작).
+  MAX_JOINED_VIEWERS: 100,
 
   // `!참여`로 들어온 시청자만 라이브 채팅 제시어 후보가 될 수 있습니다.
   // Set에는 플랫폼 접두사가 포함된 닉네임을 저장해 플랫폼 간 동명이인도 구분합니다.
@@ -129,6 +132,10 @@ const wordPacks = {
     // 1) `!참여`를 친 시청자만 참가자 명단에 등록하고, 우선 일반 단어팩 몬스터로 한 번 소환합니다.
     if (hasJoinCommand) {
       const wasJoined = this.joinedViewers.has(safeNickname);
+      // 명단이 가득 찼는데(=상한 도달) 새 시청자면 참여 거부. 기존 참여자의 재참여는 계속 허용.
+      if (!wasJoined && this.joinedViewers.size >= this.MAX_JOINED_VIEWERS) {
+        return false;
+      }
       this.joinedViewers.add(safeNickname);
       this.enqueueViewer(safeNickname);
       if (!wasJoined) this.realParticipantCount += 1;
@@ -153,6 +160,17 @@ const wordPacks = {
     }
 
     return false;
+  },
+
+  /**
+   * 🔄 참여자 명단/대기열 초기화. 새 판 시작 시, 그리고 채팅 모달의 "참여자 초기화" 버튼에서 호출.
+   *    joinedViewers(명단)·viewerQueue(대기열)·realParticipantCount(카운트)·liveCandidate(경쟁 후보)를 모두 비운다.
+   */
+  resetParticipants() {
+    this.joinedViewers.clear();
+    this.viewerQueue = [];
+    this.realParticipantCount = 0;
+    this.liveCandidate = null;
   },
 
   /**

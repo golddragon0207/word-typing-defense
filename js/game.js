@@ -256,6 +256,18 @@ class GameEngine {
       btn.addEventListener('click', () => this.returnToMain());
     });
 
+    // 🔄 채팅 연동 모달: 참여자 명단 초기화 버튼
+    const btnResetParticipants = document.getElementById('btn-reset-participants');
+    if (btnResetParticipants) {
+      btnResetParticipants.addEventListener('click', () => {
+        if (typeof wordPacks !== 'undefined' && typeof wordPacks.resetParticipants === 'function') {
+          wordPacks.resetParticipants();
+        }
+        this.renderParticipants();
+        this.showToastInternal('🔄 참여자 명단을 초기화했습니다.', 'info');
+      });
+    }
+
     // 결과 화면 → 후원 모달 바로가기
     const btnResultSupport = document.getElementById('btn-result-support');
     if (btnResultSupport) {
@@ -740,6 +752,10 @@ class GameEngine {
 
     this.stageKillCount = 0;
     this.mvpTracker = new Map(); // 🏅 새 판 시작 시 MVP 집계 초기화
+    // 🔄 판마다 참여자 명단/대기열을 새로 시작 (이전 판 참여자가 이어지지 않도록)
+    if (typeof wordPacks !== 'undefined' && typeof wordPacks.resetParticipants === 'function') {
+      wordPacks.resetParticipants();
+    }
 
     if (this.stateManager) this.stateManager.resetGame(this.config);
     if (this.turretManager) this.turretManager.setupTurrets(1, this.config.playerNames, canvas);
