@@ -24,7 +24,8 @@ class GameEngine {
     this.renderer = null;
 
     this.stageKillCount = 0;
-    // 🏅 이번 판 MVP 집계: 실제 참여 시청자(봇/보스 제외) 닉네임별 몬스터 처치 수 누적
+    // 🏅 이번 판 MVP 집계: 실제 참여 시청자(봇/보스 제외) 닉네임별 몬스터 "등장(참여)" 수 누적
+    //    (처치 여부와 무관 — 스폰 시점에 MonsterManager가 trackMvpAppearance로 보고)
     this.mvpTracker = new Map();
     this.simInterval = null; // 가상 시청자 자동 소환(테스트) 타이머
     this.bgStars = [];
@@ -813,11 +814,6 @@ class GameEngine {
       if (window.audioManager) window.audioManager.playExplosion();
       if (this.stateManager) this.stateManager.registerHit(text, monster.scoreValue || 100);
 
-      // 🏅 MVP 집계: 실제 참여 시청자(봇·보스 제외)가 낸 몬스터 처치 수를 닉네임별로 누적
-      if (monster && !monster.isBot && monster.username) {
-        this.mvpTracker.set(monster.username, (this.mvpTracker.get(monster.username) || 0) + 1);
-      }
-
       // 🏆 스테이지 진행: 보스 처치 or 일반 처치 누적 목표 달성 시 다음 스테이지로
       if (isBoss) {
         this.advanceStage();
@@ -926,15 +922,26 @@ class GameEngine {
   }
 
   /**
-   * 🏅 이번 판 MVP 산출: 실참여 시청자(봇/보스 제외) 중 몬스터를 가장 많이 낸(=처치된) 닉네임.
+   * 🏅 MVP 등장(참여) 집계: 실참여 시청자의 몬스터가 화면에 뜰 때마다 MonsterManager가 호출.
+   *    처치 여부와 무관하게 "낸 몬스터 수"를 닉네임별로 누적한다. 봇/보스는 호출되지 않음.
+   * @param {string} username - 몬스터에 표시되는 시청자 닉네임
+   */
+  trackMvpAppearance(username) {
+    const name = (username || '').toString().trim();
+    if (!name) return;
+    this.mvpTracker.set(name, (this.mvpTracker.get(name) || 0) + 1);
+  }
+
+  /**
+   * 🏅 이번 판 MVP 산출: 실참여 시청자(봇/보스 제외) 중 몬스터를 가장 많이 낸 닉네임.
    * 동점이면 먼저 집계된(=먼저 참여한) 시청자를 우선한다. 참여자가 없으면 null.
-   * @returns {{name: string, kills: number}|null}
+   * @returns {{name: string, count: number}|null}
    */
   computeMvp() {
     if (!this.mvpTracker || this.mvpTracker.size === 0) return null;
     let best = null;
-    for (const [name, kills] of this.mvpTracker.entries()) {
-      if (!best || kills > best.kills) best = { name, kills };
+    for (const [name, count] of this.mvpTracker.entries()) {
+      if (!best || count > best.count) best = { name, count };
     }
     return best;
   }
@@ -976,7 +983,7 @@ class GameEngine {
       if (mvpEl) {
         if (mvp) {
           if (mvpNameEl) mvpNameEl.innerText = mvp.name; // 닉네임은 시청자 입력값이라 innerText로 안전 처리
-          if (mvpKillsEl) mvpKillsEl.innerText = `${mvp.kills}마리 처치`;
+          if (mvpKillsEl) mvpKillsEl.innerText = `몬스터 ${mvp.count}마리 참여`;
           mvpEl.classList.remove('hidden');
         } else {
           mvpEl.classList.add('hidden');

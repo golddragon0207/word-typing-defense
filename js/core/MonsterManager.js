@@ -102,6 +102,13 @@ class MonsterManager {
         };
 
         this.monsters.push(monster);
+
+        // 🏅 MVP 등장 집계: 실참여 시청자(봇 제외) 몬스터가 뜰 때마다 게임 엔진에 보고
+        //    (처치 여부와 무관하게 "참여/등장" 기준으로 MVP 산정)
+        if (!data.isBot && data.nickname && typeof window !== 'undefined'
+            && window.gameEngine && typeof window.gameEngine.trackMvpAppearance === 'function') {
+            window.gameEngine.trackMvpAppearance(data.nickname);
+        }
     }
 
     /**
