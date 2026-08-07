@@ -17,11 +17,13 @@ class ChatIntegrationEngine {
     const trimmed = input.trim();
 
     try {
-      // 🟢 치지직 (Chzzk): https://chzzk.naver.com/live/{32자리 Hash ID}
+      // 🟢 치지직 (Chzzk): 채널 ID = 32자리 Hash. URL 위치가 형식마다 달라
+      //   URL 어디에 있든 첫 32자리 hex를 채널 ID로 추출한다.
+      //   지원: chzzk.naver.com/live/{ID}, chzzk.naver.com/{ID},
+      //         studio.chzzk.naver.com/{ID}/live(스튜디오/관리 페이지), 또는 32자리 hex 원문
       if (platform === 'chzzk') {
-        const chzzkRegex = /(?:live\/|channel\/)([a-f0-9]{32})/i;
-        const match = trimmed.match(chzzkRegex);
-        if (match && match[1]) return match[1];
+        const match = trimmed.match(/[0-9a-f]{32}/i);
+        if (match) return match[0];
       }
 
       // 🔵 SOOP (숲/아프리카TV): 방송국 주소 및 BJ ID 파싱

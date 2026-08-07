@@ -31,7 +31,7 @@
 ## 🎯 2. 주요 기능 및 상세 정책
 
 ### 1. 📡 원클릭 방송 URL 실시간 채팅 연동 (치지직/SOOP/유튜브 다중)
-*  **URL 자동 파서**: 붙여넣은 방송 주소에서 치지직 32자리 채널 ID / SOOP BJ·방송국 ID(`sooplive.com`·`sooplive.co.kr`·`afreecatv.com` 도메인 지원, 첫 경로 세그먼트=BJ ID) / 유튜브 Video ID 자동 추출.
+*  **URL 자동 파서**: 붙여넣은 방송 주소에서 치지직 32자리 채널 ID(URL 위치 무관하게 첫 32자리 hex 추출 — `chzzk.naver.com/live/{ID}`·`chzzk.naver.com/{ID}`·`studio.chzzk.naver.com/{ID}/live` 모두 지원) / SOOP BJ·방송국 ID(`sooplive.com`·`sooplive.co.kr`·`afreecatv.com` 도메인 지원, 첫 경로 세그먼트=BJ ID) / 유튜브 Video ID 자동 추출.
 *  **다중 플랫폼 동시 연동**: `channels[]` 배열 구조로 SOOP + 치지직 + 유튜브를 동시에 연결 가능. 각 플랫폼 채팅은 플랫폼 접두사(🔵/🟢/🔴)와 함께 하나의 시청자 대기열로 병합. 연동 모달 기본 탭·시작화면 배지는 **SOOP를 선두**로 배치.
 *  **참여자 목록 표시**: `!참여`한 시청자를 채팅 연동 모달에 실시간 목록(총원 + 최근 참여자 칩)으로 표시해 스트리머가 연동 상태를 바로 확인.
 *  **스트리머 닉네임 자동 입력**: SOOP 연동 성공 시 방송의 BJ 닉네임(`BJNICK`)→BJ ID 순으로 메인 화면의 스트리머 닉네임 칸(`#input-player-nickname`)을 자동으로 채움(`_autofillStreamerName`). 사용자가 이미 입력한 값이 있으면 덮어쓰지 않음. (현재 SOOP만 지원 — 치지직/유튜브는 각 플랫폼 API의 채널 표시명으로 확장 가능)
