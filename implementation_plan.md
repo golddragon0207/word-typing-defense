@@ -1,8 +1,10 @@
-# 🎮 word-typing-defense (스트리머 워드 디펜스) 구현 계획서 (v3.0)
+# 🎮 word-typing-defense (스트리머 워드 디펜스) 구현 계획서 (v3.1)
 
  스트리머 1인 솔로 플레이에 최적화된 단일 입력 웹 타자 디펜스 환경을 제공하며, 화면상에는 시청자 닉네임 뱃지와 타깃 제시어(밈/유행어/실시간 채팅)가 직관적으로 구분되는 **2단 몬스터 UI 시스템**을 구축합니다.
  모바일 접속은 완전히 배제하고 최소 지원 해상도를 **1024x768 (PC 전용)**로 확정하여, 방송 송출(OBS 크로마키 및 투명 오버레이 지원) 시 화면 잘림이나 가로 스크롤 없이 100% 쾌적하고 안정적인 방송 플레이를 보장합니다.
 
+> **v3.1 변경 요약**: **SOOP(숲/아프리카) 실시간 채팅 실제 연동 구현**(입장 핸드셰이크·패킷 파싱 + 전용 무료 Cloudflare Worker CORS 프록시 `CONFIG.SOOP_PROXY`, 스트리머는 URL만 붙여넣으면 자동), SOOP를 연동 모달 **기본/맨 왼쪽 탭**·시작화면 배지 선두로 배치, 라이브 채팅 설정 박스 **테두리 ON/OFF 상태 표시**, 후원 모달 **QR·계좌 가로 배치 + 헤더 '카카오뱅크'**, SOOP URL 파서 `sooplive.com` 도메인 지원.
+>
 > **v3.0 변경 요약**: 난이도별 밸런스 테이블 도입, `!참여` 단일 명령어 + 봇 자동 보충, 💬 라이브 채팅 하이브리드 모드(실제 채팅 문구를 타깃으로), 난이도별 명예의 전당(로컬 + Firebase 글로벌), Firebase Analytics(GA4) 게임 이벤트 수집, 피버 모드, 단어팩 미리보기, 토스트 알림, 배경 파티클 연출 추가.
 
 ---
@@ -15,7 +17,7 @@
 | **타깃 플랫폼 & 해상도** |  PC Desktop 전용 (**1024 × 768** 최소 해상도 고정, OBS 크로마키/투명 오버레이 지원) |
 | **웹 배포 및 접속 주소** |  **GitHub Pages 단일 Git URL 배포** (`https://golddragon0207.github.io/word-typing-defense/`) |
 | **플레이 모드** |  **1인 솔로 스트리머 전용 디펜스** (복잡한 N인 합방/대결 모드 옵션 전면 제거) |
-| **방송 채팅 연동 방식** |  **원클릭 방송 URL 파싱 연동** (스트리머가 방송 주소 입력 시 자동 ID 추출, CORS 프록시/웹소켓 릴레이 경유). 치지직/SOOP/유튜브 **동시 다중 연동** 지원 |
+| **방송 채팅 연동 방식** |  **원클릭 방송 URL 파싱 연동** (스트리머가 방송 주소 입력 시 자동 ID 추출). SOOP/치지직/유튜브 **동시 다중 연동**. SOOP는 전용 무료 Cloudflare Worker 프록시(`CONFIG.SOOP_PROXY`, 개발자 1회 배포) 경유 — 스트리머는 URL만 입력 |
 | **몬스터 UI 시스템** |  **2단 UI** (상단: 시청자 닉네임 Pill Tag / 하단: 제시어 Box). 보스는 금색·확대, 라이브 채팅 문구는 보라색으로 강조. **Max Cap 15마리** 고정 상한 |
 | **난이도 밸런스** |  4단계(Easy/Normal/Hard/Hell) 밸런스 테이블(`CONFIG.DIFFICULTY`)로 낙하속도·스폰주기·기지 체력·피격 데미지·스테이지 처치목표를 난이도별 차등 |
 | **명예의 전당** |  **난이도별 TOP 5**. 로컬(`localStorage`) 기본 + Firebase Firestore **글로벌 리더보드**(설정 시 자동 활성, 미설정 시 로컬 폴백) |
@@ -29,12 +31,13 @@
 ## 🎯 2. 주요 기능 및 상세 정책
 
 ### 1. 📡 원클릭 방송 URL 실시간 채팅 연동 (치지직/SOOP/유튜브 다중)
-*  **URL 자동 파서**: 붙여넣은 방송 주소에서 치지직 32자리 채널 ID / SOOP BJ·방송국 ID / 유튜브 Video ID 자동 추출.
-*  **다중 플랫폼 동시 연동**: `channels[]` 배열 구조로 치지직 + SOOP + 유튜브를 동시에 연결 가능. 각 플랫폼 채팅은 플랫폼 접두사(🟢/🔵/🔴)와 함께 하나의 시청자 대기열로 병합.
+*  **URL 자동 파서**: 붙여넣은 방송 주소에서 치지직 32자리 채널 ID / SOOP BJ·방송국 ID(`sooplive.com`·`sooplive.co.kr`·`afreecatv.com` 도메인 지원, 첫 경로 세그먼트=BJ ID) / 유튜브 Video ID 자동 추출.
+*  **다중 플랫폼 동시 연동**: `channels[]` 배열 구조로 SOOP + 치지직 + 유튜브를 동시에 연결 가능. 각 플랫폼 채팅은 플랫폼 접두사(🔵/🟢/🔴)와 함께 하나의 시청자 대기열로 병합. 연동 모달 기본 탭·시작화면 배지는 **SOOP를 선두**로 배치.
 *  **참여자 목록 표시**: `!참여`한 시청자를 채팅 연동 모달에 실시간 목록(총원 + 최근 참여자 칩)으로 표시해 스트리머가 연동 상태를 바로 확인.
-*  **CORS 프록시 / 웹소켓 릴레이**: GitHub Pages 정적 환경의 브라우저 제약을 우회(치지직 폴링 → 웹소켓, SOOP 웹소켓, 유튜브 Data API v3 폴링).
-*  **Smart Fallback**: 방송 비활성화·주소 오류·통신 장애 시 토스트로 안내 후, 대기열이 비면 `getNextMonsterData`가 자동으로 `[BOT]` 가상 시청자를 배정(별도 폴백 로직 불필요한 자연 폴백 구조).
-*  ⚠️ 유튜브 연동은 `CONFIG.YOUTUBE_API_KEY` 필요(미설정 시 BOT 시뮬레이션). 치지직/SOOP는 공용 데모 프록시를 사용하므로 실서비스 시 자체 프록시 권장.
+*  **SOOP 실제 채팅 클라이언트**: `player_live_api.php`로 방송번호(BNO)·채팅서버(CHDOMAIN/CHPT) 조회 → `wss://{CHDOMAIN}:{CHPT+1}/Websocket/{BJID}` 접속(서브프로토콜 `chat`) → LOGIN(svc 1)·JOIN(svc 2)·주기 PING(svc 0), 수신 CHAT(svc 5) 패킷을 `0x0c` 구분자로 파싱해 닉네임·메시지 추출. `CONFIG.SOOP_DEBUG`로 원본 프레임 로그 출력(프로토콜이 비공식이라 라이브 검증·필드 튜닝 지원).
+*  **CORS 프록시 / 웹소켓**: GitHub Pages 정적 환경의 브라우저 제약을 우회. SOOP 정보 API는 전용 무료 **Cloudflare Worker 프록시**([`proxy/soop-cors-proxy.worker.js`](proxy/soop-cors-proxy.worker.js), SOOP/아프리카 도메인만 허용) 경유; 치지직 폴링→웹소켓; 유튜브 Data API v3 폴링.
+*  **Smart Fallback**: 방송 비활성화·주소 오류·통신 장애·프록시 미설정 시 토스트로 안내 후, 대기열이 비면 `getNextMonsterData`가 자동으로 `[BOT]` 가상 시청자를 배정(별도 폴백 로직 불필요한 자연 폴백 구조).
+*  ⚠️ 유튜브 연동은 `CONFIG.YOUTUBE_API_KEY` 필요(미설정 시 BOT 시뮬레이션). SOOP는 `CONFIG.SOOP_PROXY`(개발자 1회 배포)가 필요하며 미설정 시 BOT 폴백. 치지직 공용 데모 프록시는 불안정하므로 실서비스 시 자체 프록시 권장.
 
 ### 2. 🙋 `!참여` 단일 명령어 참가 & 봇 자동 보충
 *  **`!참여`만 참가 명령어로 인정**(`!참가`는 제거). '명령어 전용' 체크박스 해제 시 아무 메시지나 곧 참가 처리.
@@ -48,7 +51,7 @@
 *  **라이브 모드(ON)**: `!참여`한 시청자가 친 채팅 문구를 정제(`sanitizeLiveChatWord`)해 **타이핑 타깃으로 사용**. 정제 규칙: `!참여` 토큰 제거 → (설정 시) 이모티콘·특수문자 제거 → 비속어 필터 → 최대 글자수 컷.
 *  **🔥 다음 자리 경쟁(덮어쓰기)**: 라이브 모드에선 시청자들이 채팅으로 **"다음 몬스터 자리"(경쟁 후보 `liveCandidate`)를 두고 경쟁**한다. 나중에 친 채팅이 앞 채팅을 덮어쓰고(마지막이 승자), 몬스터가 소환되는 순간(자리가 나면) 그때의 후보가 **확정되어 그 몬스터로 등장**한다. 경쟁이 없으면(아무도 안 치면) 기존 `!참여` 대기열/봇으로 폴백.
 *  **토글 위치**: 상단 컨트롤바 `💬 라이브 채팅 모드` 버튼으로 **게임 중에도 즉시 ON/OFF**(OBS·사운드 토글과 동일한 라이브 컨트롤 성격).
-*  **세부 설정**: 단어/닉네임 팩 모달에서 최대 글자수·특수문자 제거 여부 설정.
+*  **세부 설정**: 단어/닉네임 팩 모달에서 최대 글자수·특수문자 제거 여부 설정. 라이브 채팅 설정 박스는 **모드 ON일 때만 보라색 테두리+글로우로 활성 상태를 표시**(OFF 시 테두리 꺼짐, `.live-active` 클래스로 양쪽 토글 동기화). 상태 전환 토스트는 🟢 ON / 🔴 OFF 스위치 표기.
 *  **시각 강조**: 라이브 채팅 문구가 그대로 쓰인 몬스터는 하단 박스를 **보라색**으로 렌더링해 팩 단어 몬스터와 구분.
 *  ※ 시청자 채팅은 항상 **닉네임(상단 태그)**으로 반영되며, 채팅 문구가 타깃이 되는 것은 라이브 모드일 때만.
 
@@ -126,7 +129,7 @@
     *  1024x768 고정 레이아웃, 모달 잘림 방지, `.modal-actions`/`.modal-footer` 분리, `body.obs-overlay` 투명 스타일, 토스트/등급뱃지/난이도탭/단어칩/피버 등 컴포넌트 스타일.
 
 3.  **`js/config.js`**
-    *  `CONFIG.YOUTUBE_API_KEY`, `CONFIG.FIREBASE`(리더보드/애널리틱스), `CONFIG.KAKAO_ADFIT`(6개), **`CONFIG.DIFFICULTY`(난이도 밸런스 테이블)** + `getDifficultyConfig()`, 광고 리프레시 로직.
+    *  `CONFIG.YOUTUBE_API_KEY`, **`CONFIG.SOOP_PROXY`/`CONFIG.SOOP_DEBUG`(SOOP 프록시·디버그)**, `CONFIG.FIREBASE`(리더보드/애널리틱스), `CONFIG.KAKAO_ADFIT`(6개), **`CONFIG.DIFFICULTY`(난이도 밸런스 테이블)** + `getDifficultyConfig()`, 광고 리프레시 로직.
 
 4.  **`js/wordPacks.js`**
     *  단어팩(기본/프리셋/보스), 시청자 대기열(`{nickname, chatWord}`) 관리, `!참여` 처리·참가자 명단, 봇 자동 보충, **라이브 채팅 정제(`sanitizeLiveChatWord`)**, 비속어 필터, 한글 자모 획수 유틸.
@@ -135,7 +138,7 @@
     *  Web Audio API 효과음 5종(레이저/폭발/피버/오타/팡파르) + Mute.
 
 6.  **`js/chatIntegration.js`**
-    *  플랫폼별 URL 파서, 치지직/SOOP/유튜브 다중 연동, Smart Fallback 토스트 안내, `handleIncomingChat` → `wordPacks.processChatMessage` 전달.
+    *  플랫폼별 URL 파서, SOOP/치지직/유튜브 다중 연동, **SOOP 채팅 프로토콜 클라이언트**(핸드셰이크·패킷 빌드/파싱, `CONFIG.SOOP_PROXY` 경유), Smart Fallback 토스트 안내, `handleIncomingChat` → `wordPacks.processChatMessage` 전달.
 
 7.  **`js/globalLeaderboard.js`**
     *  Firebase 초기화, Firestore 점수 제출/난이도별 조회(`submitScore`/`fetchTopByDifficulty`), Analytics `logEvent`. 미설정 시 자동 비활성. 상단 주석에 Firestore 보안 규칙 포함.
@@ -157,3 +160,9 @@
 
 13. **`js/game.js`**
     *  메인 루프 오케스트레이터. 전 UI 배선(모달·난이도·닉네임·채팅연동·단어팩·명예의전당·OBS·사운드·**라이브 채팅 토글**), 스테이지 진행, 사운드/피버/보스 배너 연출, 배경 파티클, 토스트, 글로벌 리더보드/애널리틱스 연동.
+
+14. **`proxy/soop-cors-proxy.worker.js`**
+    *  SOOP 연동용 무료 Cloudflare Worker CORS 프록시. `player_live_api.php` 요청을 pass-through로 중계하고 CORS 헤더 부여. SOOP/아프리카 도메인만 허용(오픈 프록시 악용 방지). 개발자가 1회 배포 후 주소를 `CONFIG.SOOP_PROXY`에 입력.
+
+15. **`docs/SOOP_연동_설정.md`**
+    *  SOOP 프록시(Cloudflare Worker) 배포·설정 단계별 가이드 + `SOOP_DEBUG` 콘솔 로그 기반 라이브 문제 해결.

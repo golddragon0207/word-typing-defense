@@ -1,6 +1,6 @@
 # 🎮 스트리머 워드 타자 디펜스 (Word Typing Defense)
 
-치지직 · SOOP · 유튜브 라이브 **1인 솔로 스트리머**에 최적화된 **네온 사이버펑크 스타일 타자 방어(산성비) 웹 게임**입니다.
+SOOP · 치지직 · 유튜브 라이브 **1인 솔로 스트리머**에 최적화된 **네온 사이버펑크 스타일 타자 방어(산성비) 웹 게임**입니다.
 시청자가 채팅으로 `!참여`하면 그 닉네임이 몬스터로 등장하고, 스트리머가 아래 제시어를 타이핑해서 방어합니다.
 
 > **웹 배포 주소**: [https://golddragon0207.github.io/word-typing-defense/](https://golddragon0207.github.io/word-typing-defense/)
@@ -15,10 +15,11 @@
 - **하단 제시어 상자**: 실제로 타이핑할 제시어. **글자 길이에 맞춰 박스가 자동으로 늘어나** 긴 단어도 깔끔하게 표시됩니다.
 - 보스는 금색·확대, 라이브 채팅 문구 몬스터는 보라색으로 구분됩니다.
 
-### 2. 📡 실시간 방송 채팅 연동 (치지직 · SOOP · 유튜브 동시)
-- 방송 주소를 붙여넣으면 채널 ID를 자동 파싱해 연동합니다. **세 플랫폼 동시 연동** 지원.
+### 2. 📡 실시간 방송 채팅 연동 (SOOP · 치지직 · 유튜브 동시)
+- 방송 주소를 붙여넣으면 채널 ID를 자동 파싱해 연동합니다. **세 플랫폼 동시 연동** 지원. (연동 모달 기본 탭은 **SOOP**)
 - 시청자가 채팅에 **`!참여`**를 치면 그 닉네임이 몬스터로 출전합니다.
-- 연동 실패·방송 오프라인 시 **`[BOT]` 가상 시청자 자동 소환**으로 끊김 없이 진행(Smart Fallback).
+- **SOOP 연동은 CORS 우회용 프록시가 필요**합니다. 무료 Cloudflare Worker([`proxy/soop-cors-proxy.worker.js`](./proxy/soop-cors-proxy.worker.js))를 **개발자가 한 번만 배포**해 `CONFIG.SOOP_PROXY`에 넣어두면, 이후 **스트리머는 방송 URL만 붙여넣으면 자동 연동**됩니다(프록시 조작 불필요). 설정법: [`docs/SOOP_연동_설정.md`](./docs/SOOP_연동_설정.md).
+- 연동 실패·방송 오프라인·프록시 미설정 시 **`[BOT]` 가상 시청자 자동 소환**으로 끊김 없이 진행(Smart Fallback).
 - 실참여자가 적으면 목표 인원까지 봇으로 자동 보충하고, 비속어는 자동 필터링됩니다.
 - **참여자 목록**: 채팅 모달에서 `!참여`한 시청자를 실시간 목록으로 확인.
 - **공정성 장치**: 대기열은 30명 버퍼 + **1인당 최대 2자리**로 제한해, 한 명이 도배해도 여러 시청자가 골고루 등장합니다.
@@ -58,7 +59,7 @@
 
 ### 10. 💰 수익화 광고 & ☕ 후원
 - 카카오 애드핏 `728×90` 배너 6개 슬롯(메인/결과/각 모달). 모달 오픈 시 동적 리프레시.
-- 상단 `☕ 후원` → 카카오뱅크(`3333-28-2684443`) 계좌복사 & QR(`donation-qr.png`) 후원 모달(가입 0단계).
+- 상단 `☕ 후원` → 카카오뱅크(`3333-28-2684443`) 계좌복사 & QR(`donation-qr.png`)를 **가로로 나란히** 배치한 후원 모달(가입 0단계).
 
 ### 11. 📊 (선택) Firebase 애널리틱스
 - Firebase 연동 시 게임 시작/종료, 난이도 선택, 방송 플랫폼 연동 등 이벤트를 GA4로 수집(개인식별정보 미전송). 미설정 시 자동 비활성.
@@ -72,7 +73,7 @@
 - [`js/config.js`](./js/config.js) : 유튜브 API 키, Firebase 설정, 카카오 애드핏 ID, **난이도 밸런스 테이블(`CONFIG.DIFFICULTY`)**
 - [`js/wordPacks.js`](./js/wordPacks.js) : 단어팩(프리셋/보스), 시청자 대기열·참가자 명단, `!참여` 처리·봇 보충, 라이브 채팅 경쟁/정제, 한글 자모 획수 유틸
 - [`js/audio.js`](./js/audio.js) : Web Audio API 효과음 5종(레이저/폭발/피버/오타/팡파르)
-- [`js/chatIntegration.js`](./js/chatIntegration.js) : 치지직/SOOP/유튜브 URL 파서 및 다중 실시간 연동
+- [`js/chatIntegration.js`](./js/chatIntegration.js) : 치지직/SOOP/유튜브 URL 파서 및 다중 실시간 연동. **SOOP 채팅 프로토콜 클라이언트**(입장 핸드셰이크·패킷 파싱, `CONFIG.SOOP_PROXY` 경유)
 - [`js/globalLeaderboard.js`](./js/globalLeaderboard.js) : Firebase Firestore 글로벌 리더보드 + Analytics 연동(선택형)
 - [`js/core/StateManager.js`](./js/core/StateManager.js) : 상태 머신, 점수/HP/콤보/CPM·WPM/피버, 난이도별 로컬 TOP5
 - [`js/core/TurretManager.js`](./js/core/TurretManager.js) : 중앙 포탑 좌표·회전각·사격·반동
@@ -80,6 +81,8 @@
 - [`js/core/InputManager.js`](./js/core/InputManager.js) : 타자 입력, 한글 IME 조합 감지, 바닥 우선 타깃팅
 - [`js/renderers/CanvasRenderer.js`](./js/renderers/CanvasRenderer.js) : 고해상도 Draw, 2단 몬스터 UI(동적 박스폭), 이펙트
 - [`js/game.js`](./js/game.js) : 메인 루프 오케스트레이터, 전 UI 배선, 스테이지 진행, 연출
+- [`proxy/soop-cors-proxy.worker.js`](./proxy/soop-cors-proxy.worker.js) : SOOP 연동용 무료 Cloudflare Worker CORS 프록시(개발자 1회 배포)
+- [`docs/SOOP_연동_설정.md`](./docs/SOOP_연동_설정.md) : SOOP 프록시 배포·설정 단계별 가이드 + 라이브 문제 해결
 - [`implementation_plan.md`](./implementation_plan.md) : 상세 기술 구현 계획서
 
 ---
@@ -88,6 +91,7 @@
 
 정적 호스팅(GitHub Pages)이라 아래 값은 **비워두면 해당 기능만 자동으로 꺼지고 나머지는 정상 동작**합니다.
 
+- **SOOP 라이브 연동**: `js/config.js`의 `SOOP_PROXY`에 배포한 Cloudflare Worker 주소(`.../?url=`) 입력. 비우면 SOOP은 BOT 시뮬레이션으로 폴백. 배포·설정 전체 절차는 [`docs/SOOP_연동_설정.md`](./docs/SOOP_연동_설정.md) 참고. (프로토콜이 비공식이라 실제 방송에서 `SOOP_DEBUG` 로그로 최종 검증 권장)
 - **유튜브 라이브 연동**: `js/config.js`의 `YOUTUBE_API_KEY`에 YouTube Data API v3 키 입력. (키에 HTTP 리퍼러 제한을 걸면 배포 도메인에서만 동작하며 로컬에서는 막힘)
 - **글로벌 명예의 전당 / 애널리틱스**: `js/config.js`의 `CONFIG.FIREBASE`에 Firebase 웹 앱 설정 입력 + Firestore 보안 규칙 게시(규칙은 `js/globalLeaderboard.js` 상단 주석 참고).
 
