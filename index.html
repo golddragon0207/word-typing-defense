@@ -32,7 +32,6 @@
 
       <div class="quick-controls">
         <button id="btn-chat-modal" class="btn btn-neon green">📡 방송 채팅 연동</button>
-        <button id="btn-live-chat-toggle" class="btn btn-neon purple" aria-pressed="false">💬 라이브 제시어: OFF</button>
         <button id="btn-word-modal" class="btn btn-neon purple">📝 단어/닉네임 팩</button>
         <button id="btn-leaderboard-modal" class="btn btn-neon gold">🏆 명예의 전당 (Top 5)</button>
         <button id="btn-support-modal" class="btn btn-neon gold">☕ 후원 (Donate)</button>
@@ -81,6 +80,11 @@
             <div id="hud-fever-fill" class="fever-bar-fill" style="width: 0%;"></div>
           </div>
         </div>
+      </div>
+
+      <div id="queue-panel" class="queue-panel hidden">
+        <div class="queue-panel-header">🕒 출전 대기열 <span id="queue-count" class="queue-count">0</span></div>
+        <div id="queue-list" class="queue-list"></div>
       </div>
 
       <div id="stage-banner" class="stage-banner-overlay hidden">
@@ -249,9 +253,14 @@
               <div id="active-channels-list" class="channel-chips-container"></div>
             </div>
 
+            <div class="participants-section">
+              <label>🙋 참여자 <span id="participant-count" class="participant-count">(0명)</span>:</label>
+              <div id="participant-list" class="participant-chips-container"></div>
+            </div>
+
             <div class="chat-options">
               <label><input type="checkbox" id="chk-keyword-only" checked /> 🎯 '!참여' 명령어 입력 시청자만 자동 참가</label>
-              <p class="chat-option-note">💬 라이브 제시어 모드에서는 <strong>!참여한 시청자의 후속 채팅만</strong> 안전하게 정제해 제시어로 사용합니다.</p>
+              <p class="chat-option-note">💬 라이브 채팅 모드에서는 <strong>!참여한 시청자의 후속 채팅만</strong> 안전하게 정제해 제시어로 사용합니다.</p>
             </div>
           </div>
 
@@ -297,7 +306,7 @@
               <span>💬 라이브 채팅 제시어 설정</span>
               <span id="live-chat-status" class="live-chat-status">OFF</span>
             </div>
-            <p class="live-chat-settings-desc">상단의 라이브 제시어 모드를 켜면 <strong>!참여한 시청자만</strong> 이후 채팅 문구를 몬스터 제시어로 보냅니다.
+            <p class="live-chat-settings-desc">상단의 라이브 채팅 모드를 켜면 <strong>!참여한 시청자끼리</strong> 채팅으로 다음 몬스터 자리를 경쟁합니다 (마지막에 친 사람이 그 몬스터로 확정).
             </p>
             <div class="live-chat-settings-row">
               <label for="select-live-chat-max-len">최대 글자수</label>
@@ -312,15 +321,6 @@
             </div>
           </div>
 
-          <hr class="divider" />
-
-          <div class="custom-word-input">
-            <label>✏️ 자율 커스텀 단어장 (줄바꿈 입력):</label>
-            <textarea id="txt-custom-words" rows="5" placeholder="원하는 단어나 닉네임을 줄바꿈(Enter)으로 등록하세요."
-              spellcheck="false"></textarea>
-            <small class="custom-word-hint">한 단어당 최대 16자 · 최대 300개까지 · 비속어는 자동 필터링됩니다.</small>
-            <button id="btn-apply-custom-words" class="btn btn-neon purple">📌 이 단어들을 몬스터로 즉시 등록</button>
-          </div>
         </div>
 
         <div class="modal-actions modal-actions-pad">

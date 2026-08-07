@@ -728,25 +728,6 @@ html {
   color: #fff;
 }
 
-#txt-custom-words {
-  /* textarea 박스 연산이 외부 모달 렌더링을 방해하지 않도록 격리 */
-  contain: strict;
-  resize: vertical;
-  background: #0d0e15;
-  border: 1px solid #2a2e3d;
-  border-radius: 8px;
-  color: #e0e6ed;
-  padding: 10px 12px;
-  font-family: 'Noto Sans KR', sans-serif;
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-
-#txt-custom-words:focus {
-  outline: none;
-  border-color: #bf00ff;
-  box-shadow: 0 0 12px rgba(191, 0, 255, 0.3);
-}
 
 /* ==========================================
    ANIMATIONS
@@ -1153,8 +1134,7 @@ html {
 }
 
 .tab-content label,
-.word-pack-selector label,
-.custom-word-input label {
+.word-pack-selector label {
   font-size: 0.8rem;
   color: #a0e8ff;
   font-weight: 700;
@@ -1238,6 +1218,119 @@ html {
   font-size: 0.78rem;
 }
 
+/* ==========================================
+   🕒 게임 중 출전 대기열 패널 (좌상단)
+   ========================================== */
+.queue-panel {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 10;
+  width: 168px;
+  max-height: 320px;
+  background: rgba(13, 14, 21, 0.82);
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  border-radius: 10px;
+  padding: 8px 10px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.queue-panel.hidden {
+  display: none !important;
+}
+
+.queue-panel-header {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #00f3ff;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.queue-count {
+  background: rgba(0, 243, 255, 0.15);
+  border: 1px solid #00f3ff;
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.queue-item {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #e0e6ed;
+  background: rgba(0, 243, 255, 0.08);
+  border-left: 2px solid #00f3ff;
+  border-radius: 4px;
+  padding: 3px 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-item-bot {
+  color: #6c7280;
+  background: rgba(108, 114, 128, 0.1);
+  border-left-color: #3a3f52;
+}
+
+/* 🔥 라이브 경쟁 후보 (다음 몬스터 자리) */
+.queue-item-live {
+  color: #ffcc00;
+  background: rgba(191, 0, 255, 0.15);
+  border-left-color: #bf00ff;
+  font-weight: 800;
+  animation: pulseGlow 0.9s ease-in-out infinite;
+}
+
+/* 🙋 참여자 목록 */
+.participants-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid #2a2e3d;
+  padding-top: 10px;
+}
+
+.participant-count {
+  color: #00ff66;
+  font-weight: 800;
+}
+
+.participant-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 92px;
+  overflow-y: auto;
+}
+
+.participant-chip {
+  display: inline-block;
+  background: rgba(0, 243, 255, 0.1);
+  border: 1px solid #00f3ff;
+  color: #00f3ff;
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.participant-empty {
+  color: #6c7280;
+  font-size: 0.78rem;
+}
+
 .chip-remove {
   background: none;
   border: none;
@@ -1295,17 +1388,6 @@ html {
   border: none;
   border-top: 1px solid #2a2e3d;
   margin: 4px 0;
-}
-
-.custom-word-input {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.custom-word-hint {
-  color: #6c7280;
-  font-size: 0.72rem;
 }
 
 /* 라이브 채팅 제시어 모드 설정 */

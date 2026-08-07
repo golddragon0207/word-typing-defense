@@ -200,7 +200,7 @@ class GameEngine {
 
           // 모달별 진입 시 최신 데이터 렌더링
           if (modalId === 'modal-leaderboard') this.renderLeaderboard();
-          if (modalId === 'modal-chat') this.renderActiveChannels();
+          if (modalId === 'modal-chat') this.startChatModalLiveRefresh();
           if (modalId === 'modal-words') this.renderWordPackPreview();
 
           // ⚡ 2. 광고 호출 함수는 그대로 유지하되, 모달이 다 뜨고 난 150ms 뒤 비동기로 실행
@@ -358,6 +358,78 @@ class GameEngine {
     });
   }
 
+  /**
+   * 🙋 `!참여`한 시청자 목록 렌더링 (총원 + 최근 참여자 칩)
+   */
+  renderParticipants() {
+    const listEl = document.getElementById('participant-list');
+    const countEl = document.getElementById('participant-count');
+    if (!listEl || typeof wordPacks === 'undefined') return;
+
+    const joined = Array.from(wordPacks.joinedViewers || []);
+    if (countEl) countEl.textContent = `(${joined.length}명)`;
+
+    if (joined.length === 0) {
+      listEl.innerHTML = '<span class="participant-empty">아직 !참여한 시청자가 없습니다.</span>';
+      return;
+    }
+
+    // 최근 참여자 40명만 최신순으로 표시 (Set은 삽입 순서 보존)
+    const recent = joined.slice(-40).reverse();
+    listEl.innerHTML = recent.map(n => `<span class="participant-chip">${this.escapeHtml(n)}</span>`).join('');
+  }
+
+  /**
+   * 🕒 게임 중 화면 좌상단 "출전 대기열" 패널 갱신
+   * (큐 앞쪽 = 다음에 소환될 순서. 실참여자는 밝게, [BOT]은 흐리게 표시)
+   */
+  renderQueuePanel() {
+    const panel = document.getElementById('queue-panel');
+    const listEl = document.getElementById('queue-list');
+    const countEl = document.getElementById('queue-count');
+    if (!panel || !listEl || typeof wordPacks === 'undefined') return;
+
+    const queue = wordPacks.viewerQueue || [];
+    if (countEl) countEl.textContent = queue.length;
+
+    let html = '';
+
+    // 🔥 라이브 경쟁 후보 (현재 채팅으로 다투는 "다음 몬스터 자리")
+    const cand = wordPacks.liveChatMode ? wordPacks.liveCandidate : null;
+    if (cand && cand.nickname) {
+      html += `<span class="queue-item queue-item-live">🔥 ${this.escapeHtml(cand.nickname)}: ${this.escapeHtml(cand.chatWord || '')}</span>`;
+    }
+
+    // 다음에 소환될 순서대로 앞에서 최대 8개
+    const upcoming = queue.slice(0, 8);
+    html += upcoming.map(entry => {
+      const name = entry && entry.nickname ? entry.nickname : '[BOT]';
+      const isBot = name.startsWith('[BOT]');
+      return `<span class="queue-item${isBot ? ' queue-item-bot' : ''}">${this.escapeHtml(name)}</span>`;
+    }).join('');
+
+    listEl.innerHTML = html;
+  }
+
+  /**
+   * 채팅 모달이 열려 있는 동안 연동 목록/참여자 목록을 주기적으로 갱신 (모달 닫히면 자동 중지)
+   */
+  startChatModalLiveRefresh() {
+    this.renderActiveChannels();
+    this.renderParticipants();
+
+    clearInterval(this._chatModalTimer);
+    this._chatModalTimer = setInterval(() => {
+      const modal = document.getElementById('modal-chat');
+      if (!modal || modal.classList.contains('hidden')) {
+        clearInterval(this._chatModalTimer);
+        return;
+      }
+      this.renderActiveChannels();
+      this.renderParticipants();
+    }, 1500);
+  }
+
   /* ==========================================================
    * 📝 단어/닉네임 팩 모달 이벤트
    * ========================================================== */
@@ -372,41 +444,12 @@ class GameEngine {
       });
     }
 
-    const btnApplyCustom = document.getElementById('btn-apply-custom-words');
-    if (btnApplyCustom) {
-      btnApplyCustom.addEventListener('click', () => {
-        const textarea = document.getElementById('txt-custom-words');
-        if (!textarea || typeof wordPacks === 'undefined') return;
-        const list = textarea.value.split('\n').map(s => s.trim()).filter(Boolean);
-        if (list.length === 0) {
-          this.showToastInternal('등록할 단어를 먼저 입력해주세요.', 'warn');
-          return;
-        }
-
-        const result = wordPacks.applyCustomWords(list);
-        if (!result.ok) {
-          this.showToastInternal(`유효한 단어가 없습니다. (각 단어 ${wordPacks.CUSTOM_WORD_MAX_LEN}자 이하로 입력해주세요)`, 'warn');
-          return;
-        }
-
-        this.renderWordPackPreview();
-
-        let msg = `✏️ 커스텀 단어 ${result.applied}개가 몬스터로 등록되었습니다.`;
-        const notes = [];
-        if (result.skippedLong > 0) notes.push(`${wordPacks.CUSTOM_WORD_MAX_LEN}자 초과 ${result.skippedLong}개 제외`);
-        if (result.skippedOverCount > 0) notes.push(`최대 ${wordPacks.CUSTOM_WORD_MAX_COUNT}개 초과분 제외`);
-        if (notes.length > 0) msg += ` (${notes.join(', ')})`;
-
-        this.showToastInternal(msg, notes.length > 0 ? 'warn' : 'success');
-      });
-    }
-
     const maxLenSelect = document.getElementById('select-live-chat-max-len');
     if (maxLenSelect) {
       maxLenSelect.addEventListener('change', () => {
         if (typeof wordPacks === 'undefined') return;
         wordPacks.liveChatMaxLen = Number(maxLenSelect.value) || 10;
-        this.showToastInternal(`💬 라이브 제시어 최대 길이: ${wordPacks.liveChatMaxLen}자`, 'info');
+        this.showToastInternal(`💬 라이브 채팅 제시어 최대 길이: ${wordPacks.liveChatMaxLen}자`, 'info');
       });
     }
 
@@ -431,7 +474,7 @@ class GameEngine {
       const enabled = typeof wordPacks !== 'undefined' && wordPacks.liveChatMode;
       btn.classList.toggle('active', enabled);
       btn.setAttribute('aria-pressed', String(enabled));
-      btn.textContent = enabled ? '💬 라이브 제시어: ON' : '💬 라이브 제시어: OFF';
+      btn.textContent = enabled ? '💬 라이브 채팅 모드: ON' : '💬 라이브 채팅 모드: OFF';
 
       const status = document.getElementById('live-chat-status');
       if (status) {
@@ -446,8 +489,8 @@ class GameEngine {
       updateUI();
       this.showToastInternal(
         wordPacks.liveChatMode
-          ? '💬 라이브 제시어 모드 ON — !참여한 시청자의 후속 채팅만 사용합니다.'
-          : '🛡️ 라이브 제시어 모드 OFF — 안전 단어팩으로 돌아갑니다.',
+          ? '💬 라이브 채팅 모드 ON — !참여한 시청자의 채팅이 제시어가 됩니다.'
+          : '🛡️ 라이브 채팅 모드 OFF — 안전 단어팩으로 돌아갑니다.',
         wordPacks.liveChatMode ? 'success' : 'info'
       );
       if (window.GlobalLeaderboard) {
@@ -653,6 +696,8 @@ class GameEngine {
     if (gameOverScreen) gameOverScreen.classList.add('hidden');
     if (gameHud) gameHud.classList.remove('hidden');
     if (typingBar) typingBar.classList.remove('hidden');
+    const queuePanel = document.getElementById('queue-panel');
+    if (queuePanel) queuePanel.classList.remove('hidden');
 
     this.setupInputBars();
 
@@ -686,6 +731,8 @@ class GameEngine {
     if (gameHud) gameHud.classList.add('hidden');
     if (typingBar) typingBar.classList.add('hidden');
     if (mainScreen) mainScreen.classList.remove('hidden');
+    const queuePanel = document.getElementById('queue-panel');
+    if (queuePanel) queuePanel.classList.add('hidden');
 
     if (this.monsterManager) this.monsterManager.clear();
     if (this.stateManager) this.stateManager.changeState('MENU');
@@ -806,6 +853,13 @@ class GameEngine {
           this.showGameOverScreen();
         }
       }
+
+      // 🕒 대기열 패널 갱신 (매 프레임 대신 약 3회/초로 스로틀)
+      const now = performance.now();
+      if (!this._lastQueueRender || now - this._lastQueueRender > 350) {
+        this._lastQueueRender = now;
+        this.renderQueuePanel();
+      }
     }
     if (this.turretManager) this.turretManager.update(deltaTime);
     if (this.renderer) this.renderer.updateEffects(deltaTime);
@@ -830,6 +884,8 @@ class GameEngine {
   showGameOverScreen() {
     document.getElementById('game-hud').classList.add('hidden');
     document.getElementById('typing-input-bar').classList.add('hidden');
+    const queuePanel = document.getElementById('queue-panel');
+    if (queuePanel) queuePanel.classList.add('hidden');
 
     if (this.simInterval) {
       clearInterval(this.simInterval);

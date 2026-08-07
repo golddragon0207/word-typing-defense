@@ -59,8 +59,12 @@ const wordPacks = {
   //    - chatIntegration.js가 processChatMessage()를 통해 여기에 적재하고,
   //    - MonsterManager가 getNextMonsterData()를 호출할 때마다 하나씩 소비합니다.
   viewerQueue: [],
-  // 대형 방송에서 '!참여'가 짧은 시간에 몰려도 오래된 참가자가 밀려나지 않도록 넉넉하게 확보
-  MAX_QUEUE_LENGTH: 60,
+  // 대기열(순번 대기) 상한. 화면 동시 15마리 + 대기 30명 = 순간 최대 45명이 파이프라인에 참여.
+  // 초과 시 가장 오래된 대기자부터 밀려나며, 봇 보충 목표(TARGET_MIN_POPULATION)는 이보다 작아야
+  // 봇이 실참여자를 밀어내지 않는다 (30 > 20 여유 확보).
+  MAX_QUEUE_LENGTH: 30,
+  // 한 시청자가 큐에 동시에 대기할 수 있는 최대 항목 수 (도배로 큐 독점 방지). [BOT]은 예외.
+  MAX_QUEUE_PER_VIEWER: 2,
 
   // `!참여`로 들어온 시청자만 라이브 채팅 제시어 후보가 될 수 있습니다.
   // Set에는 플랫폼 접두사가 포함된 닉네임을 저장해 플랫폼 간 동명이인도 구분합니다.
@@ -78,6 +82,11 @@ const wordPacks = {
   liveChatMode: false,
   liveChatMaxLen: 10,        // 라이브 채팅 문구 최대 글자수 (단어팩 모달에서 조정 가능)
   liveChatStripSpecial: true, // 이모티콘/특수문자 제거 여부 (단어팩 모달에서 조정 가능)
+
+  // 🔥 다음 몬스터 자리를 두고 시청자들이 채팅으로 경쟁하는 "후보" 슬롯 (마지막 채팅이 덮어씀).
+  // 몬스터가 소환되는 순간 이 후보가 확정되어 그 몬스터로 등장하고, 후보는 비워져 새 경쟁이 시작된다.
+  // { nickname, chatWord } 또는 null.
+  liveCandidate: null,
 
   // 5. 비속어/욕설 간이 필터 목록 (마스킹 처리)
   badWords: [
@@ -128,12 +137,13 @@ const wordPacks = {
       return true;
     }
 
-    // 2) 라이브 채팅 모드에서는 이미 `!참여`한 시청자의 후속 메시지만 제시어 후보로 사용합니다.
-    //    keywordOnly 체크 상태와 관계없이, 미참여자의 일반 채팅은 절대 큐에 넣지 않습니다.
+    // 2) 🔥 라이브 채팅 모드: 이미 `!참여`한 시청자의 후속 채팅은 "다음 몬스터 자리"를 두고 경쟁한다.
+    //    큐에 바로 넣지 않고 경쟁 후보(liveCandidate)를 덮어써서, 마지막에 친 시청자가 승자가 된다.
+    //    (미참여자의 일반 채팅은 절대 후보가 되지 않음)
     if (this.liveChatMode && this.joinedViewers.has(safeNickname)) {
       const chatWord = this.sanitizeLiveChatWord(msg);
       if (!chatWord) return false;
-      this.enqueueViewer(safeNickname, chatWord);
+      this.liveCandidate = { nickname: safeNickname, chatWord };
       return true;
     }
 
@@ -178,11 +188,23 @@ const wordPacks = {
    * @param {string|null} chatWord - 라이브 채팅 모드일 때 이 시청자의 정제된 채팅 문구 (없으면 null)
    */
   enqueueViewer(nickname, chatWord = null) {
-    if (!nickname) return;
+    if (!nickname) return false;
+
+    // 실참여자(비봇)는 1인당 큐 대기 상한 적용 → 한 명이 도배해도 큐를 독점하지 못함
+    // ([BOT]은 물량 보충용이라 예외로 중복 허용)
+    if (!nickname.startsWith('[BOT]')) {
+      let count = 0;
+      for (const e of this.viewerQueue) {
+        if (e.nickname === nickname) count++;
+      }
+      if (count >= this.MAX_QUEUE_PER_VIEWER) return false;
+    }
+
     this.viewerQueue.push({ nickname, chatWord });
     if (this.viewerQueue.length > this.MAX_QUEUE_LENGTH) {
       this.viewerQueue.shift();
     }
+    return true;
   },
 
   /**
@@ -228,44 +250,6 @@ const wordPacks = {
     return Array.isArray(preset) && preset.length > 0 ? preset : this.words;
   },
 
-  // 커스텀 단어장 최소 제한 (게임이 깨지지 않도록)
-  CUSTOM_WORD_MAX_LEN: 16,    // 단어 하나당 최대 글자수 (초과 시 제외 — 낙하 중 타이핑 실용성 고려)
-  CUSTOM_WORD_MAX_COUNT: 300, // 등록 가능한 최대 단어 수 (초과분은 잘림)
-
-  /**
-   * 커스텀 단어장 적용 (모달 > 자율 커스텀 단어 등록)
-   * - 빈 줄/공백 제거, 비속어 필터
-   * - 단어당 최대 글자수(CUSTOM_WORD_MAX_LEN) 초과 시 제외
-   * - 전체 개수(CUSTOM_WORD_MAX_COUNT) 초과분은 앞에서부터만 사용
-   * @param {Array<string>} list
-   * @returns {{ok:boolean, applied:number, skippedLong:number, skippedOverCount:number}}
-   */
-  applyCustomWords(list) {
-    const rawList = (list || []).map(w => String(w).trim()).filter(Boolean);
-
-    let skippedLong = 0;
-    const cleaned = [];
-    for (const w of rawList) {
-      const filtered = this.filterText(w).trim();
-      if (!filtered) continue;
-      if (filtered.length > this.CUSTOM_WORD_MAX_LEN) { skippedLong++; continue; }
-      cleaned.push(filtered);
-      if (cleaned.length >= this.CUSTOM_WORD_MAX_COUNT) break;
-    }
-
-    // 개수 상한 때문에 잘려나간 (길이는 정상이던) 단어 수
-    const skippedOverCount = Math.max(0, rawList.length - skippedLong - cleaned.length);
-
-    if (cleaned.length > 0) this._customWords = cleaned;
-
-    return {
-      ok: cleaned.length > 0,
-      applied: cleaned.length,
-      skippedLong,
-      skippedOverCount
-    };
-  },
-
   /**
    * 2단 몬스터 데이터 생성 (상단 닉네임 + 하단 제시어)
    * - 실시간 채팅 대기열에 시청자가 있으면 우선 소비, 없으면 [BOT] 표식 부여
@@ -274,6 +258,18 @@ const wordPacks = {
    * @returns {Object} { nickname, isBot, word, isLiveChat }
    */
   getNextMonsterData(customNickname = null) {
+    // 🔥 라이브 경쟁: 소환 순간 경쟁 후보가 있으면 그 승자(마지막 채팅)가 이 몬스터로 확정된다.
+    if (!customNickname && this.liveChatMode && this.liveCandidate && this.liveCandidate.chatWord) {
+      const winner = this.liveCandidate;
+      this.liveCandidate = null; // 확정 후 후보 비움 → 다음 경쟁 시작
+      return {
+        nickname: winner.nickname,
+        isBot: false,
+        word: winner.chatWord,
+        isLiveChat: true
+      };
+    }
+
     let nickname = customNickname;
     let isBot = false;
     let chatWord = null;
