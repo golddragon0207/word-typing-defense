@@ -513,6 +513,8 @@ class GameEngine {
         modalBtn.classList.toggle('active', enabled);
         modalBtn.setAttribute('aria-pressed', String(enabled));
         modalBtn.textContent = enabled ? '💬 라이브 모드: ON' : '💬 라이브 모드: OFF';
+        const settingsBox = modalBtn.closest('.live-chat-settings');
+        if (settingsBox) settingsBox.classList.toggle('live-active', enabled);
       }
     };
 
@@ -522,8 +524,8 @@ class GameEngine {
       updateUI();
       this.showToastInternal(
         wordPacks.liveChatMode
-          ? '💬 라이브 채팅 모드 ON — !참여한 시청자의 채팅이 제시어가 됩니다.'
-          : '🛡️ 라이브 채팅 모드 OFF — 안전 단어팩으로 돌아갑니다.',
+          ? '🟢 라이브 채팅 모드 ON — !참여한 시청자의 채팅이 제시어가 됩니다.'
+          : '🔴 라이브 채팅 모드 OFF — 안전 단어팩으로 돌아갑니다.',
         wordPacks.liveChatMode ? 'success' : 'info'
       );
       if (window.GlobalLeaderboard) {
@@ -554,6 +556,8 @@ class GameEngine {
       const enabled = !!wordPacks.liveChatMode;
       modalBtn.classList.toggle('active', enabled);
       modalBtn.textContent = enabled ? '💬 라이브 모드: ON' : '💬 라이브 모드: OFF';
+      const settingsBox = modalBtn.closest('.live-chat-settings');
+      if (settingsBox) settingsBox.classList.toggle('live-active', enabled);
     }
 
     const words = wordPacks.getActiveWords();
