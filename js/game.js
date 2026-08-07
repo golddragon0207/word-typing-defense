@@ -267,7 +267,7 @@ class GameEngine {
     const btnCopyAccount = document.getElementById('btn-copy-account');
     if (btnCopyAccount) {
       btnCopyAccount.addEventListener('click', () => {
-        const accountNumber = '7942-35-71342';
+        const accountNumber = '3333-28-2684443';
         const onCopied = () => {
           if (window.showToast) window.showToast(`📋 계좌번호가 복사되었습니다! (${accountNumber})`);
         };
