@@ -644,23 +644,6 @@ html {
   text-align: center !important;
 }
 
-.qr-container {
-  margin: 6px 0 !important;
-}
-
-.qr-image {
-  max-width: 130px !important;
-  width: 100%;
-  height: auto;
-  border-radius: 10px;
-  border: 2px solid #ffaa00;
-}
-
-.qr-hint {
-  color: #a0a5b5;
-  font-size: 0.78rem;
-}
-
 .account-info-box {
   background: rgba(255, 170, 0, 0.08);
   border: 1.5px solid rgba(255, 170, 0, 0.4);
