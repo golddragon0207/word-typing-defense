@@ -12,14 +12,15 @@ const CONFIG = {
   // 키가 비어 있으면 유튜브 연동은 자동으로 [BOT] 시뮬레이션 모드로 대체됩니다.
   YOUTUBE_API_KEY: "AIzaSyCD9Gh03q3exnSz8T9YRdHzWXCcLwXfELs",
 
-  // 🔵 SOOP(숲/아프리카) 연동용 CORS 프록시.
+  // 🔵 SOOP(숲/아프리카) 연동용 CORS 프록시. ⭐ 개발자가 딱 한 번만 설정하면 됩니다.
   //   SOOP은 채팅 서버 주소·방송번호(BNO)를 player_live_api.php에서 받아와야 하는데
   //   이 API가 CORS 헤더를 주지 않아 브라우저에서 직접 호출하면 차단됩니다.
-  //   → 아래에 "요청을 그대로 전달(pass-through)"해 주는 프록시 주소를 넣으세요.
-  //   예) 직접 배포한 Cloudflare Worker: "https://your-worker.example.workers.dev/?url="
-  //       (워커가 ?url= 뒤의 실제 주소로 요청을 대신 보내고 CORS 헤더를 붙여 돌려줌)
+  //   → 무료 Cloudflare Worker(proxy/soop-cors-proxy.worker.js)를 배포하고,
+  //     나온 주소 뒤에 "/?url=" 를 붙여서 아래에 넣으세요. (반드시 /?url= 로 끝나야 함)
+  //     예) SOOP_PROXY: "https://soop-proxy.내계정.workers.dev/?url="
+  //   👉 배포 방법 전체 안내: docs/SOOP_연동_설정.md
+  //   여기만 채워두면 스트리머는 방송국 URL만 붙여넣으면 자동 연동됩니다(프록시 조작 불필요).
   //   비어 있으면 SOOP 실시간 연동은 시작하지 않고 BOT 시뮬레이션으로 폴백합니다.
-  //   ⚠️ cors-anywhere.herokuapp.com 같은 공개 데모 프록시는 자주 다운/차단되니 자체 프록시 권장.
   SOOP_PROXY: "",
 
   // SOOP 채팅 파싱 디버그 로그(원본 프레임/파싱 결과를 콘솔에 출력). 라이브에서 필드 인덱스 튜닝용.
