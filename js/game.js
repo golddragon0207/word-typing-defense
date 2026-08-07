@@ -263,6 +263,44 @@ class GameEngine {
       });
     }
 
+    // 후원 링크 URL 동적 동기화
+    if (CONFIG && CONFIG.DONATION_URL) {
+      const linkQr = document.getElementById('link-donation-qr');
+      const btnLink = document.getElementById('btn-open-donation-link');
+      if (linkQr) linkQr.href = CONFIG.DONATION_URL;
+      if (btnLink) btnLink.href = CONFIG.DONATION_URL;
+    }
+
+    // 계좌번호 1초 복사 버튼
+    const btnCopyAccount = document.getElementById('btn-copy-account');
+    if (btnCopyAccount) {
+      btnCopyAccount.addEventListener('click', () => {
+        const accountNumber = '7942-35-71342';
+        const onCopied = () => {
+          if (window.showToast) window.showToast(`📋 계좌번호가 복사되었습니다! (${accountNumber})`);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(accountNumber).then(onCopied).catch(() => {
+            const tempInput = document.createElement('input');
+            tempInput.value = accountNumber;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            onCopied();
+          });
+        } else {
+          const tempInput = document.createElement('input');
+          tempInput.value = accountNumber;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          document.execCommand('copy');
+          document.body.removeChild(tempInput);
+          onCopied();
+        }
+      });
+    }
+
     this.bindChatModalEvents();
     this.bindWordPackModalEvents();
     this.bindLiveChatToggle();
