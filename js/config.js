@@ -23,7 +23,15 @@ const CONFIG = {
   //   비어 있으면 SOOP 실시간 연동은 시작하지 않고 BOT 시뮬레이션으로 폴백합니다.
   SOOP_PROXY: "https://soop-proxy.skkim867.workers.dev/?url=",
 
+  // 🟢 치지직(Chzzk) 연동용 CORS 프록시. 치지직도 live-status·access-token API가 CORS 차단이라
+  //   프록시가 필요합니다. 위 SOOP 프록시(Cloudflare Worker)가 치지직 도메인도 허용하도록
+  //   확장돼 있으므로, 같은 주소를 그대로 넣으면 됩니다(별도 배포 불필요).
+  //   비워두면 SOOP_PROXY 값을 재사용하며, 둘 다 비면 치지직은 BOT 시뮬레이션으로 폴백합니다.
+  //   ⚠️ Worker를 proxy/soop-cors-proxy.worker.js 최신본으로 반드시 재배포해야 치지직이 열립니다.
+  CHZZK_PROXY: "https://soop-proxy.skkim867.workers.dev/?url=",
+
   // SOOP 채팅 파싱 디버그 로그(원본 프레임/파싱 결과를 콘솔에 출력). 라이브에서 필드 인덱스 튜닝용.
+  // (치지직 연동 디버그 로그도 이 플래그를 함께 사용합니다.)
   SOOP_DEBUG: true,
   // 🌐 글로벌 명예의 전당(Firestore) + 📊 애널리틱스 연동용 설정
   // Firebase 콘솔(https://console.firebase.google.com/) > 프로젝트 설정 > 일반 > "내 앱" > 웹 앱에서

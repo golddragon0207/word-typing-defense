@@ -110,57 +110,122 @@ class ChatIntegrationEngine {
   }
 
   /**
-   * 🟢 치지직 (Chzzk) 실시간 라이브 웹소켓 연동
+   * 🟢 치지직 (Chzzk) 실시간 라이브 채팅 연동 — 실제 프로토콜 구현
+   *
+   * 흐름 (kimcore/chzzk 등 공개 구현체 기준):
+   *   1) live-status(GET, 프록시 경유)로 방송 상태(OPEN)·채팅방ID(chatChannelId) 조회
+   *      → api.chzzk.naver.com 은 CORS 차단 대상이라 CONFIG.CHZZK_PROXY(=SOOP 프록시 재사용)가 필요
+   *   2) access-token(GET, 프록시 경유)로 익명 읽기용 accessToken 발급
+   *      (comm-api.game.naver.com, code 42601 이면 성인 인증 필요 방송이라 익명 불가)
+   *   3) chatChannelId 해시로 채팅 서버(kr-ss1~9) 결정 → wss://kr-ss{N}.chat.naver.com/chat 접속
+   *      (웹소켓은 CORS 대상이 아니라 브라우저에서 직접 연결)
+   *   4) CONNECT(cmd 100, accTkn 포함) → CONNECTED(cmd 10100) 후 채팅 수신 시작
+   *   5) CHAT(cmd 93101) 패킷의 profile.nickname / msg 를 추출 → handleIncomingChat
+   *      keepalive: 서버 PING(cmd 0)엔 PONG(cmd 10000) 응답 + 20초 주기로 PING(cmd 0) 송신
    */
   async connectChzzk(channel, prefix) {
+    const channelId = (channel.targetId || '').trim();
+    // 치지직 REST API도 CORS 차단이라 프록시가 필요. CHZZK_PROXY가 비면 SOOP_PROXY를 재사용.
+    const proxy = (typeof CONFIG !== 'undefined' && (CONFIG.CHZZK_PROXY || CONFIG.SOOP_PROXY)) || '';
+    const debug = !!(typeof CONFIG !== 'undefined' && CONFIG.SOOP_DEBUG);
+
+    if (!channelId) {
+      this.notifyFallback(prefix, '채널 ID를 확인할 수 없습니다.');
+      return;
+    }
+    if (!proxy) {
+      console.warn(`⚠️ ${prefix} CONFIG.CHZZK_PROXY/SOOP_PROXY가 비어 있어 치지직 연동을 시작할 수 없습니다. (CORS 프록시 필요)`);
+      this.notifyFallback(prefix, '프록시 미설정 (CORS 프록시 필요)');
+      return;
+    }
+
+    const viaProxy = (targetUrl) => proxy + encodeURIComponent(targetUrl);
+
     try {
-      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-      const res = await fetch(`${proxyUrl}https://api.chzzk.naver.com/polling/v2/channels/${channel.targetId}/live-detail`);
-
-      if (!res.ok) throw new Error(`HTTP status ${res.status}`);
-      const data = await res.json();
-      const chatChannelId = data?.content?.chatChannelId;
-
-      if (!chatChannelId) {
-        throw new Error("치지직 방송이 비활성화 상태이거나 채팅 채널 ID를 찾을 수 없습니다.");
+      // 1) 라이브 상태 조회 → chatChannelId
+      const statusUrl = `https://api.chzzk.naver.com/polling/v2/channels/${encodeURIComponent(channelId)}/live-status`;
+      const sres = await fetch(viaProxy(statusUrl));
+      if (!sres.ok) throw new Error(`라이브 상태 조회 실패 (HTTP ${sres.status})`);
+      const sdata = await sres.json();
+      if (debug) console.log(`[Chzzk] live-status 응답:`, JSON.stringify(sdata));
+      const content = sdata && sdata.content ? sdata.content : null;
+      if (!content) throw new Error('라이브 정보를 찾을 수 없습니다 (채널 ID를 확인하세요).');
+      if (content.status && content.status !== 'OPEN') {
+        throw new Error(`방송 중이 아닙니다 (status=${content.status}).`);
       }
+      const chatChannelId = content.chatChannelId;
+      if (!chatChannelId) throw new Error('chatChannelId를 찾을 수 없습니다.');
 
-      const wsUrl = `wss://kr-ss1.chat.naver.com/chat`;
+      // 2) 접근 토큰 발급 (익명 읽기)
+      const tokenUrl = `https://comm-api.game.naver.com/nng_main/v1/chats/access-token?channelId=${encodeURIComponent(chatChannelId)}&chatType=STREAMING`;
+      const tres = await fetch(viaProxy(tokenUrl));
+      if (!tres.ok) throw new Error(`접근 토큰 발급 실패 (HTTP ${tres.status})`);
+      const tdata = await tres.json();
+      if (tdata && tdata.code === 42601) throw new Error('성인 인증이 필요한 방송이라 익명 연동이 불가합니다.');
+      const accTkn = tdata && tdata.content ? tdata.content.accessToken : null;
+      if (!accTkn) throw new Error('접근 토큰(accessToken)을 받지 못했습니다.');
+
+      // 3) 채팅 서버 선택 (chatChannelId 문자 코드 합 해시로 kr-ss1~9 결정)
+      const serverId = Math.abs(
+        chatChannelId.split('').map(c => c.charCodeAt(0)).reduce((a, b) => a + b, 0)
+      ) % 9 + 1;
+      const wsUrl = `wss://kr-ss${serverId}.chat.naver.com/chat`;
+      if (debug) console.log(`[Chzzk] WS 접속: ${wsUrl} (chatChannelId=${chatChannelId})`);
+
       const ws = new WebSocket(wsUrl);
       channel.ws = ws;
 
+      const defaults = { cid: chatChannelId, svcid: 'game', ver: '2' };
+
       ws.onopen = () => {
-        console.log(`✅ ${prefix} 치지직 웹소켓 연결 성공!`);
-        const handshakeCmd = {
-          ver: "2",
-          cmd: 100,
-          svcid: "game",
-          cid: chatChannelId,
-          bdy: { uid: null, devType: 2001, accTkn: "", auth: "READ" },
-          tid: 1
-        };
-        ws.send(JSON.stringify(handshakeCmd));
+        console.log(`✅ ${prefix} 치지직 웹소켓 연결 성공! CONNECT 전송`);
+        ws.send(JSON.stringify({
+          ...defaults,
+          cmd: 100, tid: 1,
+          bdy: { accTkn, auth: 'READ', devType: 2001, uid: null }
+        }));
       };
 
       ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.cmd === 93101 && Array.isArray(msg.bdy)) {
-            msg.bdy.forEach(chat => {
-              const profile = JSON.parse(chat.profile || '{}');
-              const nickname = profile.nickname || '치지직시청자';
-              const chatText = chat.msg || '';
-              this.handleIncomingChat(nickname, chatText, prefix);
+        let json;
+        try { json = JSON.parse(event.data); } catch (_) { return; }
+        const body = json.bdy;
+        if (debug && json.cmd !== 0 && json.cmd !== 10000) console.log(`[Chzzk] cmd=${json.cmd}`);
+
+        switch (json.cmd) {
+          case 10100: // CONNECTED
+            this.notifySuccess(prefix, '채팅 연결 성공');
+            if (channel.pollTimer) clearInterval(channel.pollTimer);
+            channel.pollTimer = setInterval(() => {
+              try { ws.send(JSON.stringify({ cmd: 0, ver: '2' })); } catch (_) {}
+            }, 20000);
+            break;
+          case 0: // 서버 PING → PONG 응답
+            try { ws.send(JSON.stringify({ cmd: 10000, ver: '2' })); } catch (_) {}
+            break;
+          case 93101: { // CHAT
+            const chats = Array.isArray(body) ? body : ((body && body.messageList) || []);
+            chats.forEach(chat => {
+              const type = chat.msgTypeCode || chat.messageTypeCode;
+              if (type !== 1) return; // 일반 텍스트 채팅만 (도네/구독/시스템 제외)
+              let nickname = '치지직시청자';
+              try { const p = JSON.parse(chat.profile || '{}'); if (p && p.nickname) nickname = p.nickname; } catch (_) {}
+              const message = chat.msg || chat.content || '';
+              if (message) this.handleIncomingChat(nickname, message, prefix);
             });
+            break;
           }
-        } catch (err) {
-          console.warn(`[Chzzk] 패킷 파싱 에러:`, err);
         }
       };
 
       ws.onerror = (err) => {
-        console.error(`❌ ${prefix} 치지직 웹소켓 통신 오류 발생`, err);
-        this.notifyFallback(prefix, '웹소켓 통신 오류');
+        console.error(`❌ ${prefix} 치지직 웹소켓 오류`, err);
+        this.notifyFallback(prefix, '치지직 웹소켓 오류');
+      };
+
+      ws.onclose = () => {
+        console.warn(`🔌 ${prefix} 치지직 웹소켓 연결 종료`);
+        if (channel.pollTimer) { clearInterval(channel.pollTimer); channel.pollTimer = null; }
       };
 
       this.notifySuccess(prefix, '연동 시도 시작');

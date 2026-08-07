@@ -1,12 +1,14 @@
 /**
  * ============================================================================
- * SOOP(숲/아프리카) CORS 프록시 — Cloudflare Worker
+ * SOOP(숲/아프리카) + 치지직(Chzzk) CORS 프록시 — Cloudflare Worker
  * ============================================================================
  *
  * 왜 필요한가?
- *   SOOP은 채팅 서버 주소·방송번호(BNO)를 player_live_api.php에서 받아와야 하는데,
- *   이 API가 CORS 헤더를 주지 않아 브라우저(정적 사이트)에서 직접 호출하면 차단됩니다.
+ *   SOOP은 채팅 서버 주소·방송번호(BNO)를 player_live_api.php에서, 치지직은 채팅방
+ *   ID(chatChannelId)·접근 토큰을 각 API에서 받아와야 하는데, 이 API들이 CORS 헤더를
+ *   주지 않아 브라우저(정적 사이트)에서 직접 호출하면 차단됩니다.
  *   이 Worker가 요청을 서버 측에서 대신 보내고 CORS 헤더를 붙여 돌려줍니다.
+ *   (SOOP·치지직 모두 이 한 개의 Worker로 처리 — config의 SOOP_PROXY/CHZZK_PROXY에 같은 주소 사용)
  *
  * 스트리머는 이걸 만질 필요가 전혀 없습니다.
  *   개발자가 딱 한 번 배포 → 나온 주소를 js/config.js의 SOOP_PROXY에 넣어두면
@@ -20,7 +22,10 @@
  * 보안: 아무 주소나 중계하는 오픈 프록시가 되지 않도록 SOOP/아프리카 도메인만 허용합니다.
  */
 
-const ALLOWED_HOST = /(^|\.)sooplive\.co\.kr$|(^|\.)afreecatv\.com$/i;
+// 오픈 프록시 악용 방지: SOOP/아프리카 + 치지직(네이버) 채팅 API 도메인만 허용.
+//   - SOOP:   *.sooplive.co.kr, *.afreecatv.com
+//   - 치지직: api.chzzk.naver.com(라이브 상태), comm-api.game.naver.com(접근 토큰)
+const ALLOWED_HOST = /(^|\.)sooplive\.co\.kr$|(^|\.)afreecatv\.com$|(^|\.)chzzk\.naver\.com$|(^|\.)game\.naver\.com$/i;
 
 function corsHeaders(extra = {}) {
   return {
@@ -57,14 +62,18 @@ export default {
       return new Response('Host not allowed', { status: 403, headers: corsHeaders() });
     }
 
+    // 대상 호스트에 맞는 Referer 지정 (네이버/치지직 API는 sooplive Referer를 싫어할 수 있음)
+    const isNaver = /(^|\.)naver\.com$/i.test(t.hostname);
+    const referer = isNaver ? 'https://chzzk.naver.com/' : 'https://play.sooplive.co.kr/';
+
     // 원 요청을 그대로 전달(pass-through)
     const init = {
       method: request.method,
       headers: {
         'Content-Type': request.headers.get('Content-Type') || 'application/x-www-form-urlencoded',
-        // SOOP이 브라우저스러운 UA를 기대하는 경우가 있어 기본값 지정
+        // SOOP/치지직이 브라우저스러운 UA를 기대하는 경우가 있어 기본값 지정
         'User-Agent': request.headers.get('User-Agent') || 'Mozilla/5.0',
-        'Referer': 'https://play.sooplive.co.kr/',
+        'Referer': referer,
       },
     };
     if (request.method === 'POST') {

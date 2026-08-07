@@ -18,7 +18,8 @@ SOOP · 치지직 · 유튜브 라이브 **1인 솔로 스트리머**에 최적�
 ### 2. 📡 실시간 방송 채팅 연동 (SOOP · 치지직 · 유튜브 동시)
 - 방송 주소를 붙여넣으면 채널 ID를 자동 파싱해 연동합니다. **세 플랫폼 동시 연동** 지원. (연동 모달 기본 탭은 **SOOP**)
 - 시청자가 채팅에 **`!참여`**를 치면 그 닉네임이 몬스터로 출전합니다.
-- **SOOP 연동은 CORS 우회용 프록시가 필요**합니다. 무료 Cloudflare Worker([`proxy/soop-cors-proxy.worker.js`](./proxy/soop-cors-proxy.worker.js))를 **개발자가 한 번만 배포**해 `CONFIG.SOOP_PROXY`에 넣어두면, 이후 **스트리머는 방송 URL만 붙여넣으면 자동 연동**됩니다(프록시 조작 불필요). 설정법: [`docs/SOOP_연동_설정.md`](./docs/SOOP_연동_설정.md).
+- **SOOP·치지직 연동은 CORS 우회용 프록시가 필요**합니다. 무료 Cloudflare Worker([`proxy/soop-cors-proxy.worker.js`](./proxy/soop-cors-proxy.worker.js)) **하나**를 **개발자가 한 번만 배포**해 `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY`(같은 주소)에 넣어두면, 이후 **스트리머는 방송 URL만 붙여넣으면 자동 연동**됩니다(프록시 조작 불필요). 이 Worker는 SOOP·아프리카·치지직(`api.chzzk.naver.com`·`comm-api.game.naver.com`) 도메인을 허용합니다. 설정법: [`docs/SOOP_연동_설정.md`](./docs/SOOP_연동_설정.md).
+  - 치지직은 `live-status`로 채팅방ID를 얻고 `access-token`으로 익명 읽기 토큰을 발급받아 `wss://kr-ss{N}.chat.naver.com`에 연결합니다(성인 인증 방송은 익명 연동 불가).
 - 연동 실패·방송 오프라인·프록시 미설정 시 **`[BOT]` 가상 시청자 자동 소환**으로 끊김 없이 진행(Smart Fallback).
 - 실참여자가 적으면 목표 인원까지 봇으로 자동 보충하고, 비속어는 자동 필터링됩니다.
 - **참여자 목록 & 재모집**: 채팅 모달에서 `!참여`한 시청자를 실시간 목록으로 확인. **🗑️ 참여자 초기화** 버튼으로 언제든 비울 수 있습니다. **`🔄 다시 도전하기`를 누르면 메인 화면으로 돌아가며 채팅 연동 모달이 자동으로 떠서 시청자를 다시 모집**합니다(방송 URL·연결은 그대로 유지). 판이 끝나 메인으로 돌아갈 때 명단은 자동으로 초기화됩니다.
@@ -75,7 +76,7 @@ SOOP · 치지직 · 유튜브 라이브 **1인 솔로 스트리머**에 최적�
 - [`js/config.js`](./js/config.js) : 유튜브 API 키, Firebase 설정, 카카오 애드핏 ID, **난이도 밸런스 테이블(`CONFIG.DIFFICULTY`)**
 - [`js/wordPacks.js`](./js/wordPacks.js) : 단어팩(프리셋/보스), 시청자 대기열·참가자 명단, `!참여` 처리·봇 보충, 라이브 채팅 경쟁/정제, 한글 자모 획수 유틸
 - [`js/audio.js`](./js/audio.js) : Web Audio API 효과음 5종(레이저/폭발/피버/오타/팡파르)
-- [`js/chatIntegration.js`](./js/chatIntegration.js) : 치지직/SOOP/유튜브 URL 파서 및 다중 실시간 연동. **SOOP 채팅 프로토콜 클라이언트**(입장 핸드셰이크·패킷 파싱, `CONFIG.SOOP_PROXY` 경유)
+- [`js/chatIntegration.js`](./js/chatIntegration.js) : 치지직/SOOP/유튜브 URL 파서 및 다중 실시간 연동. **SOOP·치지직 채팅 프로토콜 클라이언트**(SOOP: 입장 핸드셰이크·패킷 파싱 / 치지직: live-status·access-token→WS cmd 100 핸드셰이크, 프록시 경유)
 - [`js/globalLeaderboard.js`](./js/globalLeaderboard.js) : Firebase Firestore 글로벌 리더보드 + Analytics 연동(선택형)
 - [`js/core/StateManager.js`](./js/core/StateManager.js) : 상태 머신, 점수/HP/콤보/CPM·WPM/피버, 난이도별 로컬 TOP5
 - [`js/core/TurretManager.js`](./js/core/TurretManager.js) : 중앙 포탑 좌표·회전각·사격·반동

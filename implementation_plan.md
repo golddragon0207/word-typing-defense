@@ -36,9 +36,10 @@
 *  **참여자 목록 표시**: `!참여`한 시청자를 채팅 연동 모달에 실시간 목록(총원 + 최근 참여자 칩)으로 표시해 스트리머가 연동 상태를 바로 확인.
 *  **스트리머 닉네임 자동 입력**: SOOP 연동 성공 시 방송의 BJ 닉네임(`BJNICK`)→BJ ID 순으로 메인 화면의 스트리머 닉네임 칸(`#input-player-nickname`)을 자동으로 채움(`_autofillStreamerName`). 사용자가 이미 입력한 값이 있으면 덮어쓰지 않음. (현재 SOOP만 지원 — 치지직/유튜브는 각 플랫폼 API의 채널 표시명으로 확장 가능)
 *  **SOOP 실제 채팅 클라이언트**: `player_live_api.php`로 방송번호(BNO)·**채팅방번호(CHATNO)**·채팅서버(CHDOMAIN/CHPT) 조회 → `wss://{CHDOMAIN}:{CHPT+1}/Websocket/{BJID}` 접속(서브프로토콜 `chat`) → **LOGIN(svc 1, 익명 CONNECT 페이로드 = 구분자×3 + `16` + 구분자)** → 응답 후 **JOIN(svc 2, 입장 대상은 BNO가 아니라 `CHATNO`)** → 주기 PING(svc 0), 수신 CHAT(svc 5) 패킷을 `0x0c` 구분자로 파싱해 닉네임·메시지 추출. `CONFIG.SOOP_DEBUG`로 원본 프레임 로그 출력(프로토콜이 비공식이라 라이브 검증·필드 튜닝 지원).
-*  **CORS 프록시 / 웹소켓**: GitHub Pages 정적 환경의 브라우저 제약을 우회. SOOP 정보 API는 전용 무료 **Cloudflare Worker 프록시**([`proxy/soop-cors-proxy.worker.js`](proxy/soop-cors-proxy.worker.js), SOOP/아프리카 도메인만 허용) 경유; 치지직 폴링→웹소켓; 유튜브 Data API v3 폴링.
+*  **치지직 실제 채팅 클라이언트**: `polling/v2/channels/{채널ID}/live-status`로 방송 상태(OPEN)·채팅방ID(`chatChannelId`) 조회 → `comm-api.game.naver.com/.../access-token`로 익명 읽기용 `accessToken` 발급(code 42601이면 성인 인증 필요 방송이라 익명 불가) → `chatChannelId` 문자코드 합 해시로 채팅 서버(`kr-ss1~9`) 결정 → `wss://kr-ss{N}.chat.naver.com/chat` 접속 → **CONNECT(cmd 100, `accTkn` 포함)** → CONNECTED(cmd 10100) 후 CHAT(cmd 93101)의 `profile.nickname`/`msg` 파싱. keepalive: 서버 PING(cmd 0)→PONG(cmd 10000) + 20초 주기 PING. 두 REST 호출은 CORS 차단이라 프록시 경유(WS는 CORS 대상 아님, 직접 연결).
+*  **CORS 프록시 / 웹소켓**: GitHub Pages 정적 환경의 브라우저 제약을 우회. SOOP·치지직 REST API는 **하나의 무료 Cloudflare Worker 프록시**([`proxy/soop-cors-proxy.worker.js`](proxy/soop-cors-proxy.worker.js), SOOP/아프리카 + `api.chzzk.naver.com`·`comm-api.game.naver.com` 도메인만 허용) 경유; 채팅 웹소켓은 양쪽 다 브라우저에서 직접 연결; 유튜브는 Data API v3 폴링.
 *  **Smart Fallback**: 방송 비활성화·주소 오류·통신 장애·프록시 미설정 시 토스트로 안내 후, 대기열이 비면 `getNextMonsterData`가 자동으로 `[BOT]` 가상 시청자를 배정(별도 폴백 로직 불필요한 자연 폴백 구조).
-*  ⚠️ 유튜브 연동은 `CONFIG.YOUTUBE_API_KEY` 필요(미설정 시 BOT 시뮬레이션). SOOP는 `CONFIG.SOOP_PROXY`(개발자 1회 배포)가 필요하며 미설정 시 BOT 폴백. 치지직 공용 데모 프록시는 불안정하므로 실서비스 시 자체 프록시 권장.
+*  ⚠️ 유튜브 연동은 `CONFIG.YOUTUBE_API_KEY` 필요(미설정 시 BOT 시뮬레이션). SOOP·치지직은 `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY`(같은 Worker 주소, 개발자 1회 배포)가 필요하며 미설정 시 BOT 폴백. **Worker는 치지직 도메인 허용본으로 재배포해야 치지직이 열림.**
 
 ### 2. 🙋 `!참여` 단일 명령어 참가 & 봇 자동 보충
 *  **`!참여`만 참가 명령어로 인정**(`!참가`는 제거). '명령어 전용' 체크박스 해제 시 아무 메시지나 곧 참가 처리.
@@ -143,7 +144,7 @@
     *  Web Audio API 효과음 5종(레이저/폭발/피버/오타/팡파르) + Mute.
 
 6.  **`js/chatIntegration.js`**
-    *  플랫폼별 URL 파서, SOOP/치지직/유튜브 다중 연동, **SOOP 채팅 프로토콜 클라이언트**(핸드셰이크·패킷 빌드/파싱, `CONFIG.SOOP_PROXY` 경유), Smart Fallback 토스트 안내, `handleIncomingChat` → `wordPacks.processChatMessage` 전달.
+    *  플랫폼별 URL 파서, SOOP/치지직/유튜브 다중 연동, **SOOP·치지직 채팅 프로토콜 클라이언트**(SOOP: 핸드셰이크·패킷 빌드/파싱 / 치지직: live-status·access-token→WS cmd 100·PING/PONG·CHAT 파싱, `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY` 경유), Smart Fallback 토스트 안내, `handleIncomingChat` → `wordPacks.processChatMessage` 전달.
 
 7.  **`js/globalLeaderboard.js`**
     *  Firebase 초기화, Firestore 점수 제출/난이도별 조회(`submitScore`/`fetchTopByDifficulty`), Analytics `logEvent`. 미설정 시 자동 비활성. 상단 주석에 Firestore 보안 규칙 포함.
