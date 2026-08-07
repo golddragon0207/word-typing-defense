@@ -736,6 +736,10 @@ class GameEngine {
 
     if (this.monsterManager) this.monsterManager.clear();
     if (this.stateManager) this.stateManager.changeState('MENU');
+
+    setTimeout(() => {
+      if (window.refreshAdfitSlot) window.refreshAdfitSlot('ad-container-main');
+    }, 150);
   }
 
   /**
@@ -951,6 +955,11 @@ class GameEngine {
           if (ok) this.showToastInternal('🌐 글로벌 명예의 전당에 기록을 제출했습니다.', 'info');
         });
       }
+
+      // 💰 결과 화면 광고 리프레시 (150ms 비동기 실행)
+      setTimeout(() => {
+        if (window.refreshAdfitSlot) window.refreshAdfitSlot('ad-container-gameover');
+      }, 150);
     }
   }
 }

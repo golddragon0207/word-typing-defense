@@ -1546,3 +1546,42 @@ body.obs-overlay .hud-overlay {
 .fever-bar-fill.fever-ready {
   animation: pulseGlow 0.6s ease-in-out infinite;
 }
+
+/* ==========================================
+   ☕ 카카오페이 후원 QR 모달 전용 스타일
+   ========================================== */
+.modal-body-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 16px 20px;
+}
+
+.qr-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(255, 209, 102, 0.3);
+  border: 3px solid #ffd166;
+  margin: 6px 0;
+}
+
+.qr-image {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.qr-hint {
+  font-size: 12px;
+  color: #a0a5ba;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
