@@ -539,16 +539,6 @@ class GameEngine {
    * 🏆 명예의 전당 (난이도별 TOP 5, localStorage + 글로벌)
    * ========================================================== */
   bindLeaderboardEvents() {
-    const btnClear = document.getElementById('btn-clear-leaderboard');
-    if (btnClear) {
-      btnClear.addEventListener('click', () => {
-        if (!confirm('이 브라우저에 저장된 로컬 전적을 초기화할까요? (글로벌 명예의 전당 기록에는 영향 없음) 이 작업은 되돌릴 수 없습니다.')) return;
-        if (this.stateManager) this.stateManager.clearScores();
-        this.renderLeaderboard();
-        this.showToastInternal('🗑️ 로컬 전적이 초기화되었습니다.', 'info');
-      });
-    }
-
     // 난이도 탭 전환 (쉬움/보통/어려움/헬) — 이미 불러온 캐시에서 바로 다시 그림 (재조회 없음)
     document.querySelectorAll('.leaderboard-diff-tabs .tab-btn').forEach(tabBtn => {
       tabBtn.addEventListener('click', () => {
