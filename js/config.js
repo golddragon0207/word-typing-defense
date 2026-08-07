@@ -11,6 +11,19 @@ const CONFIG = {
   // https://console.cloud.google.com/apis/credentials 에서 "YouTube Data API v3" 사용 설정 후 API 키 발급
   // 키가 비어 있으면 유튜브 연동은 자동으로 [BOT] 시뮬레이션 모드로 대체됩니다.
   YOUTUBE_API_KEY: "AIzaSyCD9Gh03q3exnSz8T9YRdHzWXCcLwXfELs",
+
+  // 🔵 SOOP(숲/아프리카) 연동용 CORS 프록시.
+  //   SOOP은 채팅 서버 주소·방송번호(BNO)를 player_live_api.php에서 받아와야 하는데
+  //   이 API가 CORS 헤더를 주지 않아 브라우저에서 직접 호출하면 차단됩니다.
+  //   → 아래에 "요청을 그대로 전달(pass-through)"해 주는 프록시 주소를 넣으세요.
+  //   예) 직접 배포한 Cloudflare Worker: "https://your-worker.example.workers.dev/?url="
+  //       (워커가 ?url= 뒤의 실제 주소로 요청을 대신 보내고 CORS 헤더를 붙여 돌려줌)
+  //   비어 있으면 SOOP 실시간 연동은 시작하지 않고 BOT 시뮬레이션으로 폴백합니다.
+  //   ⚠️ cors-anywhere.herokuapp.com 같은 공개 데모 프록시는 자주 다운/차단되니 자체 프록시 권장.
+  SOOP_PROXY: "",
+
+  // SOOP 채팅 파싱 디버그 로그(원본 프레임/파싱 결과를 콘솔에 출력). 라이브에서 필드 인덱스 튜닝용.
+  SOOP_DEBUG: true,
   // 🌐 글로벌 명예의 전당(Firestore) + 📊 애널리틱스 연동용 설정
   // Firebase 콘솔(https://console.firebase.google.com/) > 프로젝트 설정 > 일반 > "내 앱" > 웹 앱에서
   // 발급받은 firebaseConfig 값을 그대로 아래에 붙여넣으세요.

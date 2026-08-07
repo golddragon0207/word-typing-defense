@@ -169,21 +169,95 @@ class ChatIntegrationEngine {
   }
 
   /**
-   * 🔵 SOOP (아프리카TV) 라이브 채팅 연동
+   * 🔵 SOOP (숲/아프리카TV) 라이브 채팅 연동 — 실제 프로토콜 구현
+   *
+   * ⚠️ SOOP 채팅 프로토콜은 비공식(리버스 엔지니어링)이라 SOOP 측 변경에 따라 깨질 수 있습니다.
+   *    필드 인덱스/패킷 규격이 맞지 않으면 CONFIG.SOOP_DEBUG=true로 콘솔 로그를 보며 조정하세요.
+   *
+   * 흐름:
+   *   1) player_live_api.php(POST)로 방송번호(BNO)·채팅서버(CHDOMAIN)·포트(CHPT) 조회
+   *      → 이 API는 CORS 차단 대상이라 CONFIG.SOOP_PROXY(pass-through 프록시)가 반드시 필요합니다.
+   *   2) wss://{CHDOMAIN}:{CHPT+1}/Websocket/{bjId} 로 접속 (서브프로토콜 'chat')
+   *   3) LOGIN(svc 1) → 응답 후 JOIN(svc 2, 채팅방=BNO) 전송, 이후 주기적 PING(svc 0)
+   *   4) 수신 CHAT(svc 5) 패킷을 파싱해 닉네임·메시지를 추출 → handleIncomingChat
    */
-  connectSoop(channel, prefix) {
+  async connectSoop(channel, prefix) {
+    const bid = (channel.targetId || '').trim().toLowerCase();
+    const proxy = (typeof CONFIG !== 'undefined' && CONFIG.SOOP_PROXY) ? CONFIG.SOOP_PROXY : '';
+    const debug = !!(typeof CONFIG !== 'undefined' && CONFIG.SOOP_DEBUG);
+
+    if (!bid) {
+      this.notifyFallback(prefix, 'BJ ID를 확인할 수 없습니다.');
+      return;
+    }
+    if (!proxy) {
+      console.warn(`⚠️ ${prefix} CONFIG.SOOP_PROXY가 비어 있어 SOOP 연동을 시작할 수 없습니다. (CORS 프록시 필요)`);
+      this.notifyFallback(prefix, 'SOOP_PROXY 미설정 (CORS 프록시 필요)');
+      return;
+    }
+
     try {
-      const wsUrl = `wss://livews.sooplive.co.kr/connect`;
-      const ws = new WebSocket(wsUrl);
+      // 1) 라이브 정보 조회 (CORS 프록시 경유)
+      const apiTarget = `https://live.sooplive.co.kr/afreeca/player_live_api.php?bjid=${encodeURIComponent(bid)}`;
+      const apiUrl = proxy + encodeURIComponent(apiTarget);
+      const body = `bid=${encodeURIComponent(bid)}&type=live&player_type=html5&mode=landing&from_api=0&pwd=&stream_type=common&quality=HD`;
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body
+      });
+      if (!res.ok) throw new Error(`라이브 정보 조회 실패 (HTTP ${res.status})`);
+
+      const info = await res.json();
+      const ch = info && info.CHANNEL ? info.CHANNEL : {};
+      if (debug) console.log(`[SOOP] player_live_api 응답 CHANNEL:`, ch);
+
+      // RESULT !== 1 이면 방송 중이 아님
+      if (ch.RESULT !== undefined && Number(ch.RESULT) !== 1) {
+        throw new Error('현재 방송 중이 아니거나 채팅방을 찾을 수 없습니다.');
+      }
+
+      const bno = ch.BNO || ch.CHATNO;               // 채팅방 번호
+      const chDomain = (ch.CHDOMAIN || '').toLowerCase();
+      const chPort = parseInt(ch.CHPT, 10);
+      if (!bno || !chDomain || !chPort) {
+        throw new Error('채팅 서버 정보(BNO/CHDOMAIN/CHPT)가 불완전합니다.');
+      }
+
+      // 2) 채팅 웹소켓 접속 (wss 포트 = CHPT + 1)
+      const wsUrl = `wss://${chDomain}:${chPort + 1}/Websocket/${bid}`;
+      if (debug) console.log(`[SOOP] 웹소켓 접속: ${wsUrl} (BNO=${bno})`);
+      const ws = new WebSocket(wsUrl, ['chat']);
+      ws.binaryType = 'arraybuffer';
       channel.ws = ws;
 
       ws.onopen = () => {
-        console.log(`✅ ${prefix} SOOP 웹소켓 연결 성공!`);
+        console.log(`✅ ${prefix} SOOP 웹소켓 연결 성공! LOGIN 전송`);
+        ws.send(this._soopPacket(1, `${this.SOOP_SEP}${this.SOOP_SEP}`)); // LOGIN
       };
 
       ws.onmessage = (event) => {
-        if (typeof event.data === 'string' && event.data.includes('CHAT')) {
-          this.handleIncomingChat("SOOP시청자", event.data, prefix);
+        const text = this._soopDecode(event.data);
+        if (!text) return;
+        const svc = this._soopServiceCode(text);
+        if (debug) console.log(`[SOOP] svc=${svc} raw=`, JSON.stringify(text));
+
+        if (svc === 1) {
+          // LOGIN 응답 → JOIN (채팅방 입장)
+          ws.send(this._soopPacket(2, `${this.SOOP_SEP}${bno}${this.SOOP_SEP.repeat(5)}`));
+          this.notifySuccess(prefix, '채팅방 입장');
+          // keepalive PING (svc 0) 60초 주기
+          channel.pollTimer = setInterval(() => {
+            try { ws.send(this._soopPacket(0, this.SOOP_SEP)); } catch (_) {}
+          }, 60000);
+        } else if (svc === 5) {
+          // CHAT 패킷 → 닉네임/메시지 파싱
+          const parsed = this._soopParseChat(text);
+          if (parsed && parsed.message) {
+            if (debug) console.log(`[SOOP] 파싱결과 nick="${parsed.nickname}" msg="${parsed.message}"`);
+            this.handleIncomingChat(parsed.nickname || 'SOOP시청자', parsed.message, prefix);
+          }
         }
       };
 
@@ -192,11 +266,71 @@ class ChatIntegrationEngine {
         this.notifyFallback(prefix, 'SOOP 웹소켓 오류');
       };
 
+      ws.onclose = () => {
+        console.warn(`🔌 ${prefix} SOOP 웹소켓 연결 종료`);
+        if (channel.pollTimer) { clearInterval(channel.pollTimer); channel.pollTimer = null; }
+      };
+
       this.notifySuccess(prefix, '연동 시도 시작');
     } catch (e) {
-      console.error(`❌ ${prefix} SOOP 연동 실패`, e);
+      console.error(`❌ ${prefix} SOOP 연동 실패: ${e.message}`);
       this.notifyFallback(prefix, e.message);
     }
+  }
+
+  /* --- SOOP 프로토콜 상수/헬퍼 ------------------------------------------- */
+  get SOOP_ESC() { return '\x1b\t'; }   // 패킷 헤더(ESC + TAB)
+  get SOOP_SEP() { return '\x0c'; }     // 필드 구분자(form feed, 0x0c)
+
+  /** svc/body로 SOOP 패킷 문자열 생성: ESC + svc(4) + len(6) + '00' + body */
+  _soopPacket(service, bodyStr) {
+    const body = bodyStr || '';
+    const len = new TextEncoder().encode(body).length;
+    return this.SOOP_ESC
+      + String(service).padStart(4, '0')
+      + String(len).padStart(6, '0')
+      + '00'
+      + body;
+  }
+
+  /** 수신 데이터(ArrayBuffer/Blob/string)를 UTF-8 문자열로 디코드 */
+  _soopDecode(data) {
+    try {
+      if (typeof data === 'string') return data;
+      if (data instanceof ArrayBuffer) return new TextDecoder('utf-8').decode(new Uint8Array(data));
+      return null; // Blob 등은 이 경로에서 처리하지 않음(binaryType=arraybuffer로 강제)
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /** 프레임 헤더에서 서비스 코드(정수) 추출 */
+  _soopServiceCode(text) {
+    // 헤더: ESC(2) + svc(4) + len(6) + '00'
+    const svcStr = text.slice(this.SOOP_ESC.length, this.SOOP_ESC.length + 4);
+    const n = parseInt(svcStr, 10);
+    return Number.isNaN(n) ? -1 : n;
+  }
+
+  /**
+   * CHAT(svc 5) 프레임에서 닉네임/메시지 추출.
+   * 본문을 구분자(0x0c)로 나눠 파싱한다. SOOP 버전에 따라 인덱스가 달라질 수 있어
+   * message=parts[1]을 기본으로 하고, 닉네임은 후보 인덱스를 순차 탐색한다.
+   */
+  _soopParseChat(text) {
+    const HEADER_LEN = this.SOOP_ESC.length + 4 + 6 + 2; // = 14
+    const payload = text.slice(HEADER_LEN);
+    const parts = payload.split(this.SOOP_SEP);
+
+    const message = (parts[1] || '').trim();
+    // 닉네임 후보: 흔히 parts[6]. 유효한(비어있지 않고 숫자ID가 아닌) 첫 항목을 사용.
+    let nickname = '';
+    const candidates = [parts[6], parts[7], parts[5], parts[2]];
+    for (const c of candidates) {
+      const v = (c || '').trim();
+      if (v && v !== message) { nickname = v; break; }
+    }
+    return { nickname, message };
   }
 
   /**

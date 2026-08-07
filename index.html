@@ -131,8 +131,8 @@
 
           <div class="platform-indicators">
             <span>지원 플랫폼:</span>
-            <span class="badge chzzk">🟢 치지직(Chzzk)</span>
             <span class="badge soop">🔵 SOOP(숲/아프리카)</span>
+            <span class="badge chzzk">🟢 치지직(Chzzk)</span>
             <span class="badge youtube">🔴 유튜브 라이브</span>
           </div>
 
@@ -201,26 +201,26 @@
           <p class="modal-desc">방송 플랫폼을 선택하고 채널 ID를 입력하면 시청자 닉네임과 채팅이 몬스터로 생성됩니다!</p>
 
           <div class="platform-tabs">
-            <button class="tab-btn active" data-tab="tab-chzzk">🟢 치지직 (Chzzk)</button>
-            <button class="tab-btn" data-tab="tab-soop">🔵 SOOP (숲/아프리카)</button>
+            <button class="tab-btn active" data-tab="tab-soop">🔵 SOOP (숲/아프리카)</button>
+            <button class="tab-btn" data-tab="tab-chzzk">🟢 치지직 (Chzzk)</button>
             <button class="tab-btn" data-tab="tab-youtube">🔴 유튜브 라이브</button>
             <button class="tab-btn" data-tab="tab-custom">💬 시뮬레이션 / 테스트</button>
           </div>
 
           <div class="tab-contents">
-            <div id="tab-chzzk" class="tab-content active">
-              <label>치지직 방송 주소 (또는 채널 ID):</label>
-              <div class="input-with-btn">
-                <input type="text" id="input-chzzk-id" placeholder="https://chzzk.naver.com/live/... 주소 전체 복사-붙여넣기" />
-                <button id="btn-add-chzzk" class="btn btn-neon green">+ 채널 추가</button>
-              </div>
-            </div>
-
-            <div id="tab-soop" class="tab-content">
+            <div id="tab-soop" class="tab-content active">
               <label>SOOP (아프리카TV) 방송국 주소 (또는 BJ ID):</label>
               <div class="input-with-btn">
                 <input type="text" id="input-soop-id" placeholder="https://play.sooplive.co.kr/... 주소 전체 복사-붙여넣기" />
                 <button id="btn-add-soop" class="btn btn-neon cyan">+ BJ 추가</button>
+              </div>
+            </div>
+
+            <div id="tab-chzzk" class="tab-content">
+              <label>치지직 방송 주소 (또는 채널 ID):</label>
+              <div class="input-with-btn">
+                <input type="text" id="input-chzzk-id" placeholder="https://chzzk.naver.com/live/... 주소 전체 복사-붙여넣기" />
+                <button id="btn-add-chzzk" class="btn btn-neon green">+ 채널 추가</button>
               </div>
             </div>
 
