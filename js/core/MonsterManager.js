@@ -1,6 +1,8 @@
 /**
  * MonsterManager.js
  * 인터넷 밈(Meme), 스트리머 유행어, 시청자 닉네임이 적용된 몬스터 관리 모듈
+ * - wordPacks.js를 통해 실시간 채팅 시청자 대기열 / 프리셋 단어 팩과 연동
+ * - 5 Stage 단위 보스전(WARNING) 지원
  */
 class MonsterManager {
     constructor(canvas = null) {
@@ -9,24 +11,12 @@ class MonsterManager {
         this.currentStage = 1;
         this.spawnInterval = null;
         this.speed = 1.0;
+        this.onBossWarning = null; // game.js에서 주입하는 콜백 (stage) => void
+        this.bossSpawnedForStage = false;
 
-        // 🟢 1. 시청자 닉네임 목록 (상단 Pill Tag용)
-        this.viewerNicknames = [
-            '억까의신', 'SOOP팬클럽', 'CHZZK열혈', '구독자3년차', '트수1호',
-            '매니저_김철수', '방장훈수꾼', '채팅창빌런', '펀치킹', '도네_백만원',
-            '익명의후원자', '스팸게시자', '알고리즘수혜자', '과몰입러', '소통전문가'
-        ];
-
-        // 🔥 2. 인터넷 밈 & 방송 유행어 제시어 팩 (하단 Target Box용)
-        this.words = [
-            // 밈 & 유행어
-            '구독과좋아요', '오타내지마라', '쀍', '어쩔티비', '뇌절금지',
-            '이게맞냐', '억까자제', '스트리머능지', '개같이부활', 'ㄱㅐㄱㅏㅌㅇㅣ',
-            '나송함다', '폼미쳤다', '레전드갱신', '나만아니면돼', '가즈아',
-            '킹받네', '무한제공참말사', '알빠임', '개추', '비추',
-            '구독취소한다', '방종각', '실수다', '골드버그', '치트키',
-            '버그냐고', '아몰랑', '멘탈바사삭', '개꿀잼', '알고리즘'
-        ];
+        // MAX_MONSTER_CAP: 대형 방송 마비 방지용 동시 출전 몬스터 상한 (난이도별로 재설정되지만
+        // CONFIG.DIFFICULTY.hell.maxMonsterCap=15가 계획서상 절대 상한이므로 기본값도 15로 둔다)
+        this.MAX_MONSTER_CAP = 15;
     }
 
     getMonsters() {
@@ -36,65 +26,111 @@ class MonsterManager {
     /**
      * 스테이지 시작 메서드
      * @param {number} stage - 스테이지 번호
-     * @param {string|Array} difficultyOrWords - 난이도 또는 커스텀 단어 배열
+     * @param {string} difficulty - 난이도 ('easy' | 'normal' | 'hard' | 'hell')
      */
-    startStage(stage = 1, difficultyOrWords = 'normal') {
+    startStage(stage = 1, difficulty = 'normal') {
         this.clear();
         this.currentStage = stage;
+        this.bossSpawnedForStage = false;
 
-        let speedMult = 1.0;
-        if (typeof difficultyOrWords === 'string') {
-            const mults = { easy: 0.8, normal: 1.0, hard: 1.4, hell: 2.0 };
-            speedMult = mults[difficultyOrWords] || 1.0;
-        } else if (Array.isArray(difficultyOrWords) && difficultyOrWords.length > 0) {
-            this.words = difficultyOrWords;
+        // 🎮 난이도별 밸런스 테이블 조회 (config.js CONFIG.DIFFICULTY)
+        const cfg = (typeof getDifficultyConfig === 'function')
+            ? getDifficultyConfig(difficulty)
+            : { speedMult: 1.0, maxMonsterCap: 15, spawnIntervalBase: 2400, spawnIntervalStep: 150, spawnIntervalMin: 800 };
+
+        this.speed = (1.0 + (stage - 1) * 0.2) * cfg.speedMult;
+        // 계획서상 절대 상한(15)을 넘지 않도록 항상 clamp
+        this.MAX_MONSTER_CAP = Math.min(15, cfg.maxMonsterCap);
+
+        // 🤖 '!참여' 실시간 참가자가 목표 인원보다 적으면 부족한 만큼 봇을 자동 보충
+        if (typeof wordPacks !== 'undefined' && typeof wordPacks.topUpBotsToTarget === 'function') {
+            wordPacks.topUpBotsToTarget();
         }
 
-        this.speed = (1.0 + (stage - 1) * 0.2) * speedMult;
+        const isBossStage = stage > 0 && stage % 5 === 0;
 
-        console.log(`[MonsterManager] Stage ${stage} 시작! (밈 제시어 수: ${this.words.length}개)`);
+        console.log(`[MonsterManager] Stage ${stage} 시작! (난이도: ${difficulty}, 동시상한: ${this.MAX_MONSTER_CAP}, 보스전: ${isBossStage ? 'YES' : 'NO'})`);
 
-        // 주기적 몬스터 생성 (최대 15마리 제한 적용)
+        if (isBossStage) {
+            // 🛡️ 5 Stage 단위 보스전: WARNING 배너 콜백 후 약간의 텀을 두고 보스 소환
+            if (typeof this.onBossWarning === 'function') {
+                this.onBossWarning(stage);
+            }
+            setTimeout(() => this.spawnBoss(), 1800);
+        } else {
+            this.spawnMonster();
+        }
+
+        // 주기적 몬스터 생성 (난이도별 스폰 주기 + Max Monster Cap 적용)
+        const spawnInterval = Math.max(
+            cfg.spawnIntervalMin,
+            cfg.spawnIntervalBase - (stage * cfg.spawnIntervalStep)
+        );
         this.spawnInterval = setInterval(() => {
-            if (this.monsters.length < 15) { // Max Monster Cap = 15
+            if (this.monsters.length < this.MAX_MONSTER_CAP && !(isBossStage && !this.bossSpawnedForStage)) {
                 this.spawnMonster();
             }
-        }, Math.max(700, 2400 - (stage * 150)));
-
-        this.spawnMonster();
+        }, spawnInterval);
     }
 
     /**
      * 시청자 닉네임과 밈 제시어가 결합된 2단 몬스터 생성
+     * (wordPacks.getNextMonsterData가 실시간 채팅 대기열 → BOT 순으로 자동 배정)
      */
     spawnMonster() {
-        const randomWord = this.words[Math.floor(Math.random() * this.words.length)];
+        if (this.monsters.length >= this.MAX_MONSTER_CAP) return;
 
-        // 시청자 닉네임 무작위 할당 (70% 확률로 일반 시청자, 30% 확률로 [BOT])
-        let nickname = '';
-        if (Math.random() < 0.7) {
-            nickname = this.viewerNicknames[Math.floor(Math.random() * this.viewerNicknames.length)];
-        } else {
-            const botNames = ['[BOT] 자동소환봇', '[BOT] 알파고', '[BOT] 타자시뮬레이터'];
-            nickname = botNames[Math.floor(Math.random() * botNames.length)];
-        }
+        const data = (typeof wordPacks !== 'undefined')
+            ? wordPacks.getNextMonsterData()
+            : { nickname: '[BOT] 시뮬레이터', isBot: true, word: '타자연습', isLiveChat: false };
 
-        const canvasWidth = this.canvas ? this.canvas.width : (window.innerWidth || 800);
+        // CanvasRenderer가 논리(CSS) 좌표계로 그리므로 clientWidth(논리 픽셀) 기준으로 스폰 위치 계산
+        const safeWidth = this.canvas ? (this.canvas.clientWidth || 1024) : (window.innerWidth || 1024);
 
         const monster = {
             id: Date.now() + Math.random(),
-            username: nickname,  // 🏷️ 상단: 시청자 닉네임
-            text: randomWord,    // 🎯 하단: 밈 제시어
-            x: Math.random() * (canvasWidth - 180) + 90, // 화면 좌우 넘침 방지
+            username: data.nickname, // 🏷️ 상단: 시청자 닉네임
+            isBot: data.isBot,
+            text: data.word,         // 🎯 하단: 제시어 (라이브 채팅 모드면 실제 채팅 문구)
+            isLiveChat: !!data.isLiveChat, // 💬 라이브 채팅 문구가 그대로 쓰인 몬스터인지 (렌더러 강조용)
+            x: Math.random() * (safeWidth - 180) + 90, // 화면 좌우 넘침 방지
             y: 40,
             speed: this.speed,
             scoreValue: 100 * this.currentStage,
-            hp: 1
+            hp: 1,
+            isBoss: false
         };
 
         this.monsters.push(monster);
     }
 
+    /**
+     * 🐲 5 Stage 단위 보스 몬스터 소환 (대형 개체, 다중 HP, 전용 단어)
+     */
+    spawnBoss() {
+        const bossWord = (typeof wordPacks !== 'undefined') ? wordPacks.getBossWord() : '최종방어선돌파';
+        const canvasWidth = this.canvas ? (this.canvas.clientWidth || 1024) : 1024;
+
+        const boss = {
+            id: Date.now() + Math.random(),
+            username: `👑 STAGE ${this.currentStage} BOSS`,
+            isBot: true,
+            text: bossWord,
+            x: canvasWidth / 2,
+            y: 40,
+            speed: this.speed * 0.55, // 보스는 느리지만 강력하게
+            scoreValue: 500 * this.currentStage,
+            hp: 1,
+            isBoss: true
+        };
+
+        this.monsters.push(boss);
+        this.bossSpawnedForStage = true;
+    }
+
+    /**
+     * 동일 단어 존재 시 기지(바닥)와 가장 가까운(Y좌표가 가장 큰) 몬스터 우선 타깃팅
+     */
     checkHit(text) {
         if (!text) return { success: false };
 
@@ -110,11 +146,17 @@ class MonsterManager {
 
         if (targetIndex !== -1) {
             const killedMonster = this.monsters.splice(targetIndex, 1)[0];
+
+            if (killedMonster.isBoss) {
+                this.bossSpawnedForStage = false; // 보스 처치 후 다음 스테이지 준비
+            }
+
             return {
                 success: true,
                 monster: killedMonster,
                 score: killedMonster.scoreValue,
-                isKilled: true
+                isKilled: true,
+                isBoss: !!killedMonster.isBoss
             };
         }
 
@@ -123,19 +165,28 @@ class MonsterManager {
 
     update(deltaTime = 0.016, stage = 1) {
         let reachedCount = 0;
-        const canvasHeight = this.canvas ? this.canvas.height : 600;
-        const bottomY = canvasHeight - 60;
+        const canvasHeight = this.canvas ? (this.canvas.clientHeight || 768) : 768;
+        const bottomY = canvasHeight - 130; // CanvasRenderer의 방어선(groundY)과 정렬
 
         for (let i = this.monsters.length - 1; i >= 0; i--) {
-            this.monsters[i].y += this.monsters[i].speed * (deltaTime * 60);
+            const m = this.monsters[i];
+            m.y += m.speed * (deltaTime * 60);
 
-            if (this.monsters[i].y >= bottomY) {
+            if (m.y >= bottomY) {
                 this.monsters.splice(i, 1);
-                reachedCount++;
+                reachedCount += m.isBoss ? 3 : 1; // 보스가 뚫리면 피해 가중
+                if (m.isBoss) this.bossSpawnedForStage = false;
             }
         }
 
         return reachedCount;
+    }
+
+    /**
+     * 현재 스테이지가 보스전이며 보스가 아직 생존 중인지 여부
+     */
+    isBossAlive() {
+        return this.monsters.some(m => m.isBoss);
     }
 
     clear() {

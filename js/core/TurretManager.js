@@ -2,7 +2,7 @@
  * ==========================================
  * Word Typing Defense - TurretManager
  * ==========================================
- * 참여 인원(1~6인)에 따른 포탑 자동 균등 배치,
+ * 1인 솔로 스트리머 전용 단일 중앙 포탑 배치,
  * 타깃 몬스터 자동/개별 조준 회전 각도(θ) 계산 및 사격 궤적을 담당합니다.
  */
 
@@ -13,16 +13,11 @@ class TurretManager {
     constructor(canvas = null) {
         this.canvas = canvas || (typeof document !== 'undefined' ? document.getElementById('gameCanvas') : null);
         this.turrets = [];
-        this.playerCount = 1;
+        this.playerCount = 1; // 1인 솔로 모드 고정
 
-        // 플레이어별 고유 네온 테마 컬러 (1P ~ 6P)
+        // 스트리머 전용 네온 시안 테마 컬러
         this.playerColors = [
-            '#00f3ff', // 1P: Cyber Cyan
-            '#ff0055', // 2P: Neon Pink
-            '#00ff66', // 3P: Lime Green
-            '#ffaa00', // 4P: Neon Gold
-            '#a000ff', // 5P: Purple Electric
-            '#ffffff'  // 6P: Pure White
+            '#00f3ff' // Cyber Cyan
         ];
 
         if (this.canvas) {
@@ -31,9 +26,9 @@ class TurretManager {
     }
 
     /**
-     * 플레이어 인원 수(1~6명)에 따라 포탑 N개 균등 좌표 배치
-     * @param {number} count 
-     * @param {Array<string>} customNames - 플레이어 닉네임 목록 (선택)
+     * 1인 솔로 플레이어 포탑 Canvas 하단 중앙 배치
+     * @param {number} count - 1인 고정 (구버전 호환용)
+     * @param {Array<string>} customNames - 스트리머 닉네임 목록 (선택)
      * @param {HTMLCanvasElement|null} canvas - 전달할 Canvas 객체 (선택)
      */
     setupTurrets(count = 1, customNames = [], canvas = null) {
@@ -47,84 +42,62 @@ class TurretManager {
             return;
         }
 
-        this.playerCount = Math.min(Math.max(count, 1), 6);
+        // 1인 솔로 모드 고정 (계획서 v2.0 스펙)
+        this.playerCount = 1;
         this.turrets = [];
 
-        const width = this.canvas.width || 1000;
-        const height = this.canvas.height || 750;
+        // ⚠️ canvas.width/height는 devicePixelRatio가 곱해진 내부(물리) 해상도이므로
+        // CanvasRenderer가 ctx.scale(dpr, dpr)로 그리는 논리 좌표계와 일치하는
+        // clientWidth/clientHeight(CSS 픽셀)를 기준으로 좌표를 계산해야 한다.
+        const width = this.canvas.clientWidth || this.canvas.width || 1024;
+        const height = this.canvas.clientHeight || this.canvas.height || 768;
 
         const paddingY = 45;
         const yPos = height - paddingY;
-        const segmentWidth = width / (this.playerCount + 1);
+        const xPos = width / 2; // 화면 중앙 배치
 
-        for (let i = 0; i < this.playerCount; i++) {
-            const xPos = segmentWidth * (i + 1);
-            const name = (customNames && customNames[i]) ? customNames[i] : `P${i + 1}`;
-            const color = this.playerColors[i % this.playerColors.length];
+        const name = (customNames && customNames[0]) ? customNames[0] : '스트리머';
+        const color = this.playerColors[0];
 
-            this.turrets.push({
-                id: i + 1,
-                index: i,
-                name: name,
-                x: xPos,
-                y: yPos,
-                angle: -Math.PI / 2, // 초기 각도: 하늘 방향 (-90도)
-                targetAngle: -Math.PI / 2,
-                color: color,
-                isRecoil: false,     // 사격 반동 이펙트 플래그
-                recoilOffset: 0,
-                lastFiredTime: 0
-            });
-        }
+        this.turrets.push({
+            id: 1,
+            index: 0,
+            name: name,
+            x: xPos,
+            y: yPos,
+            angle: -Math.PI / 2, // 초기 각도: 하늘 방향 (-90도)
+            targetAngle: -Math.PI / 2,
+            color: color,
+            isRecoil: false,     // 사격 반동 이펙트 플래그
+            recoilOffset: 0,
+            lastFiredTime: 0
+        });
     }
 
     /**
-     * 창 크기 변경 시 포탑 위치 균등 재배치
+     * 창 크기 변경 시 중앙 포탑 위치 재배치
      */
     repositionTurrets() {
         if (!this.canvas || this.turrets.length === 0) return;
 
-        const width = this.canvas.width;
-        const height = this.canvas.height;
+        const width = this.canvas.clientWidth || this.canvas.width;
+        const height = this.canvas.clientHeight || this.canvas.height;
         const paddingY = 45;
-        const yPos = height - paddingY;
-        const segmentWidth = width / (this.playerCount + 1);
 
-        this.turrets.forEach((turret, index) => {
-            turret.x = segmentWidth * (index + 1);
-            turret.y = yPos;
-        });
+        this.turrets[0].x = width / 2;
+        this.turrets[0].y = height - paddingY;
     }
 
     /**
      * 타깃 몬스터 조준 및 사격 처리
      * @param {Object} targetMonster - { x, y }
-     * @param {number|null} preferredPlayerIdx - 지정 플레이어 인덱스 (0-based)
+     * @param {number|null} preferredPlayerIdx - 지정 플레이어 인덱스 (0번 고정)
      * @returns {Object} 조준/사격에 사용된 포탑 객체
      */
     aimAndFire(targetMonster, preferredPlayerIdx = null) {
         if (this.turrets.length === 0 || !targetMonster) return null;
 
-        let selectedTurret = null;
-
-        // 1. 플레이어 인덱스가 전달된 경우 (0-based 예: 0 = 1P, 1 = 2P)
-        if (typeof preferredPlayerIdx === 'number' && preferredPlayerIdx >= 0 && preferredPlayerIdx < this.turrets.length) {
-            selectedTurret = this.turrets[preferredPlayerIdx];
-        } else {
-            // 2. 통합 입력 모드 또는 지정 없을 시: 몬스터와 가장 가까운 포탑 자동 선택
-            let minDistance = Infinity;
-
-            this.turrets.forEach(turret => {
-                const dx = targetMonster.x - turret.x;
-                const dy = targetMonster.y - turret.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    selectedTurret = turret;
-                }
-            });
-        }
+        const selectedTurret = this.turrets[0];
 
         if (selectedTurret) {
             // 회전 각도(θ) 연산: atan2(dy, dx)
@@ -143,12 +116,12 @@ class TurretManager {
     }
 
     /**
-     * game.js 구버전 및 서브모듈 호출 호환용 래퍼 메서드
+     * game.js 호환용 래퍼 메서드
      * @param {number} playerIdx 
      * @param {Object} targetMonster 
      */
     fire(playerIdx, targetMonster) {
-        return this.aimAndFire(targetMonster, playerIdx);
+        return this.aimAndFire(targetMonster, 0);
     }
 
     /**
