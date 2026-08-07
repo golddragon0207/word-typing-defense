@@ -112,23 +112,21 @@ const wordPacks = {
 
   /**
    * 📡 실시간 채팅 메시지 수신 처리 (chatIntegration.js에서 호출)
-   * - '!참여' 명령어(오직 이것만)로 참가 추출 및 시청자 대기열(Queue) 등록
-   *   ('!참가'는 더 이상 참여 명령어로 인정하지 않음 — '!참여'만 허용)
+   * - '!참여' 또는 '!참가' 명령어 입력 시 시청자 대기열(Queue)에 자동 등록
    * - 비속어 필터링 적용
    * - 💬 라이브 채팅 모드가 켜져 있으면, 채팅 원문을 정제해서 타이핑 타깃으로도 함께 저장
    * @param {string} nickname - 채팅 발화 시청자 닉네임(플랫폼 접두사 포함)
    * @param {string} messageText - 채팅 원문
-   * @param {boolean} keywordOnly - true면 '!참여' 명령어 입력자만 등록
+   * @param {boolean} keywordOnly - true면 '!참여'/'!참가' 명령어 입력자만 등록
    */
   processChatMessage(nickname, messageText, keywordOnly = false) {
     if (!nickname) return false;
 
     const msg = (messageText || '').trim();
-    const hasJoinCommand = /!참여/.test(msg);
+    const hasJoinCommand = /!참여|!참가/.test(msg);
     const safeNickname = this.filterText(nickname).slice(0, 20);
 
-    // 1) `!참여`를 친 시청자만 참가자 명단에 등록하고, 우선 일반 단어팩 몬스터로 한 번 소환합니다.
-    //    명령어 뒤에 적은 문구는 타깃으로 쓰지 않아 실수/도배를 방지합니다.
+    // 1) `!참여` 또는 `!참가`를 친 시청자를 참가자 명단에 등록하고, 우선 일반 단어팩 몬스터로 한 번 소환합니다.
     if (hasJoinCommand) {
       const wasJoined = this.joinedViewers.has(safeNickname);
       this.joinedViewers.add(safeNickname);
