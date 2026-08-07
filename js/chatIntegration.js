@@ -211,11 +211,16 @@ class ChatIntegrationEngine {
 
       const info = await res.json();
       const ch = info && info.CHANNEL ? info.CHANNEL : {};
-      if (debug) console.log(`[SOOP] player_live_api 응답 CHANNEL:`, ch);
+      // 접힘 없이 그대로 복사할 수 있도록 JSON 문자열로 출력
+      if (debug) {
+        console.log(`[SOOP] 파싱된 BJ ID: "${bid}"`);
+        console.log(`[SOOP] player_live_api 응답 전체:`, JSON.stringify(info));
+        console.log(`[SOOP] CHANNEL 요약: RESULT=${ch.RESULT}, BNO=${ch.BNO}, CHATNO=${ch.CHATNO}, CHDOMAIN=${ch.CHDOMAIN}, CHPT=${ch.CHPT}, BPWD=${ch.BPWD}`);
+      }
 
-      // RESULT !== 1 이면 방송 중이 아님
+      // RESULT !== 1 이면 방송 중이 아님 (에러 메시지에 실제 RESULT 값 노출)
       if (ch.RESULT !== undefined && Number(ch.RESULT) !== 1) {
-        throw new Error('현재 방송 중이 아니거나 채팅방을 찾을 수 없습니다.');
+        throw new Error(`방송 중이 아니거나 채팅방을 못 찾음 (RESULT=${ch.RESULT}). 방송이 실제 켜져 있는지, 비밀번호/성인 설정이 아닌지 확인하세요.`);
       }
 
       const bno = ch.BNO || ch.CHATNO;               // 채팅방 번호
