@@ -249,7 +249,7 @@ class GameEngine {
     if (btnStart) btnStart.addEventListener('click', () => this.startGame());
 
     const btnRestart = document.getElementById('btn-restart');
-    if (btnRestart) btnRestart.addEventListener('click', () => this.startGame());
+    if (btnRestart) btnRestart.addEventListener('click', () => this.restartAndRegather());
 
     // 메인으로 돌아가기 버튼 (클래스/ID 다중 바인딩 처리)
     document.querySelectorAll('#btn-return-main, .btn-return-main').forEach(btn => {
@@ -752,10 +752,8 @@ class GameEngine {
 
     this.stageKillCount = 0;
     this.mvpTracker = new Map(); // 🏅 새 판 시작 시 MVP 집계 초기화
-    // 🔄 판마다 참여자 명단/대기열을 새로 시작 (이전 판 참여자가 이어지지 않도록)
-    if (typeof wordPacks !== 'undefined' && typeof wordPacks.resetParticipants === 'function') {
-      wordPacks.resetParticipants();
-    }
+    // ⚠️ 참여자 명단은 여기서 리셋하지 않는다. 게임 시작 전에 모인 시청자가 지워지기 때문.
+    //    명단 리셋은 판이 끝나 메인으로 돌아갈 때(returnToMain)에서 수행한다.
 
     if (this.stateManager) this.stateManager.resetGame(this.config);
     if (this.turretManager) this.turretManager.setupTurrets(1, this.config.playerNames, canvas);
@@ -789,9 +787,33 @@ class GameEngine {
     if (this.monsterManager) this.monsterManager.clear();
     if (this.stateManager) this.stateManager.changeState('MENU');
 
+    // 🔄 판이 끝나 메인으로 돌아올 때 참여자 명단을 새로 시작 (다음 판은 시청자를 다시 모집)
+    if (typeof wordPacks !== 'undefined' && typeof wordPacks.resetParticipants === 'function') {
+      wordPacks.resetParticipants();
+    }
+    this.renderParticipants();
+
     setTimeout(() => {
       if (window.refreshAdfitSlot) window.refreshAdfitSlot('ad-container-main');
     }, 150);
+  }
+
+  /**
+   * 🔄 '다시 도전하기': 메인 화면으로 돌아가면서 방송 채팅 연동 모달을 자동으로 띄운다.
+   *    returnToMain()이 참여자 명단을 리셋하므로, 시청자는 `!참여`로 새로 모집된다.
+   *    방송 채팅 연결(WebSocket)은 그대로 유지되어 URL 재입력 없이 바로 다시 모을 수 있다.
+   *    (모집이 끝나면 스트리머가 모달을 닫고 '게임 시작'을 누른다)
+   */
+  restartAndRegather() {
+    this.returnToMain(); // 명단 리셋 + 메인 화면 표시
+    const chatModal = document.getElementById('modal-chat');
+    if (chatModal) {
+      chatModal.classList.remove('hidden');
+      this.startChatModalLiveRefresh();
+      setTimeout(() => {
+        if (window.refreshAdfitSlot) window.refreshAdfitSlot('ad-container-chat');
+      }, 150);
+    }
   }
 
   /**
