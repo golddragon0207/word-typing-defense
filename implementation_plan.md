@@ -34,7 +34,7 @@
 *  **URL 자동 파서**: 붙여넣은 방송 주소에서 치지직 32자리 채널 ID / SOOP BJ·방송국 ID(`sooplive.com`·`sooplive.co.kr`·`afreecatv.com` 도메인 지원, 첫 경로 세그먼트=BJ ID) / 유튜브 Video ID 자동 추출.
 *  **다중 플랫폼 동시 연동**: `channels[]` 배열 구조로 SOOP + 치지직 + 유튜브를 동시에 연결 가능. 각 플랫폼 채팅은 플랫폼 접두사(🔵/🟢/🔴)와 함께 하나의 시청자 대기열로 병합. 연동 모달 기본 탭·시작화면 배지는 **SOOP를 선두**로 배치.
 *  **참여자 목록 표시**: `!참여`한 시청자를 채팅 연동 모달에 실시간 목록(총원 + 최근 참여자 칩)으로 표시해 스트리머가 연동 상태를 바로 확인.
-*  **SOOP 실제 채팅 클라이언트**: `player_live_api.php`로 방송번호(BNO)·채팅서버(CHDOMAIN/CHPT) 조회 → `wss://{CHDOMAIN}:{CHPT+1}/Websocket/{BJID}` 접속(서브프로토콜 `chat`) → LOGIN(svc 1)·JOIN(svc 2)·주기 PING(svc 0), 수신 CHAT(svc 5) 패킷을 `0x0c` 구분자로 파싱해 닉네임·메시지 추출. `CONFIG.SOOP_DEBUG`로 원본 프레임 로그 출력(프로토콜이 비공식이라 라이브 검증·필드 튜닝 지원).
+*  **SOOP 실제 채팅 클라이언트**: `player_live_api.php`로 방송번호(BNO)·**채팅방번호(CHATNO)**·채팅서버(CHDOMAIN/CHPT) 조회 → `wss://{CHDOMAIN}:{CHPT+1}/Websocket/{BJID}` 접속(서브프로토콜 `chat`) → **LOGIN(svc 1, 익명 CONNECT 페이로드 = 구분자×3 + `16` + 구분자)** → 응답 후 **JOIN(svc 2, 입장 대상은 BNO가 아니라 `CHATNO`)** → 주기 PING(svc 0), 수신 CHAT(svc 5) 패킷을 `0x0c` 구분자로 파싱해 닉네임·메시지 추출. `CONFIG.SOOP_DEBUG`로 원본 프레임 로그 출력(프로토콜이 비공식이라 라이브 검증·필드 튜닝 지원).
 *  **CORS 프록시 / 웹소켓**: GitHub Pages 정적 환경의 브라우저 제약을 우회. SOOP 정보 API는 전용 무료 **Cloudflare Worker 프록시**([`proxy/soop-cors-proxy.worker.js`](proxy/soop-cors-proxy.worker.js), SOOP/아프리카 도메인만 허용) 경유; 치지직 폴링→웹소켓; 유튜브 Data API v3 폴링.
 *  **Smart Fallback**: 방송 비활성화·주소 오류·통신 장애·프록시 미설정 시 토스트로 안내 후, 대기열이 비면 `getNextMonsterData`가 자동으로 `[BOT]` 가상 시청자를 배정(별도 폴백 로직 불필요한 자연 폴백 구조).
 *  ⚠️ 유튜브 연동은 `CONFIG.YOUTUBE_API_KEY` 필요(미설정 시 BOT 시뮬레이션). SOOP는 `CONFIG.SOOP_PROXY`(개발자 1회 배포)가 필요하며 미설정 시 BOT 폴백. 치지직 공용 데모 프록시는 불안정하므로 실서비스 시 자체 프록시 권장.
@@ -86,6 +86,7 @@
 ### 9. 👤 1인 솔로 모드 & 중앙 포탑
 *  4단계 난이도 + 스트리머 닉네임 단일 입력(입력값이 실제 포탑/저장에 반영).
 *  중앙 단일 포탑 회전각($\theta$)·레이저 빔·폭발 파티클·반동. **좌표는 `clientWidth/clientHeight`(논리 픽셀) 기준**으로 계산해 4K/Retina(DPR≠1)에서도 정위치.
+*  **포탑·방어선 하단 배치**: 하단 타자 입력 바가 대포를 가리지 않도록 포탑(`height−105`)과 방어선/몬스터 도달선(`groundY = height−190`)을 함께 위로 올려 배치(대포~방어선 간격 85px 유지).
 
 ### 10. ⌨️ 한글 자모 획수 기반 CPM/WPM & 콤보 & 피버
 *  IME 조합 완료 감지, 초/중/종성 획수 정밀 연산(`getHangulStrokeCount`)으로 CPM/WPM 산출 → HUD 실시간 표시.

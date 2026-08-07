@@ -52,7 +52,9 @@ class TurretManager {
         const width = this.canvas.clientWidth || this.canvas.width || 1024;
         const height = this.canvas.clientHeight || this.canvas.height || 768;
 
-        const paddingY = 45;
+        // 하단 타자 입력창(채팅 입력 바)이 대포를 가리지 않도록 포탑을 위로 올린다.
+        // (방어선 groundY = height-190 과 짝을 이뤄 대포~방어선 간격 유지)
+        const paddingY = 105;
         const yPos = height - paddingY;
         const xPos = width / 2; // 화면 중앙 배치
 
@@ -82,7 +84,7 @@ class TurretManager {
 
         const width = this.canvas.clientWidth || this.canvas.width;
         const height = this.canvas.clientHeight || this.canvas.height;
-        const paddingY = 45;
+        const paddingY = 105; // setupTurrets와 동일 (입력 바가 대포를 가리지 않도록)
 
         this.turrets[0].x = width / 2;
         this.turrets[0].y = height - paddingY;

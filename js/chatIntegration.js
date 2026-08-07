@@ -180,7 +180,7 @@ class ChatIntegrationEngine {
    *   1) player_live_api.php(POST)로 방송번호(BNO)·채팅서버(CHDOMAIN)·포트(CHPT) 조회
    *      → 이 API는 CORS 차단 대상이라 CONFIG.SOOP_PROXY(pass-through 프록시)가 반드시 필요합니다.
    *   2) wss://{CHDOMAIN}:{CHPT+1}/Websocket/{bjId} 로 접속 (서브프로토콜 'chat')
-   *   3) LOGIN(svc 1) → 응답 후 JOIN(svc 2, 채팅방=BNO) 전송, 이후 주기적 PING(svc 0)
+   *   3) LOGIN(svc 1) → 응답 후 JOIN(svc 2, 채팅방=CHATNO) 전송, 이후 주기적 PING(svc 0)
    *   4) 수신 CHAT(svc 5) 패킷을 파싱해 닉네임·메시지를 추출 → handleIncomingChat
    */
   async connectSoop(channel, prefix) {
@@ -225,23 +225,27 @@ class ChatIntegrationEngine {
         throw new Error(`방송 중이 아니거나 채팅방을 못 찾음 (RESULT=${ch.RESULT}). 방송이 실제 켜져 있는지, 비밀번호/성인 설정이 아닌지 확인하세요.`);
       }
 
-      const bno = ch.BNO || ch.CHATNO;               // 채팅방 번호
+      // ⚠️ 채팅방 입장(JOIN)에 쓰는 번호는 방송번호(BNO)가 아니라 CHATNO다.
+      //    (예: BNO=296187049 이지만 CHATNO=6227) — BNO로 JOIN하면 방에 못 들어간다.
+      const chatNo = ch.CHATNO || ch.BNO;            // 채팅방 번호 (JOIN 대상)
       const chDomain = (ch.CHDOMAIN || '').toLowerCase();
       const chPort = parseInt(ch.CHPT, 10);
-      if (!bno || !chDomain || !chPort) {
-        throw new Error('채팅 서버 정보(BNO/CHDOMAIN/CHPT)가 불완전합니다.');
+      if (!chatNo || !chDomain || !chPort) {
+        throw new Error('채팅 서버 정보(CHATNO/CHDOMAIN/CHPT)가 불완전합니다.');
       }
 
       // 2) 채팅 웹소켓 접속 (wss 포트 = CHPT + 1)
       const wsUrl = `wss://${chDomain}:${chPort + 1}/Websocket/${bid}`;
-      if (debug) console.log(`[SOOP] 웹소켓 접속: ${wsUrl} (BNO=${bno})`);
+      if (debug) console.log(`[SOOP] 웹소켓 접속: ${wsUrl} (CHATNO=${chatNo})`);
       const ws = new WebSocket(wsUrl, ['chat']);
       ws.binaryType = 'arraybuffer';
       channel.ws = ws;
 
       ws.onopen = () => {
         console.log(`✅ ${prefix} SOOP 웹소켓 연결 성공! LOGIN 전송`);
-        ws.send(this._soopPacket(1, `${this.SOOP_SEP}${this.SOOP_SEP}`)); // LOGIN
+        // 익명 접속 CONNECT(LOGIN) 페이로드: 구분자×3 + "16" + 구분자 (총 6바이트).
+        // 예전처럼 구분자×2만 보내면 서버가 "프로토콜 정의와 맞지 않는 패킷"으로 거절한다.
+        ws.send(this._soopPacket(1, `${this.SOOP_SEP.repeat(3)}16${this.SOOP_SEP}`)); // LOGIN
       };
 
       ws.onmessage = (event) => {
@@ -251,8 +255,8 @@ class ChatIntegrationEngine {
         if (debug) console.log(`[SOOP] svc=${svc} raw=`, JSON.stringify(text));
 
         if (svc === 1) {
-          // LOGIN 응답 → JOIN (채팅방 입장)
-          ws.send(this._soopPacket(2, `${this.SOOP_SEP}${bno}${this.SOOP_SEP.repeat(5)}`));
+          // LOGIN(CONNECT) 응답 → JOIN (채팅방 입장). 익명 입장 페이로드: 구분자 + CHATNO + 구분자×5
+          ws.send(this._soopPacket(2, `${this.SOOP_SEP}${chatNo}${this.SOOP_SEP.repeat(5)}`));
           this.notifySuccess(prefix, '채팅방 입장');
           // keepalive PING (svc 0) 60초 주기
           channel.pollTimer = setInterval(() => {

@@ -55,8 +55,8 @@ class CanvasRenderer {
         const width = this.canvas.width / this.dpr;
         const height = this.canvas.height / this.dpr;
 
-        // 하단 타자 입력창 높이(약 100~120px)를 고려해 방어선 Y좌표 상향 조정
-        const groundY = height - 130;
+        // 하단 타자 입력창(채팅 입력 바)이 대포/방어선을 가리지 않도록 방어선 Y좌표를 위로 올림
+        const groundY = height - 190;
 
         ctx.save();
 
