@@ -21,7 +21,7 @@ const CONFIG = {
   //   👉 배포 방법 전체 안내: docs/SOOP_연동_설정.md
   //   여기만 채워두면 스트리머는 방송국 URL만 붙여넣으면 자동 연동됩니다(프록시 조작 불필요).
   //   비어 있으면 SOOP 실시간 연동은 시작하지 않고 BOT 시뮬레이션으로 폴백합니다.
-  SOOP_PROXY: "",
+  SOOP_PROXY: "https://soop-proxy.skkim867.workers.dev/?url=",
 
   // SOOP 채팅 파싱 디버그 로그(원본 프레임/파싱 결과를 콘솔에 출력). 라이브에서 필드 인덱스 튜닝용.
   SOOP_DEBUG: true,
