@@ -24,9 +24,11 @@ class ChatIntegrationEngine {
         if (match && match[1]) return match[1];
       }
 
-      // 🔵 SOOP (아프리카TV): 방송국 주소 및 BJ ID 파싱
+      // 🔵 SOOP (숲/아프리카TV): 방송국 주소 및 BJ ID 파싱
+      // 지원 도메인: sooplive.com, sooplive.co.kr, play.sooplive.*, afreecatv.com 등
+      // URL 형태: https://play.sooplive.com/{BJID}/{방송번호}  → 첫 경로 세그먼트가 BJ ID
       if (platform === 'soop') {
-        if (trimmed.includes('sooplive.co.kr') || trimmed.includes('afreecatv.com')) {
+        if (trimmed.includes('sooplive') || trimmed.includes('afreeca')) {
           const urlObj = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
           const pathSegments = urlObj.pathname.split('/').filter(p => p.length > 0);
           if (pathSegments.length > 0) return pathSegments[0];
