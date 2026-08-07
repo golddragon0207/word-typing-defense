@@ -123,7 +123,7 @@ const wordPacks = {
     if (!nickname) return false;
 
     const msg = (messageText || '').trim();
-    const hasJoinCommand = /!참여/.test(msg);
+    const hasJoinCommand = /!참여|!참가/.test(msg);
     const safeNickname = this.filterText(nickname).slice(0, 20);
 
     // 1) `!참여`를 친 시청자만 참가자 명단에 등록하고, 우선 일반 단어팩 몬스터로 한 번 소환합니다.
