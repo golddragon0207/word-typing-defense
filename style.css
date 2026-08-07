@@ -965,6 +965,45 @@ html {
   font-size: 0.85rem;
 }
 
+/* 🏅 이번 판 MVP 배너 (최다 처치 실참여 시청자) */
+.result-mvp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 4px auto 2px;
+  padding: 10px 18px;
+  background: linear-gradient(90deg, rgba(255, 170, 0, 0.18), rgba(255, 204, 0, 0.10));
+  border: 1px solid rgba(255, 204, 0, 0.55);
+  border-radius: 12px;
+  box-shadow: 0 0 16px rgba(255, 204, 0, 0.25);
+}
+
+.result-mvp.hidden {
+  display: none !important;
+}
+
+.result-mvp-label {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: #ffcc00;
+  letter-spacing: 0.5px;
+}
+
+.result-mvp-name {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
+}
+
+.result-mvp-kills {
+  font-size: 0.85rem;
+  color: #ffd45e;
+}
+
 /* ==========================================
    RESULT SCREEN STAT GRID
    ========================================== */

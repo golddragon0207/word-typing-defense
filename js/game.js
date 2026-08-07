@@ -24,6 +24,8 @@ class GameEngine {
     this.renderer = null;
 
     this.stageKillCount = 0;
+    // 🏅 이번 판 MVP 집계: 실제 참여 시청자(봇/보스 제외) 닉네임별 몬스터 처치 수 누적
+    this.mvpTracker = new Map();
     this.simInterval = null; // 가상 시청자 자동 소환(테스트) 타이머
     this.bgStars = [];
     this.bgAnimId = null;
@@ -736,6 +738,7 @@ class GameEngine {
     const canvas = document.getElementById('gameCanvas');
 
     this.stageKillCount = 0;
+    this.mvpTracker = new Map(); // 🏅 새 판 시작 시 MVP 집계 초기화
 
     if (this.stateManager) this.stateManager.resetGame(this.config);
     if (this.turretManager) this.turretManager.setupTurrets(1, this.config.playerNames, canvas);
@@ -809,6 +812,11 @@ class GameEngine {
       if (this.renderer) this.renderer.addExplosionEffect(monster);
       if (window.audioManager) window.audioManager.playExplosion();
       if (this.stateManager) this.stateManager.registerHit(text, monster.scoreValue || 100);
+
+      // 🏅 MVP 집계: 실제 참여 시청자(봇·보스 제외)가 낸 몬스터 처치 수를 닉네임별로 누적
+      if (monster && !monster.isBot && monster.username) {
+        this.mvpTracker.set(monster.username, (this.mvpTracker.get(monster.username) || 0) + 1);
+      }
 
       // 🏆 스테이지 진행: 보스 처치 or 일반 처치 누적 목표 달성 시 다음 스테이지로
       if (isBoss) {
@@ -917,6 +925,20 @@ class GameEngine {
     }
   }
 
+  /**
+   * 🏅 이번 판 MVP 산출: 실참여 시청자(봇/보스 제외) 중 몬스터를 가장 많이 낸(=처치된) 닉네임.
+   * 동점이면 먼저 집계된(=먼저 참여한) 시청자를 우선한다. 참여자가 없으면 null.
+   * @returns {{name: string, kills: number}|null}
+   */
+  computeMvp() {
+    if (!this.mvpTracker || this.mvpTracker.size === 0) return null;
+    let best = null;
+    for (const [name, kills] of this.mvpTracker.entries()) {
+      if (!best || kills > best.kills) best = { name, kills };
+    }
+    return best;
+  }
+
   showGameOverScreen() {
     document.getElementById('game-hud').classList.add('hidden');
     document.getElementById('typing-input-bar').classList.add('hidden');
@@ -945,6 +967,21 @@ class GameEngine {
       if (wpmEl) wpmEl.innerText = this.stateManager.maxWpm;
       if (comboEl) comboEl.innerText = this.stateManager.maxCombo;
       if (killsEl) killsEl.innerText = this.stateManager.totalKills;
+
+      // 🏅 이번 판 MVP(최다 처치 실참여 시청자) 표시. 참여 시청자가 없으면(봇만) 숨김.
+      const mvp = this.computeMvp();
+      const mvpEl = document.getElementById('result-mvp');
+      const mvpNameEl = document.getElementById('result-mvp-name');
+      const mvpKillsEl = document.getElementById('result-mvp-kills');
+      if (mvpEl) {
+        if (mvp) {
+          if (mvpNameEl) mvpNameEl.innerText = mvp.name; // 닉네임은 시청자 입력값이라 innerText로 안전 처리
+          if (mvpKillsEl) mvpKillsEl.innerText = `${mvp.kills}마리 처치`;
+          mvpEl.classList.remove('hidden');
+        } else {
+          mvpEl.classList.add('hidden');
+        }
+      }
 
       const rank = this.stateManager.calculateRankGrade();
       if (rankBadgeEl) {
