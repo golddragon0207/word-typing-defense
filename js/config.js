@@ -41,9 +41,6 @@ const CONFIG = {
     HEIGHT: "90"
   },
 
-  // ☕ 후원 웹페이지/네이버 QR 연결 URL (클릭 시 이동할 주소)
-  DONATION_URL: "https://qr.naver.com/",
-
   // 🎮 난이도별 밸런스 테이블 (MonsterManager / StateManager / game.js 공용 참조)
   // - maxMonsterCap: 화면에 동시 출전 가능한 최대 몬스터 수. 방송 마비 방지를 위해
   //   난이도 상관없이 항상 15로 고정 (계획서상 하드 상한선, 절대 넘기지 않음)

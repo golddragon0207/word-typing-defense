@@ -263,14 +263,6 @@ class GameEngine {
       });
     }
 
-    // 후원 링크 URL 동적 동기화
-    if (CONFIG && CONFIG.DONATION_URL) {
-      const linkQr = document.getElementById('link-donation-qr');
-      const btnLink = document.getElementById('btn-open-donation-link');
-      if (linkQr) linkQr.href = CONFIG.DONATION_URL;
-      if (btnLink) btnLink.href = CONFIG.DONATION_URL;
-    }
-
     // 계좌번호 1초 복사 버튼
     const btnCopyAccount = document.getElementById('btn-copy-account');
     if (btnCopyAccount) {
