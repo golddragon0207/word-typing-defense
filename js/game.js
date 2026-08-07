@@ -464,26 +464,29 @@ class GameEngine {
 
   /**
    * 💬 라이브 채팅 제시어 모드: `!참여`한 시청자의 후속 채팅만 타깃 단어로 사용한다.
-   * 게임 진행 중에도 즉시 켜고 끌 수 있다.
+   * 상단 컨트롤바 버튼 및 단어팩 모달 내부 버튼 어느 곳에서나 토글 가능하며 실시간 양방향 동기화된다.
    */
   bindLiveChatToggle() {
-    const btn = document.getElementById('btn-live-chat-toggle');
-    if (!btn) return;
+    const topBtn = document.getElementById('btn-live-chat-toggle');
+    const modalBtn = document.getElementById('btn-modal-live-chat-toggle');
 
     const updateUI = () => {
       const enabled = typeof wordPacks !== 'undefined' && wordPacks.liveChatMode;
-      btn.classList.toggle('active', enabled);
-      btn.setAttribute('aria-pressed', String(enabled));
-      btn.textContent = enabled ? '💬 라이브 채팅 모드: ON' : '💬 라이브 채팅 모드: OFF';
 
-      const status = document.getElementById('live-chat-status');
-      if (status) {
-        status.textContent = enabled ? 'ON' : 'OFF';
-        status.classList.toggle('active', enabled);
+      if (topBtn) {
+        topBtn.classList.toggle('active', enabled);
+        topBtn.setAttribute('aria-pressed', String(enabled));
+        topBtn.textContent = enabled ? '💬 라이브 채팅 모드: ON' : '💬 라이브 채팅 모드: OFF';
+      }
+
+      if (modalBtn) {
+        modalBtn.classList.toggle('active', enabled);
+        modalBtn.setAttribute('aria-pressed', String(enabled));
+        modalBtn.textContent = enabled ? '💬 라이브 모드: ON' : '💬 라이브 모드: OFF';
       }
     };
 
-    btn.addEventListener('click', () => {
+    const toggleMode = () => {
       if (typeof wordPacks === 'undefined') return;
       wordPacks.liveChatMode = !wordPacks.liveChatMode;
       updateUI();
@@ -496,7 +499,10 @@ class GameEngine {
       if (window.GlobalLeaderboard) {
         window.GlobalLeaderboard.logEvent('live_chat_mode_toggled', { enabled: wordPacks.liveChatMode });
       }
-    });
+    };
+
+    if (topBtn) topBtn.addEventListener('click', toggleMode);
+    if (modalBtn) modalBtn.addEventListener('click', toggleMode);
 
     updateUI();
   }
@@ -512,10 +518,12 @@ class GameEngine {
     if (maxLenSelect) maxLenSelect.value = String(wordPacks.liveChatMaxLen);
     const stripSpecialCheck = document.getElementById('chk-live-chat-strip-special');
     if (stripSpecialCheck) stripSpecialCheck.checked = !!wordPacks.liveChatStripSpecial;
-    const status = document.getElementById('live-chat-status');
-    if (status) {
-      status.textContent = wordPacks.liveChatMode ? 'ON' : 'OFF';
-      status.classList.toggle('active', !!wordPacks.liveChatMode);
+
+    const modalBtn = document.getElementById('btn-modal-live-chat-toggle');
+    if (modalBtn) {
+      const enabled = !!wordPacks.liveChatMode;
+      modalBtn.classList.toggle('active', enabled);
+      modalBtn.textContent = enabled ? '💬 라이브 모드: ON' : '💬 라이브 모드: OFF';
     }
 
     const words = wordPacks.getActiveWords();
