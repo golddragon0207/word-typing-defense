@@ -992,6 +992,12 @@ class GameEngine {
 
       // 🏆 스테이지 진행: 보스 처치 or 일반 처치 누적 목표 달성 시 다음 스테이지로
       if (isBoss) {
+        // 💚 보스 처치 보상: 기지 체력 일부 회복(최대 체력의 25%, 상한 초과분은 버림)
+        if (this.stateManager) {
+          const healAmount = Math.round(this.stateManager.maxHp * 0.25);
+          const healed = this.stateManager.healBase(healAmount);
+          if (healed > 0) this.showToastInternal(`💚 보스 격파! 기지 +${healed} 회복`, 'success');
+        }
         this.advanceStage();
       } else {
         this.stageKillCount += 1;

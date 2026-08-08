@@ -167,6 +167,18 @@ class StateManager {
     }
 
     /**
+     * 💚 기지 체력 회복 (보스 처치 보상 등). 최대 체력을 넘지 않는다.
+     * @param {number} amount - 회복량
+     * @returns {number} 실제로 회복된 체력(상한 초과분 제외)
+     */
+    healBase(amount = 0) {
+        const before = this.hp;
+        this.hp = Math.min(this.maxHp, this.hp + Math.max(0, amount));
+        this.updateHUDUI();
+        return this.hp - before;
+    }
+
+    /**
      * 상단 HUD 체력바, 체력%, 점수, 스테이지, 콤보, WPM 실시간 갱신
      */
     updateHUDUI() {
