@@ -22,9 +22,9 @@
 | **난이도 밸런스** |  밸런스 테이블(`CONFIG.DIFFICULTY`)로 낙하속도·스폰주기·기지 체력·피격 데미지·스테이지 처치목표 차등. **난이도 선택 UI는 제거**되어 표준(`normal`)으로 고정 실행(스테이지별 자동 상승은 유지) |
 | **명예의 전당** |  **최고 도달 스테이지 기준 단일 TOP 5**(동점 시 점수순). 로컬(`localStorage`) 기본 + Firebase Firestore **글로벌 리더보드**(설정 시 자동 활성, 미설정 시 로컬 폴백) |
 | **화면 & 모달 최적화** |  카드 너비 `width: min(96%, 800px)` / 세로 `max-height: 72vh`. 버튼 영역(`.modal-actions`)과 광고 영역(`.modal-footer`)을 구조적으로 분리 |
-| **상단 컨트롤바 (6개)** |  📝 단어/닉네임 팩, 🏆 명예의 전당, ☕ 개발자 후원, 💬 라이브 채팅 모드, 📺 OBS 크로마키, 🔊 사운드 ON/OFF (방송 채팅 연동은 홈 화면 인라인 패널) |
+| **상단 컨트롤바 (7개)** |  📝 단어/닉네임 팩, 🏆 명예의 전당, ☕ 개발자 후원, 💡 건의사항, 💬 라이브 채팅 모드, 📺 OBS 크로마키, 🔊 사운드 ON/OFF (방송 채팅 연동은 홈 화면 인라인 패널) |
 | **수익화 광고 및 후원** | **총 5개** 카카오 애드핏 `728x90` 슬롯 + **카카오뱅크(`3333-28-2684443`) 계좌 복사 & QR(`donation-qr.png`)** 후원 모달 |
-| **선택형 백엔드** |  Firebase(무료 티어) — Firestore 글로벌 리더보드 + Analytics(GA4). `CONFIG.FIREBASE` 미설정 시 전 기능 자동 비활성/로컬 폴백 |
+| **선택형 백엔드** |  Firebase(무료 티어) — Firestore 글로벌 리더보드 + 건의사항(`suggestions`) 저장 + Analytics(GA4). `CONFIG.FIREBASE` 미설정 시 전 기능 자동 비활성/로컬 폴백 |
 
 ---
 
@@ -148,7 +148,7 @@
     *  플랫폼별 URL 파서, SOOP/치지직/유튜브 다중 연동, **SOOP·치지직 채팅 프로토콜 클라이언트**(SOOP: 핸드셰이크·패킷 빌드/파싱 / 치지직: live-status·access-token→WS cmd 100·PING/PONG·CHAT 파싱, `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY` 경유), Smart Fallback 토스트 안내, `handleIncomingChat` → `wordPacks.processChatMessage` 전달.
 
 7.  **`js/globalLeaderboard.js`**
-    *  Firebase 초기화, Firestore 점수 제출/스테이지 기준 조회(`submitScore`/`fetchTop`), Analytics `logEvent`. 미설정 시 자동 비활성. 상단 주석에 Firestore 보안 규칙 포함.
+    *  Firebase 초기화, Firestore 점수 제출/스테이지 기준 조회(`submitScore`/`fetchTop`), 💡 건의사항 저장(`submitSuggestion` → `suggestions` 컬렉션, 읽기 비공개), Analytics `logEvent`. 미설정 시 자동 비활성. 상단 주석에 리더보드·건의사항 Firestore 보안 규칙 포함.
 
 8.  **`js/core/StateManager.js`**
     *  상태 머신, 무한 Stage/HP/점수/콤보/CPM·WPM/피버 관리, 난이도별 체력·데미지 적용, 등급 환산, **최고 도달 스테이지 기준 단일 로컬 TOP5** 저장/조회.

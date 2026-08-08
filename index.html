@@ -34,6 +34,7 @@
         <button id="btn-word-modal" class="btn btn-neon purple">📝 단어/닉네임 팩</button>
         <button id="btn-leaderboard-modal" class="btn btn-neon gold">🏆 명예의 전당 (Top 5)</button>
         <button id="btn-support-modal" class="btn btn-neon gold">☕ 후원 (Donate)</button>
+        <button id="btn-suggestion-modal" class="btn btn-neon pink">💡 건의사항</button>
         <button id="btn-live-chat-toggle" class="btn btn-neon purple">💬 라이브 채팅 모드: OFF</button>
         <button id="btn-obs-toggle" class="btn btn-neon cyan">📺 OBS 크로마키 (배경 투명)</button>
         <button id="btn-sfx-toggle" class="btn btn-neon gold">🔊 사운드: ON</button>
@@ -339,6 +340,32 @@
 
         <div class="modal-footer">
           <div id="ad-container-support" class="ad-banner-box"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-suggestion" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>💡 건의사항 보내기</h2>
+          <button class="btn-close" data-close="modal-suggestion">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">게임에 바라는 점·버그·아이디어를 자유롭게 남겨주세요! 개발자에게 바로 전달됩니다. 💛</p>
+
+          <label class="suggestion-label">닉네임 (선택)</label>
+          <input type="text" id="input-suggestion-nickname" class="input-nickname" maxlength="20"
+            placeholder="비워두면 '익명'으로 전송됩니다" />
+
+          <label class="suggestion-label">건의 내용 <span class="required-mark">*필수</span></label>
+          <textarea id="input-suggestion-text" class="suggestion-textarea" maxlength="500"
+            placeholder="예) 이런 단어팩이 있으면 좋겠어요 / OO 화면에서 버그가 있어요"></textarea>
+          <div class="suggestion-count"><span id="suggestion-charcount">0</span> / 500</div>
+        </div>
+
+        <div class="modal-actions modal-actions-pad">
+          <button id="btn-submit-suggestion" class="btn btn-primary">📨 보내기</button>
+          <button class="btn btn-neon" data-close="modal-suggestion">닫기</button>
         </div>
       </div>
     </div>

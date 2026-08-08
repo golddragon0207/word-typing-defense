@@ -190,7 +190,8 @@ class GameEngine {
     const modalMap = [
       { btnId: 'btn-word-modal', modalId: 'modal-words', adContainerId: 'ad-container-words' },
       { btnId: 'btn-leaderboard-modal', modalId: 'modal-leaderboard', adContainerId: 'ad-container-leaderboard' },
-      { btnId: 'btn-support-modal', modalId: 'modal-support', adContainerId: 'ad-container-support' }
+      { btnId: 'btn-support-modal', modalId: 'modal-support', adContainerId: 'ad-container-support' },
+      { btnId: 'btn-suggestion-modal', modalId: 'modal-suggestion', adContainerId: null }
     ];
 
     modalMap.forEach(({ btnId, modalId, adContainerId }) => {
@@ -312,6 +313,54 @@ class GameEngine {
     this.bindLiveChatToggle();
     this.bindObsToggle();
     this.bindSfxToggle();
+    this.bindSuggestionModal();
+  }
+
+  /* ==========================================================
+   * 💡 건의사항 모달: 입력 → Firestore(suggestions) 저장
+   * ========================================================== */
+  bindSuggestionModal() {
+    const btn = document.getElementById('btn-submit-suggestion');
+    const textEl = document.getElementById('input-suggestion-text');
+    const nickEl = document.getElementById('input-suggestion-nickname');
+    const countEl = document.getElementById('suggestion-charcount');
+
+    // 글자수 카운터 실시간 갱신
+    if (textEl && countEl) {
+      textEl.addEventListener('input', () => {
+        countEl.textContent = String(textEl.value.length);
+      });
+    }
+
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      const text = textEl ? textEl.value.trim() : '';
+      if (!text) {
+        this.showToastInternal('💡 건의 내용을 입력해주세요!', 'warn');
+        if (textEl) textEl.focus();
+        return;
+      }
+      if (!window.GlobalLeaderboard || !window.GlobalLeaderboard.enabled) {
+        this.showToastInternal('⚠️ 지금은 건의사항 전송을 사용할 수 없습니다. 잠시 후 다시 시도해주세요.', 'warn');
+        return;
+      }
+
+      btn.disabled = true;
+      const nickname = nickEl ? nickEl.value.trim() : '';
+      const ok = await window.GlobalLeaderboard.submitSuggestion(text, nickname);
+      btn.disabled = false;
+
+      if (ok) {
+        this.showToastInternal('📨 건의사항이 전송되었습니다. 소중한 의견 감사합니다! 💛', 'success');
+        if (textEl) textEl.value = '';
+        if (nickEl) nickEl.value = '';
+        if (countEl) countEl.textContent = '0';
+        const modal = document.getElementById('modal-suggestion');
+        if (modal) modal.classList.add('hidden');
+      } else {
+        this.showToastInternal('⚠️ 전송에 실패했습니다. 네트워크를 확인 후 다시 시도해주세요.', 'warn');
+      }
+    });
   }
 
   /* ==========================================================

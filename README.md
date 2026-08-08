@@ -68,17 +68,21 @@ SOOP · 치지직 · 유튜브 라이브 **1인 솔로 스트리머**에 최적�
 ### 11. 📊 (선택) Firebase 애널리틱스
 - Firebase 연동 시 게임 시작/종료, 난이도 선택, 방송 플랫폼 연동 등 이벤트를 GA4로 수집(개인식별정보 미전송). 미설정 시 자동 비활성.
 
+### 12. 💡 건의사항 (Firebase Firestore)
+- 상단 **`💡 건의사항`** 버튼 → 닉네임(선택) + 건의 내용(최대 500자)을 입력해 개발자에게 바로 전송. 저장된 건의는 개발자가 Firebase 콘솔에서 확인합니다(클라이언트 조회 불가).
+- ⚠️ **Firestore 보안 규칙에 `suggestions` 컬렉션 규칙을 추가**해야 전송됩니다. 규칙 원문은 [`js/globalLeaderboard.js`](./js/globalLeaderboard.js) 상단 주석 참고 → Firebase 콘솔 > Firestore > 규칙에 붙여넣고 **게시**. (미추가 시 전송 실패 토스트가 뜹니다.)
+
 ---
 
 ## 📁 파일 구조
 
-- [`index.html`](./index.html) : 메인 화면(홈 인라인 방송 채팅 연동 패널 포함), 3개 모달(단어팩/명예의전당/후원), 상단 컨트롤바 6개, 광고 슬롯, Firebase SDK 로드
+- [`index.html`](./index.html) : 메인 화면(홈 인라인 방송 채팅 연동 패널 포함), 4개 모달(단어팩/명예의전당/후원/건의사항), 상단 컨트롤바 7개, 광고 슬롯, Firebase SDK 로드
 - [`style.css`](./style.css) : 사이버펑크 네온 CSS, 1024×768 고정 레이아웃, 모달/토스트/등급뱃지/난이도탭 스타일, OBS 투명 오버레이
 - [`js/config.js`](./js/config.js) : 유튜브 API 키, Firebase 설정, 카카오 애드핏 ID, **난이도 밸런스 테이블(`CONFIG.DIFFICULTY`)**, 몬스터 동시 출전 상한(`CONFIG.MAX_MONSTER_CAP`), 참여/큐 튜닝(`CONFIG.QUEUE`)
 - [`js/wordPacks.js`](./js/wordPacks.js) : 단어팩(프리셋/보스), 시청자 대기열·참가자 명단, `!참여` 처리·봇 보충, 라이브 채팅 큐 누적/정제, 한글 자모 획수 유틸
 - [`js/audio.js`](./js/audio.js) : Web Audio API 효과음 5종(레이저/폭발/피버/오타/팡파르)
 - [`js/chatIntegration.js`](./js/chatIntegration.js) : 치지직/SOOP/유튜브 URL 파서 및 다중 실시간 연동. **SOOP·치지직 채팅 프로토콜 클라이언트**(SOOP: 입장 핸드셰이크·패킷 파싱 / 치지직: live-status·access-token→WS cmd 100 핸드셰이크, 프록시 경유)
-- [`js/globalLeaderboard.js`](./js/globalLeaderboard.js) : Firebase Firestore 글로벌 리더보드 + Analytics 연동(선택형)
+- [`js/globalLeaderboard.js`](./js/globalLeaderboard.js) : Firebase Firestore 글로벌 리더보드 + 건의사항(`suggestions`) 저장 + Analytics 연동(선택형)
 - [`js/core/StateManager.js`](./js/core/StateManager.js) : 상태 머신, 점수/HP/콤보/CPM·WPM/피버, 최고 도달 스테이지 기준 로컬 TOP5
 - [`js/core/TurretManager.js`](./js/core/TurretManager.js) : 중앙 포탑 좌표·회전각·사격·반동
 - [`js/core/MonsterManager.js`](./js/core/MonsterManager.js) : 난이도별 스폰/속도/상한, 보스전, 낙하 관리

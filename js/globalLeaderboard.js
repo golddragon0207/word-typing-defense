@@ -36,6 +36,16 @@
  *                     && request.resource.data.stage <= 9999;
  *       allow update, delete: if false; // 클라이언트에서 수정/삭제 불가 (스코어 위변조 방지)
  *     }
+ *     match /suggestions/{docId} {
+ *       allow read: if false;   // 건의사항은 클라이언트 조회 불가 (개발자가 콘솔에서만 확인)
+ *       allow create: if request.resource.data.keys().hasOnly(['text','nickname','createdAt'])
+ *                     && request.resource.data.text is string
+ *                     && request.resource.data.text.size() >= 1
+ *                     && request.resource.data.text.size() <= 500
+ *                     && request.resource.data.nickname is string
+ *                     && request.resource.data.nickname.size() <= 20;
+ *       allow update, delete: if false;
+ *     }
  *   }
  * }
  * ────────────────────────────────────────────────────────────
@@ -157,6 +167,30 @@ const GlobalLeaderboard = {
     } catch (e) {
       console.warn('⚠️ [GlobalLeaderboard] TOP 조회 실패:', e.message);
       return null;
+    }
+  },
+
+  /**
+   * 💡 건의사항 제출 (suggestions 컬렉션에 저장 → 개발자가 Firebase 콘솔에서 확인)
+   * 개인정보는 받지 않으며, 닉네임은 선택(비우면 '익명')이다.
+   * @param {string} text - 건의 내용 (1~500자)
+   * @param {string} [nickname] - 작성자 닉네임 (선택, 최대 20자)
+   * @returns {Promise<boolean>} 성공 여부
+   */
+  async submitSuggestion(text, nickname) {
+    if (!this.enabled || !this.db) return false;
+    const body = (text || '').trim();
+    if (!body) return false;
+    try {
+      await this.db.collection('suggestions').add({
+        text: body.slice(0, 500),
+        nickname: (nickname || '').trim().slice(0, 20) || '익명',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return true;
+    } catch (e) {
+      console.warn('⚠️ [GlobalLeaderboard] 건의사항 제출 실패:', e.message);
+      return false;
     }
   }
 };
