@@ -209,6 +209,7 @@ class MonsterManager {
      */
     _spawnTick() {
         if (typeof document !== 'undefined' && document.hidden) return;
+        if (typeof window !== 'undefined' && window.gameEngine && window.gameEngine.isPaused) return; // ⏸ 일시정지 중 스폰 정지
         if (this.monsters.length < this.MAX_MONSTER_CAP && !(this._isBossStage && !this.bossSpawnedForStage)) {
             this.spawnMonster();
         }

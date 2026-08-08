@@ -1050,6 +1050,45 @@ html {
   text-align: center;
 }
 
+/* ⏸ 일시정지 오버레이 */
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 160;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 8, 14, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+.pause-overlay.hidden {
+  display: none !important;
+}
+
+.pause-card {
+  text-align: center;
+  padding: 28px 46px;
+  background: rgba(13, 14, 21, 0.95);
+  border: 2px solid #00f3ff;
+  border-radius: 16px;
+  box-shadow: 0 0 30px rgba(0, 243, 255, 0.35);
+}
+
+.pause-card h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #00f3ff;
+  text-shadow: 0 0 14px rgba(0, 243, 255, 0.6);
+  margin-bottom: 8px;
+}
+
+.pause-card p {
+  color: #cfe9f5;
+  font-size: 0.95rem;
+}
+
 .stage-banner-card {
   background: rgba(10, 12, 20, 0.82);
   border: 2px solid #00f3ff;
@@ -1173,6 +1212,23 @@ html {
   animation: pulseGlow 1.1s ease-in-out infinite;
 }
 
+/* 🌐 글로벌 상위 % 뱃지 (등급 뱃지 아래, 누적 기록 충분 시 '상위 X%' / 아니면 '집계 중') */
+.percentile-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  color: #00f3ff;
+  padding: 4px 12px;
+  border: 1px solid rgba(0, 243, 255, 0.4);
+  border-radius: 20px;
+  background: rgba(0, 243, 255, 0.08);
+}
+
+.percentile-badge.hidden {
+  display: none !important;
+}
+
 .danger-text {
   text-align: center;
   font-family: 'Orbitron', sans-serif;
@@ -1280,6 +1336,9 @@ html {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* 전체 순위 보기 시 목록이 길어지면 내부 스크롤 (모달 밖으로 넘치지 않도록) */
+  max-height: 46vh;
+  overflow-y: auto;
 }
 
 .leaderboard-row {

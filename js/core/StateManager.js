@@ -207,29 +207,32 @@ class StateManager {
     }
 
     /**
-     * 👑 최종 결과 등급(Rank) 환산 메서드 (0점 판정 추가)
+     * 👑 최종 결과 등급(Rank) 환산 — "도달 스테이지" 기준.
+     *   게임의 목표(얼마나 오래 방어했나)·명예의 전당 순위와 동일한 잣대로 통일.
+     *   구간은 타수→도달 스테이지 시뮬레이션으로 보정(B=평균 300~400타 ≈ 스테이지 22~26).
+     *   0점/0처치(사실상 미플레이)는 항상 D.
      */
     calculateRankGrade() {
         if (!this.score || this.score <= 0 || this.totalKills <= 0) {
             return 'D';
         }
 
-        const finalScore = this.score;
+        const stage = this.currentStage || 1;
 
-        if (finalScore >= 10000) {
-            return 'SSS';
-        } else if (finalScore >= 7000) {
-            return 'SS';
-        } else if (finalScore >= 5000) {
-            return 'S';
-        } else if (finalScore >= 3000) {
-            return 'A';
-        } else if (finalScore >= 1500) {
-            return 'B';
-        } else if (finalScore >= 500) {
-            return 'C';
+        if (stage >= 70) {
+            return 'SSS';   // 최상위 (≈800타+)
+        } else if (stage >= 50) {
+            return 'SS';    // 고수 (≈700타)
+        } else if (stage >= 34) {
+            return 'S';     // 숙련 상
+        } else if (stage >= 27) {
+            return 'A';     // 숙련 (≈450~600타)
+        } else if (stage >= 22) {
+            return 'B';     // 평균 (≈300~400타)
+        } else if (stage >= 10) {
+            return 'C';     // 초급 (≈200~280타)
         } else {
-            return 'D';
+            return 'D';     // 입문
         }
     }
 

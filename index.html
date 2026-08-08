@@ -96,6 +96,14 @@
         </div>
       </div>
 
+      <!-- ⏸ 일시정지 오버레이 (스페이스바 토글) -->
+      <div id="pause-overlay" class="pause-overlay hidden">
+        <div class="pause-card">
+          <h2>⏸ 일시정지</h2>
+          <p>스페이스바를 눌러 계속하기</p>
+        </div>
+      </div>
+
       <!-- ⌨️ 타자 입력 바: 게임플레이라 고정 무대(1024×708) 안에 유지 -->
       <div id="typing-input-bar" class="typing-bar hidden">
         <div id="multi-input-container" class="multi-input-grid">
@@ -191,6 +199,7 @@
 
           <div class="rank-result-header">
             <span id="result-rank-badge" class="rank-grade-badge rank-s">👑 D RANK</span>
+            <span id="result-percentile" class="percentile-badge hidden">상위 집계 중…</span>
             <span id="result-new-record" class="new-record-badge hidden">🎉 NEW RECORD!</span>
           </div>
           <p class="result-subtitle">몬스터의 침공으로 기지가 파괴되었습니다.</p>
@@ -303,6 +312,7 @@
         </div>
 
         <div class="modal-actions modal-actions-pad">
+          <button id="btn-leaderboard-all" class="btn btn-neon cyan">📜 전체 순위 보기</button>
           <button class="btn btn-primary" data-close="modal-leaderboard">닫기</button>
         </div>
 

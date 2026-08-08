@@ -224,8 +224,8 @@ class GameEngine {
           // ⚡ 1. 클릭하는 순간 모달창부터 0ms 만에 즉시 띄움
           modal.classList.remove('hidden');
 
-          // 모달별 진입 시 최신 데이터 렌더링
-          if (modalId === 'modal-leaderboard') this.renderLeaderboard();
+          // 모달별 진입 시 최신 데이터 렌더링 (명예의 전당은 항상 TOP5로 초기화)
+          if (modalId === 'modal-leaderboard') this.renderLeaderboard(false);
           if (modalId === 'modal-words') this.renderWordPackPreview();
 
           // ⚡ 2. 광고 호출 함수는 그대로 유지하되, 모달이 다 뜨고 난 150ms 뒤 비동기로 실행
@@ -236,6 +236,22 @@ class GameEngine {
           }, 150);
         });
       }
+    });
+
+    // 🏆 명예의 전당 전체 ↔ TOP5 토글
+    const lbAllBtn = document.getElementById('btn-leaderboard-all');
+    if (lbAllBtn) {
+      lbAllBtn.addEventListener('click', () => this.renderLeaderboard(!this.leaderboardShowAll));
+    }
+
+    // ⏸ 스페이스바 일시정지/재개 (게임 진행 중에만). 모달이 열려 있으면 무시.
+    //    단어에 공백이 없으므로 입력창에서 스페이스를 가로채도 타이핑에 지장 없음.
+    document.addEventListener('keydown', (e) => {
+      if (e.code !== 'Space') return;
+      if (!this.stateManager || this.stateManager.currentState !== 'PLAYING') return;
+      if (document.querySelector('.modal-backdrop:not(.hidden)')) return; // 모달 상호작용 우선
+      e.preventDefault();
+      this.togglePause();
     });
 
     // 닫기 버튼 (모달 닫을 때 게임 중이면 타자 입력창으로 포커스 자동 복원)
@@ -637,31 +653,39 @@ class GameEngine {
    * 🏆 명예의 전당 데이터 로드: 글로벌(Firestore)이 설정돼 있으면 스테이지 기준으로 조회해 캐시하고,
    * 미설정이거나 네트워크 실패 시 로컬(localStorage) 스테이지 기준 TOP5로 자동 폴백한다.
    */
-  async renderLeaderboard() {
+  async renderLeaderboard(showAll = false) {
     const listEl = document.getElementById('leaderboard-list');
     const sourceEl = document.getElementById('leaderboard-source');
     if (!listEl || !this.stateManager) return;
+
+    this.leaderboardShowAll = showAll;
+    const limit = showAll ? 200 : 5; // 전체 보기: 글로벌 최대 200 / 로컬 보관분 전체
+
+    // 📜 전체 ↔ TOP5 토글 버튼 라벨 갱신
+    const allBtn = document.getElementById('btn-leaderboard-all');
+    if (allBtn) allBtn.textContent = showAll ? '🏅 TOP 5만 보기' : '📜 전체 순위 보기';
 
     let scores = null;
     let source = 'local';
 
     if (window.GlobalLeaderboard && window.GlobalLeaderboard.enabled) {
       if (sourceEl) sourceEl.textContent = '🌐 글로벌 기록 불러오는 중...';
-      scores = await window.GlobalLeaderboard.fetchTop(5);
+      scores = await window.GlobalLeaderboard.fetchTop(limit);
       if (scores) source = 'global';
     }
 
     if (!scores) {
       source = 'local';
-      scores = this.stateManager.getTopScores(5);
+      scores = this.stateManager.getTopScores(limit);
     }
 
     this.leaderboardCache = { source, scores };
 
     if (sourceEl) {
+      const scopeTxt = showAll ? `전체 순위 (${scores.length}명)` : 'TOP 5';
       sourceEl.textContent = source === 'global'
-        ? '🌐 모든 스트리머가 함께 보는 글로벌 TOP 5 (최고 도달 스테이지 기준)입니다.'
-        : '💾 이 브라우저에만 저장된 로컬 TOP 5 (최고 도달 스테이지 기준)입니다. (글로벌 미설정 또는 연결 실패)';
+        ? `🌐 모든 스트리머가 함께 보는 글로벌 ${scopeTxt} (최고 도달 스테이지 기준)입니다.`
+        : `💾 이 브라우저에만 저장된 로컬 ${scopeTxt} (최고 도달 스테이지 기준)입니다. (글로벌 미설정 또는 연결 실패)`;
     }
 
     this.renderLeaderboardList();
@@ -775,6 +799,12 @@ class GameEngine {
   startGame() {
     if (this.monsterManager) this.monsterManager.clear();
 
+    // ⏸ 새 판 시작 시 일시정지 상태 초기화
+    this.isPaused = false;
+    this._pauseStart = null;
+    const pauseOverlay = document.getElementById('pause-overlay');
+    if (pauseOverlay) pauseOverlay.classList.add('hidden');
+
     // 스트리머 닉네임 필수: 비어 있으면 시작을 막고 입력을 유도한다.
     const nicknameInput = document.getElementById('input-player-nickname');
     const nickname = nicknameInput ? nicknameInput.value.trim() : '';
@@ -828,6 +858,12 @@ class GameEngine {
   }
 
   returnToMain() {
+    // ⏸ 일시정지 상태/오버레이 해제
+    this.isPaused = false;
+    this._pauseStart = null;
+    const pauseOverlay = document.getElementById('pause-overlay');
+    if (pauseOverlay) pauseOverlay.classList.add('hidden');
+
     const gameOverScreen = document.getElementById('screen-gameover');
     const gameHud = document.getElementById('game-hud');
     const typingBar = document.getElementById('typing-input-bar');
@@ -872,6 +908,7 @@ class GameEngine {
    */
   handleTypingSubmit(playerIdx, text) {
     if (!this.stateManager || this.stateManager.currentState !== 'PLAYING') return;
+    if (this.isPaused) return; // 일시정지 중에는 제출 무시
 
     const hitResult = this.monsterManager ? this.monsterManager.checkHit(text) : null;
 
@@ -958,6 +995,33 @@ class GameEngine {
     this._bannerTimeout = setTimeout(() => banner.classList.add('hidden'), 2000);
   }
 
+  /**
+   * ⏸ 일시정지 토글 (스페이스바). 게임 진행 중일 때만 동작.
+   *   - 몬스터 이동/스폰을 멈추고, 일시정지 동안 흐른 시간을 startTime에 더해
+   *     WPM/경과시간 계산에서 제외한다(화장실 등으로 잠깐 비워도 타수가 왜곡되지 않음).
+   */
+  togglePause() {
+    if (!this.stateManager || this.stateManager.currentState !== 'PLAYING') return;
+
+    this.isPaused = !this.isPaused;
+    const overlay = document.getElementById('pause-overlay');
+    const input = document.querySelector('.game-typing-input');
+
+    if (this.isPaused) {
+      this._pauseStart = performance.now();
+      if (overlay) overlay.classList.remove('hidden');
+      if (input) { input.blur(); input.disabled = true; } // 일시정지 중 입력 차단
+    } else {
+      // 일시정지 동안 흐른 시간만큼 startTime을 미뤄 경과시간(=WPM 분모)에서 제외
+      if (this._pauseStart && this.stateManager.startTime) {
+        this.stateManager.startTime += (performance.now() - this._pauseStart);
+      }
+      this._pauseStart = null;
+      if (overlay) overlay.classList.add('hidden');
+      if (input) { input.disabled = false; setTimeout(() => input.focus(), 30); }
+    }
+  }
+
   startMainLoop() {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
@@ -973,6 +1037,9 @@ class GameEngine {
   }
 
   update(deltaTime) {
+    // ⏸ 일시정지 중에는 몬스터 이동/포탑/이펙트를 모두 멈춘다 (스폰은 _spawnTick에서 별도 차단)
+    if (this.isPaused) return;
+
     if (this.stateManager && this.stateManager.currentState === 'PLAYING' && this.monsterManager) {
       const reachedMonsters = this.monsterManager.update(deltaTime, this.stateManager.currentStage);
       if (reachedMonsters > 0) {
@@ -1078,6 +1145,27 @@ class GameEngine {
       if (rankBadgeEl) {
         rankBadgeEl.innerText = `👑 ${rank} RANK`;
         rankBadgeEl.className = `rank-grade-badge rank-${rank.toLowerCase()}`;
+      }
+
+      // 🌐 글로벌 상위 %(누적 기록 기준). 누적 기록이 MIN_SAMPLE 미만이면 '집계 중',
+      //    Firebase 미설정/오프라인이면 아예 숨긴다. (조회는 비동기 — 먼저 '집계 중'을 띄우고 갱신)
+      const pctEl = document.getElementById('result-percentile');
+      if (pctEl) {
+        if (window.GlobalLeaderboard && window.GlobalLeaderboard.enabled) {
+          pctEl.classList.remove('hidden');
+          pctEl.innerText = '상위 집계 중…';
+          window.GlobalLeaderboard.fetchPercentile(this.stateManager.score).then(res => {
+            if (!res || !res.available) { pctEl.classList.add('hidden'); return; }
+            if (res.enough) {
+              const p = res.topPercent;
+              pctEl.innerText = `상위 ${p < 1 ? p.toFixed(1) : Math.round(p)}%`;
+            } else {
+              pctEl.innerText = '상위 집계 중…';
+            }
+          });
+        } else {
+          pctEl.classList.add('hidden');
+        }
       }
 
       // 📊 게임 종료 이벤트 로깅 (닉네임 등 개인식별정보는 넘기지 않음)
