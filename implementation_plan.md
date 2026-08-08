@@ -118,7 +118,7 @@
 ### 11. ♾️ 무한 Stage & 5 Stage 단위 보스전
 *  처치목표(`killPerStageBase + floor((stage-1)*killPerStageStep)`) 달성 시 다음 스테이지로 진행.
 *  **5 Stage마다 보스전**: WARNING 배너 → 보스 소환(확대·다중 피해). 보스 처치 시 즉시 다음 스테이지.
-*  **보스 제시어 전용 팩(`wordPacks.bossWords`, 30종)**: 라이브 채팅·단어팩 선택과 무관하게 `getBossWord()`가 '시스템 붕괴' 테마 고난도 문구에서 랜덤 출제(길고 겹받침 많아 난도↑). 단어 길이만큼 박스 폭이 자동 확장돼(최대 ≈343px, 1024 무대 내) 세로 높이는 불변·잘림 없음.
+*  **보스 제시어 전용 팩(`wordPacks.bossWords`, 30종)**: 라이브 채팅·단어팩 선택과 무관하게 `MonsterManager._pickBossWord(stage)`가 '시스템 붕괴' 테마 고난도 문구에서 (후반일수록 긴 문구 우선으로) 출제(길고 겹받침 많아 난도↑). 단어 길이만큼 박스 폭이 자동 확장돼(최대 ≈343px, 1024 무대 내) 세로 높이는 불변·잘림 없음.
 *  **⚡ 차지(기 모으기) 보스**(`spawnBoss`): 낙하하지 않고 고정 위치(`y:260`, `speed:0`)에서 차지 게이지를 채운다. 스테이지 스케일 — 필요격파 `requiredHits = 2 + floor(stage/20)`(≤5), 차지시간 `chargeTime = requiredHits × 6000ms`, 공격력 `attackDamage = 10 + floor(stage/15)×3`, 제시어는 `_pickBossWord(stage)`가 획수 티어에서 후반일수록 긴 문구 우선 출제.
     *  **`update`**: 보스는 낙하 대신 `chargeElapsed += dt`; `>= chargeTime`이면 `onBossAttack(attackDamage)` 콜백 발동 후 게이지만 0으로 리셋(진행도 `hitsLanded` 유지) + `_attackFlashUntil` 설정.
     *  **`checkHit`**: 보스 정타 시 `hitsLanded++`. 미달이면 게이지 절반 밀어내기(`chargeElapsed -= chargeTime×0.5`)+새 제시어 리롤 후 `{isKilled:false, bossDamaged:true}`; `requiredHits` 도달 시 제거+`{isKilled:true}`.
