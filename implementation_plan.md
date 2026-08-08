@@ -112,6 +112,7 @@
 
 ### 13. 🌐 Firebase 글로벌 리더보드 & 📊 Analytics (신규 — 선택형)
 *  **Firestore 글로벌 리더보드**: `CONFIG.FIREBASE.apiKey` 설정 시 자동 활성. 보안 규칙으로 읽기 공개 + 최소 검증(점수·스테이지 범위/닉네임 길이)만 허용, 클라이언트 수정·삭제 금지. ⚠️ 스테이지 기준 개편에 맞춰 규칙을 `difficulty` 제거 + `stage` 검증본으로 교체·게시 필요(`js/globalLeaderboard.js` 상단 주석 참고).
+*  **💡 건의사항(`suggestions`)**: 읽기 비공개(`allow read: if false`) + create만 최소 검증(text 1~500자, nickname ≤20자)으로 허용. 운영 프로젝트에는 규칙 게시 완료(활성). 새 Firebase 프로젝트로 배포 시엔 동일 규칙을 추가·게시해야 전송 가능(`js/globalLeaderboard.js` 상단 주석 참고).
 *  **Analytics(GA4)**: `measurementId` 설정 시 활성. `game_start`/`game_over`/`difficulty_selected`/`chat_platform_connected` 이벤트 수집(개인식별정보 미전송).
 *  두 기능 모두 실패해도 게임 진행에 영향 없음(try/catch 격리).
 

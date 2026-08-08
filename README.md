@@ -70,7 +70,7 @@ SOOP · 치지직 · 유튜브 라이브 **1인 솔로 스트리머**에 최적�
 
 ### 12. 💡 건의사항 (Firebase Firestore)
 - 상단 **`💡 건의사항`** 버튼 → 닉네임(선택) + 건의 내용(최대 500자)을 입력해 개발자에게 바로 전송. 저장된 건의는 개발자가 Firebase 콘솔에서 확인합니다(클라이언트 조회 불가).
-- ⚠️ **Firestore 보안 규칙에 `suggestions` 컬렉션 규칙을 추가**해야 전송됩니다. 규칙 원문은 [`js/globalLeaderboard.js`](./js/globalLeaderboard.js) 상단 주석 참고 → Firebase 콘솔 > Firestore > 규칙에 붙여넣고 **게시**. (미추가 시 전송 실패 토스트가 뜹니다.)
+- ✅ 운영 프로젝트에는 `suggestions` 컬렉션 보안 규칙이 이미 게시되어 기능이 활성 상태입니다. **다른 Firebase 프로젝트로 새로 배포할 때는** 해당 규칙을 반드시 추가해야 전송됩니다(미추가 시 전송 실패 토스트). 규칙 원문: [`js/globalLeaderboard.js`](./js/globalLeaderboard.js) 상단 주석 → Firebase 콘솔 > Firestore > 규칙에 붙여넣고 **게시**.
 
 ---
 
