@@ -292,10 +292,6 @@ class ChatIntegrationEngine {
         throw new Error(`방송 중이 아니거나 채팅방을 못 찾음 (RESULT=${ch.RESULT}). 방송이 실제 켜져 있는지, 비밀번호/성인 설정이 아닌지 확인하세요.`);
       }
 
-      // 🙋 스트리머 닉네임 자동 채움: 방송의 BJ 닉네임(BJNICK)→BJ ID 순으로 사용.
-      //    사용자가 이미 직접 입력한 값이 있으면 덮어쓰지 않는다.
-      this._autofillStreamerName(ch.BJNICK || ch.BJID || bid);
-
       // ⚠️ 채팅방 입장(JOIN)에 쓰는 번호는 방송번호(BNO)가 아니라 CHATNO다.
       //    (예: BNO=296187049 이지만 CHATNO=6227) — BNO로 JOIN하면 방에 못 들어간다.
       const chatNo = ch.CHATNO || ch.BNO;            // 채팅방 번호 (JOIN 대상)
@@ -491,23 +487,6 @@ class ChatIntegrationEngine {
     console.warn(`🤖 ${prefix} 연동 실패(${reason}) → [BOT] 가상 시청자 자동 소환 모드로 전환합니다.`);
     if (typeof window.showToast === 'function') {
       window.showToast(`⚠️ ${prefix} 연동 실패: ${reason} → BOT 시뮬레이션으로 전환`, 'warn');
-    }
-  }
-
-  /**
-   * 🙋 스트리머 닉네임 입력칸(#input-player-nickname)을 방송 채널명으로 자동 채움.
-   *    이미 사용자가 입력한 값이 있으면 존중하고 덮어쓰지 않는다.
-   * @param {string} name - 방송 채널/BJ 표시 이름
-   */
-  _autofillStreamerName(name) {
-    const clean = (name || '').toString().trim();
-    if (!clean) return;
-    const input = document.getElementById('input-player-nickname');
-    if (!input) return;
-    if (input.value && input.value.trim()) return; // 사용자가 이미 입력함 → 유지
-    input.value = clean;
-    if (typeof window.showToast === 'function') {
-      window.showToast(`🙋 스트리머 닉네임을 '${clean}'(으)로 자동 설정했습니다.`, 'info');
     }
   }
 

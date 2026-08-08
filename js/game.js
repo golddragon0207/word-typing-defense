@@ -90,6 +90,9 @@ class GameEngine {
     this.initToastSystem();
     this.startBackgroundStarfield();
 
+    // 홈 화면의 방송 채팅 연동 패널: 시작부터 참여자/연동 목록을 실시간 갱신
+    this.startChatPanelLiveRefresh();
+
     // 7. 메인 루프 시작
     this.isInitialized = true;
     this.startMainLoop();
@@ -187,7 +190,6 @@ class GameEngine {
   bindUIEvents() {
     // 모달 팝업 및 해당 카카오 애드핏 배너 슬롯 매핑
     const modalMap = [
-      { btnId: 'btn-chat-modal', modalId: 'modal-chat', adContainerId: 'ad-container-chat' },
       { btnId: 'btn-word-modal', modalId: 'modal-words', adContainerId: 'ad-container-words' },
       { btnId: 'btn-leaderboard-modal', modalId: 'modal-leaderboard', adContainerId: 'ad-container-leaderboard' },
       { btnId: 'btn-support-modal', modalId: 'modal-support', adContainerId: 'ad-container-support' }
@@ -203,7 +205,6 @@ class GameEngine {
 
           // 모달별 진입 시 최신 데이터 렌더링
           if (modalId === 'modal-leaderboard') this.renderLeaderboard();
-          if (modalId === 'modal-chat') this.startChatModalLiveRefresh();
           if (modalId === 'modal-words') this.renderWordPackPreview();
 
           // ⚡ 2. 광고 호출 함수는 그대로 유지하되, 모달이 다 뜨고 난 150ms 뒤 비동기로 실행
@@ -457,16 +458,17 @@ class GameEngine {
   }
 
   /**
-   * 채팅 모달이 열려 있는 동안 연동 목록/참여자 목록을 주기적으로 갱신 (모달 닫히면 자동 중지)
+   * 홈 화면(방송 채팅 연동 패널)이 보이는 동안 연동 목록/참여자 목록을 주기적으로 갱신한다.
+   * 게임이 시작되어 홈(screen-main)이 숨겨지면 자동으로 멈추고, 홈으로 돌아오면 다시 시작한다.
    */
-  startChatModalLiveRefresh() {
+  startChatPanelLiveRefresh() {
     this.renderActiveChannels();
     this.renderParticipants();
 
     clearInterval(this._chatModalTimer);
     this._chatModalTimer = setInterval(() => {
-      const modal = document.getElementById('modal-chat');
-      if (!modal || modal.classList.contains('hidden')) {
+      const home = document.getElementById('screen-main');
+      if (!home || home.classList.contains('hidden')) {
         clearInterval(this._chatModalTimer);
         return;
       }
@@ -729,9 +731,17 @@ class GameEngine {
       this.simInterval = null;
     }
 
-    // 스트리머 닉네임 입력값 반영
+    // 스트리머 닉네임 필수: 비어 있으면 시작을 막고 입력을 유도한다.
     const nicknameInput = document.getElementById('input-player-nickname');
-    const nickname = (nicknameInput && nicknameInput.value.trim()) ? nicknameInput.value.trim() : '스트리머';
+    const nickname = nicknameInput ? nicknameInput.value.trim() : '';
+    if (!nickname) {
+      // 입력칸이 접이식 연동 패널 안에 있으므로 펼쳐서 보이게 한 뒤 포커스
+      const chatPanel = document.getElementById('home-chat-panel');
+      if (chatPanel) chatPanel.open = true;
+      if (nicknameInput) nicknameInput.focus();
+      this.showToastInternal('🎨 스트리머 닉네임을 먼저 입력해주세요!', 'warn');
+      return;
+    }
     this.config.playerNames = [nickname];
 
     const mainScreen = document.getElementById('screen-main');
@@ -791,7 +801,11 @@ class GameEngine {
     if (typeof wordPacks !== 'undefined' && typeof wordPacks.resetParticipants === 'function') {
       wordPacks.resetParticipants();
     }
-    this.renderParticipants();
+
+    // 재모집 유도: 홈의 채팅 연동 패널을 펼치고 참여자/연동 목록 실시간 갱신을 재개한다.
+    const chatPanel = document.getElementById('home-chat-panel');
+    if (chatPanel) chatPanel.open = true;
+    this.startChatPanelLiveRefresh();
 
     setTimeout(() => {
       if (window.refreshAdfitSlot) window.refreshAdfitSlot('ad-container-main');
@@ -799,21 +813,13 @@ class GameEngine {
   }
 
   /**
-   * 🔄 '다시 도전하기': 메인 화면으로 돌아가면서 방송 채팅 연동 모달을 자동으로 띄운다.
-   *    returnToMain()이 참여자 명단을 리셋하므로, 시청자는 `!참여`로 새로 모집된다.
-   *    방송 채팅 연결(WebSocket)은 그대로 유지되어 URL 재입력 없이 바로 다시 모을 수 있다.
-   *    (모집이 끝나면 스트리머가 모달을 닫고 '게임 시작'을 누른다)
+   * 🔄 '다시 도전하기': 메인 화면으로 돌아가 시청자를 다시 모집한다.
+   *    returnToMain()이 참여자 명단을 리셋하고 홈의 채팅 연동 패널을 자동으로 펼치므로,
+   *    시청자는 `!참여`로 새로 모집된다. 방송 채팅 연결(WebSocket)은 그대로 유지되어
+   *    URL 재입력 없이 바로 다시 모을 수 있다. (모집이 끝나면 스트리머가 '게임 시작'을 누른다)
    */
   restartAndRegather() {
-    this.returnToMain(); // 명단 리셋 + 메인 화면 표시
-    const chatModal = document.getElementById('modal-chat');
-    if (chatModal) {
-      chatModal.classList.remove('hidden');
-      this.startChatModalLiveRefresh();
-      setTimeout(() => {
-        if (window.refreshAdfitSlot) window.refreshAdfitSlot('ad-container-chat');
-      }, 150);
-    }
+    this.returnToMain();
   }
 
   /**

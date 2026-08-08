@@ -19,11 +19,11 @@
 | **플레이 모드** |  **1인 솔로 스트리머 전용 디펜스** (복잡한 N인 합방/대결 모드 옵션 전면 제거) |
 | **방송 채팅 연동 방식** |  **원클릭 방송 URL 파싱 연동** (스트리머가 방송 주소 입력 시 자동 ID 추출). SOOP/치지직/유튜브 **동시 다중 연동**. SOOP는 전용 무료 Cloudflare Worker 프록시(`CONFIG.SOOP_PROXY`, 개발자 1회 배포) 경유 — 스트리머는 URL만 입력 |
 | **몬스터 UI 시스템** |  **2단 UI** (상단: 시청자 닉네임 Pill Tag / 하단: 제시어 Box). 보스는 금색·확대, 라이브 채팅 문구는 보라색으로 강조. **Max Cap 15마리** 고정 상한 |
-| **난이도 밸런스** |  4단계(Easy/Normal/Hard/Hell) 밸런스 테이블(`CONFIG.DIFFICULTY`)로 낙하속도·스폰주기·기지 체력·피격 데미지·스테이지 처치목표를 난이도별 차등 |
+| **난이도 밸런스** |  밸런스 테이블(`CONFIG.DIFFICULTY`)로 낙하속도·스폰주기·기지 체력·피격 데미지·스테이지 처치목표 차등. **난이도 선택 UI는 제거**되어 표준(`normal`)으로 고정 실행(스테이지별 자동 상승은 유지) |
 | **명예의 전당** |  **난이도별 TOP 5**. 로컬(`localStorage`) 기본 + Firebase Firestore **글로벌 리더보드**(설정 시 자동 활성, 미설정 시 로컬 폴백) |
 | **화면 & 모달 최적화** |  카드 너비 `width: min(96%, 800px)` / 세로 `max-height: 72vh`. 버튼 영역(`.modal-actions`)과 광고 영역(`.modal-footer`)을 구조적으로 분리 |
-| **상단 컨트롤바 (7개)** |  📡 방송 채팅 연동, 📝 단어/닉네임 팩, 🏆 명예의 전당, ☕ 개발자 후원, 💬 라이브 채팅 모드, 📺 OBS 크로마키, 🔊 사운드 ON/OFF |
-| **수익화 광고 및 후원** | **총 6개** 카카오 애드핏 `728x90` 슬롯 + **카카오뱅크(`3333-28-2684443`) 계좌 복사 & QR(`donation-qr.png`)** 후원 모달 |
+| **상단 컨트롤바 (6개)** |  📝 단어/닉네임 팩, 🏆 명예의 전당, ☕ 개발자 후원, 💬 라이브 채팅 모드, 📺 OBS 크로마키, 🔊 사운드 ON/OFF (방송 채팅 연동은 홈 화면 인라인 패널) |
+| **수익화 광고 및 후원** | **총 5개** 카카오 애드핏 `728x90` 슬롯 + **카카오뱅크(`3333-28-2684443`) 계좌 복사 & QR(`donation-qr.png`)** 후원 모달 |
 | **선택형 백엔드** |  Firebase(무료 티어) — Firestore 글로벌 리더보드 + Analytics(GA4). `CONFIG.FIREBASE` 미설정 시 전 기능 자동 비활성/로컬 폴백 |
 
 ---
@@ -33,8 +33,8 @@
 ### 1. 📡 원클릭 방송 URL 실시간 채팅 연동 (치지직/SOOP/유튜브 다중)
 *  **URL 자동 파서**: 붙여넣은 방송 주소에서 치지직 32자리 채널 ID(URL 위치 무관하게 첫 32자리 hex 추출 — `chzzk.naver.com/live/{ID}`·`chzzk.naver.com/{ID}`·`studio.chzzk.naver.com/{ID}/live` 모두 지원) / SOOP BJ·방송국 ID(`sooplive.com`·`sooplive.co.kr`·`afreecatv.com` 도메인 지원, 첫 경로 세그먼트=BJ ID) / 유튜브 Video ID 자동 추출.
 *  **다중 플랫폼 동시 연동**: `channels[]` 배열 구조로 SOOP + 치지직 + 유튜브를 동시에 연결 가능. 각 플랫폼 채팅은 플랫폼 접두사(🔵/🟢/🔴)와 함께 하나의 시청자 대기열로 병합. 연동 모달 기본 탭·시작화면 배지는 **SOOP를 선두**로 배치.
-*  **참여자 목록 표시**: `!참여`한 시청자를 채팅 연동 모달에 실시간 목록(총원 + 최근 참여자 칩)으로 표시해 스트리머가 연동 상태를 바로 확인.
-*  **스트리머 닉네임 자동 입력**: SOOP 연동 성공 시 방송의 BJ 닉네임(`BJNICK`)→BJ ID 순으로 메인 화면의 스트리머 닉네임 칸(`#input-player-nickname`)을 자동으로 채움(`_autofillStreamerName`). 사용자가 이미 입력한 값이 있으면 덮어쓰지 않음. (현재 SOOP만 지원 — 치지직/유튜브는 각 플랫폼 API의 채널 표시명으로 확장 가능)
+*  **참여자 목록 표시**: `!참여`한 시청자를 홈 화면의 채팅 연동 패널(`<details id="home-chat-panel">`)에 실시간 목록(총원 + 최근 참여자 칩)으로 표시해 스트리머가 연동 상태를 바로 확인.
+*  **스트리머 닉네임 필수 입력**: 스트리머 닉네임 칸(`#input-player-nickname`)은 홈 화면 채팅 연동 패널 안(참여자 명단 바로 위)에 위치하며 **필수 입력**. 빈 값으로 게임 시작 시 시작을 막고 패널을 펼쳐 입력칸에 포커스한다(자동 닉네임 채움 기능은 제거).
 *  **SOOP 실제 채팅 클라이언트**: `player_live_api.php`로 방송번호(BNO)·**채팅방번호(CHATNO)**·채팅서버(CHDOMAIN/CHPT) 조회 → `wss://{CHDOMAIN}:{CHPT+1}/Websocket/{BJID}` 접속(서브프로토콜 `chat`) → **LOGIN(svc 1, 익명 CONNECT 페이로드 = 구분자×3 + `16` + 구분자)** → 응답 후 **JOIN(svc 2, 입장 대상은 BNO가 아니라 `CHATNO`)** → 주기 PING(svc 0), 수신 CHAT(svc 5) 패킷을 `0x0c` 구분자로 파싱해 닉네임·메시지 추출. `CONFIG.SOOP_DEBUG`로 원본 프레임 로그 출력(프로토콜이 비공식이라 라이브 검증·필드 튜닝 지원).
 *  **치지직 실제 채팅 클라이언트**: `polling/v2/channels/{채널ID}/live-status`로 방송 상태(OPEN)·채팅방ID(`chatChannelId`) 조회 → `comm-api.game.naver.com/.../access-token`로 익명 읽기용 `accessToken` 발급(code 42601이면 성인 인증 필요 방송이라 익명 불가) → `chatChannelId` 문자코드 합 해시로 채팅 서버(`kr-ss1~9`) 결정 → `wss://kr-ss{N}.chat.naver.com/chat` 접속 → **CONNECT(cmd 100, `accTkn` 포함)** → CONNECTED(cmd 10100) 후 CHAT(cmd 93101)의 `profile.nickname`/`msg` 파싱. keepalive: 서버 PING(cmd 0)→PONG(cmd 10000) + 20초 주기 PING. 두 REST 호출은 CORS 차단이라 프록시 경유(WS는 CORS 대상 아님, 직접 연결).
 *  **CORS 프록시 / 웹소켓**: GitHub Pages 정적 환경의 브라우저 제약을 우회. SOOP·치지직 REST API는 **하나의 무료 Cloudflare Worker 프록시**([`proxy/soop-cors-proxy.worker.js`](proxy/soop-cors-proxy.worker.js), SOOP/아프리카 + `api.chzzk.naver.com`·`comm-api.game.naver.com` 도메인만 허용) 경유; 채팅 웹소켓은 양쪽 다 브라우저에서 직접 연결; 유튜브는 Data API v3 폴링.
@@ -47,7 +47,7 @@
 *  **대기열(`MAX_QUEUE_LENGTH` 30)**: 순번 대기 상한. 화면 동시 15 + 대기 30 = 순간 최대 45명 파이프라인. 봇 목표(20) < 큐 상한(30)이라 봇이 실참여자를 밀어내지 않음. 반응 신선함을 위해 60→30으로 축소.
 *  **1인당 큐 상한(`MAX_QUEUE_PER_VIEWER` 2)**: 한 시청자가 큐에 동시에 대기할 수 있는 항목을 최대 2개로 제한(도배로 큐 독점 방지 → 채팅 폭주 시에도 여러 시청자가 골고루 등장). `[BOT]`은 예외(물량 보충용).
 *  **참여자 명단 상한(`MAX_JOINED_VIEWERS` 100)**: `joinedViewers`(참여자 명단) 누적 인원 상한. 큐/화면 상한이 이미 있어 그 이상은 게임에 의미가 없고 무제한 누적을 막기 위함. 가득 차면 새 시청자의 `!참여`는 무시(기존 참여자 재참여는 계속 동작).
-*  **판마다 명단 초기화 & 재모집**: 판이 끝나 메인으로 돌아갈 때(`returnToMain`) `wordPacks.resetParticipants()`로 명단·대기열·카운트·경쟁 후보를 비운다. ⚠️ 게임 시작(`startGame`) 시점엔 리셋하지 않는다 — 시작 전에 모인 시청자가 지워지지 않도록. **'다시 도전하기'(`restartAndRegather`)는 메인으로 돌아가며 채팅 연동 모달을 자동으로 띄워** 시청자를 다시 `!참여`로 모집(방송 WebSocket 연결은 유지되어 URL 재입력 불필요). 채팅 연동 모달의 **🗑️ 참여자 초기화** 버튼으로도 수동 초기화 가능.
+*  **판마다 명단 초기화 & 재모집**: 판이 끝나 메인으로 돌아갈 때(`returnToMain`) `wordPacks.resetParticipants()`로 명단·대기열·카운트·경쟁 후보를 비운다. ⚠️ 게임 시작(`startGame`) 시점엔 리셋하지 않는다 — 시작 전에 모인 시청자가 지워지지 않도록. **'다시 도전하기'(`restartAndRegather`)는 `returnToMain`으로 메인에 돌아가며 홈의 채팅 연동 패널을 자동으로 펼쳐** 시청자를 다시 `!참여`로 모집(방송 WebSocket 연결은 유지되어 URL 재입력 불필요). 연동 패널의 **🗑️ 참여자 초기화** 버튼으로도 수동 초기화 가능.
 *  **비속어 필터(`filterText`)**: 닉네임/채팅 문구에 항상 적용.
 
 ### 3. 💬 라이브 채팅 하이브리드 모드 (신규)
@@ -88,7 +88,7 @@
 *  **OBS 크로마키 가시성**: 텍스트 두꺼운 아웃라인(Stroke) + Drop Shadow. `body.obs-overlay` 클래스로 배경 투명화(상단바 `📺 OBS 크로마키` 토글).
 
 ### 9. 👤 1인 솔로 모드 & 중앙 포탑
-*  4단계 난이도 + 스트리머 닉네임 단일 입력(입력값이 실제 포탑/저장에 반영).
+*  스트리머 닉네임 단일 입력(**필수** — 입력값이 실제 포탑/저장에 반영). 난이도 선택 UI는 제거되어 표준(`normal`) 밸런스로 고정 실행(스테이지 상승 시 난이도 테이블에 따라 자동 가속).
 *  중앙 단일 포탑 회전각($\theta$)·레이저 빔·폭발 파티클·반동. **좌표는 `clientWidth/clientHeight`(논리 픽셀) 기준**으로 계산해 4K/Retina(DPR≠1)에서도 정위치.
 *  **포탑·방어선 하단 배치**: 하단 타자 입력 바가 대포를 가리지 않도록 포탑(`height−105`)과 방어선/몬스터 도달선(`groundY = height−190`)을 함께 위로 올려 배치(대포~방어선 간격 85px 유지).
 
@@ -115,7 +115,7 @@
 *  두 기능 모두 실패해도 게임 진행에 영향 없음(try/catch 격리).
 
 ### 14. 💰 수익화 광고 & 후원
-*  카카오 애드핏 `728x90` **6개 슬롯**(메인/결과/채팅/단어팩/명예의전당/후원). 모달 오픈 시 `refreshAdfitSlot()` 동적 리프레시.
+*  카카오 애드핏 `728x90` **5개 슬롯**(메인/결과/단어팩/명예의전당/후원). 모달 오픈 시 `refreshAdfitSlot()` 동적 리프레시.
 *  카카오뱅크 계좌복사(`3333-28-2684443`) 및 QR(`donation-qr.png`) 후원 모달.
 
 ### 15. ✨ UX 연출
@@ -128,14 +128,14 @@
 ## 📂 프로젝트 파일 구조 및 역할
 
 1.  **`index.html`**
-    *  메인 화면(난이도·닉네임), 4개 모달(채팅/단어팩/명예의전당/후원), 상단 컨트롤바 7개 버튼.
-    *  카카오 애드핏 6개 슬롯, Firebase SDK(app/firestore/analytics compat) 로드, 스크립트 의존성 로드(`globalLeaderboard.js` 포함).
+    *  메인 화면(스트리머 닉네임 입력 + 홈 인라인 방송 채팅 연동 패널), 3개 모달(단어팩/명예의전당/후원), 상단 컨트롤바 6개 버튼.
+    *  카카오 애드핏 5개 슬롯, Firebase SDK(app/firestore/analytics compat) 로드, 스크립트 의존성 로드(`globalLeaderboard.js` 포함).
 
 2.  **`style.css`**
     *  1024x768 고정 레이아웃, 모달 잘림 방지, `.modal-actions`/`.modal-footer` 분리, `body.obs-overlay` 투명 스타일, 토스트/등급뱃지/난이도탭/단어칩/피버 등 컴포넌트 스타일.
 
 3.  **`js/config.js`**
-    *  `CONFIG.YOUTUBE_API_KEY`, **`CONFIG.SOOP_PROXY`/`CONFIG.SOOP_DEBUG`(SOOP 프록시·디버그)**, `CONFIG.FIREBASE`(리더보드/애널리틱스), `CONFIG.KAKAO_ADFIT`(6개), **`CONFIG.DIFFICULTY`(난이도 밸런스 테이블)** + `getDifficultyConfig()`, 광고 리프레시 로직.
+    *  `CONFIG.YOUTUBE_API_KEY`, **`CONFIG.SOOP_PROXY`/`CONFIG.SOOP_DEBUG`(SOOP 프록시·디버그)**, `CONFIG.FIREBASE`(리더보드/애널리틱스), `CONFIG.KAKAO_ADFIT`(5개), **`CONFIG.DIFFICULTY`(난이도 밸런스 테이블)** + `getDifficultyConfig()`, 광고 리프레시 로직.
 
 4.  **`js/wordPacks.js`**
     *  단어팩(기본/프리셋/보스), 시청자 대기열(`{nickname, chatWord}`) 관리, `!참여` 처리·참가자 명단, 봇 자동 보충, **라이브 채팅 정제(`sanitizeLiveChatWord`)**, 비속어 필터, 한글 자모 획수 유틸.
@@ -165,7 +165,7 @@
     *  `devicePixelRatio` 고해상도 Draw, 2단 몬스터 UI(보스 금색·확대 / 라이브 채팅 보라색), OBS 가시성 Stroke·Shadow, 이펙트.
 
 13. **`js/game.js`**
-    *  메인 루프 오케스트레이터. 전 UI 배선(모달·난이도·닉네임·채팅연동·단어팩·명예의전당·OBS·사운드·**라이브 채팅 토글**), 스테이지 진행, 사운드/피버/보스 배너 연출, 배경 파티클, 토스트, 글로벌 리더보드/애널리틱스 연동.
+    *  메인 루프 오케스트레이터. 전 UI 배선(모달·닉네임 필수·홈 인라인 채팅연동 패널·단어팩·명예의전당·OBS·사운드·**라이브 채팅 토글**), 스테이지 진행, 사운드/피버/보스 배너 연출, 배경 파티클, 토스트, 글로벌 리더보드/애널리틱스 연동.
 
 14. **`proxy/soop-cors-proxy.worker.js`**
     *  SOOP 연동용 무료 Cloudflare Worker CORS 프록시. `player_live_api.php` 요청을 pass-through로 중계하고 CORS 헤더 부여. SOOP/아프리카 도메인만 허용(오픈 프록시 악용 방지). 개발자가 1회 배포 후 주소를 `CONFIG.SOOP_PROXY`에 입력.

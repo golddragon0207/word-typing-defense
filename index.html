@@ -31,7 +31,6 @@
       </div>
 
       <div class="quick-controls">
-        <button id="btn-chat-modal" class="btn btn-neon green">📡 방송 채팅 연동</button>
         <button id="btn-word-modal" class="btn btn-neon purple">📝 단어/닉네임 팩</button>
         <button id="btn-leaderboard-modal" class="btn btn-neon gold">🏆 명예의 전당 (Top 5)</button>
         <button id="btn-support-modal" class="btn btn-neon gold">☕ 후원 (Donate)</button>
@@ -99,35 +98,80 @@
           <h1 class="glow-text">WORD TYPING DEFENSE</h1>
           <p class="subtitle">시청자 닉네임 & 채팅으로 몰려오는 몬스터를 타자로 방어하라!</p>
 
-          <div class="mode-selector">
-            <h3>🎯 게임 난이도 선택</h3>
-            <div class="difficulty-buttons-grid">
-              <button class="btn btn-diff" data-diff="easy">
-                <span class="diff-title">🟢 쉬움</span>
-                <span class="diff-desc">입문용 (여유로운 속도)</span>
-              </button>
-              <button class="btn btn-diff active" data-diff="normal">
-                <span class="diff-title">🟡 보통</span>
-                <span class="diff-desc">표준 밸런스</span>
-              </button>
-              <button class="btn btn-diff" data-diff="hard">
-                <span class="diff-title">🔴 어려움</span>
-                <span class="diff-desc">빠른 타수 필요</span>
-              </button>
-              <button class="btn btn-diff" data-diff="hell">
-                <span class="diff-title">💀 헬 (Hell)</span>
-                <span class="diff-desc">타자 고수 & 보스 폭격</span>
-              </button>
-            </div>
-          </div>
+          <details id="home-chat-panel" class="home-chat-panel" open>
+            <summary class="home-chat-summary">
+              <span class="home-chat-title">📡 방송 채팅 실시간 연동</span>
+              <span id="participant-count" class="participant-count">(0명)</span>
+            </summary>
 
-          <div class="mode-selector">
-            <h3>🎨 플레이어 스트리머 닉네임</h3>
-            <div class="solo-nickname-box">
-              <input type="text" id="input-player-nickname" class="input-nickname" placeholder="스트리머 닉네임을 입력하세요"
-                value="스트리머" />
+            <div class="home-chat-body">
+              <p class="modal-desc">방송 플랫폼을 선택하고 채널 주소를 붙여넣으면 시청자 닉네임·채팅이 몬스터로 생성됩니다!</p>
+
+              <div class="platform-tabs">
+                <button class="tab-btn active" data-tab="tab-soop">🔵 SOOP (숲/아프리카)</button>
+                <button class="tab-btn" data-tab="tab-chzzk">🟢 치지직 (Chzzk)</button>
+                <button class="tab-btn" data-tab="tab-youtube">🔴 유튜브 라이브</button>
+                <button class="tab-btn" data-tab="tab-custom">💬 시뮬레이션 / 테스트</button>
+              </div>
+
+              <div class="tab-contents">
+                <div id="tab-soop" class="tab-content active">
+                  <label>SOOP (아프리카TV) 방송국 주소 (또는 BJ ID):</label>
+                  <div class="input-with-btn">
+                    <input type="text" id="input-soop-id" placeholder="https://play.sooplive.co.kr/... 주소 전체 복사-붙여넣기" />
+                    <button id="btn-add-soop" class="btn btn-neon cyan">+ BJ 추가</button>
+                  </div>
+                </div>
+
+                <div id="tab-chzzk" class="tab-content">
+                  <label>치지직 방송 주소 (또는 채널 ID):</label>
+                  <div class="input-with-btn">
+                    <input type="text" id="input-chzzk-id" placeholder="https://chzzk.naver.com/live/... 주소 전체 복사-붙여넣기" />
+                    <button id="btn-add-chzzk" class="btn btn-neon green">+ 채널 추가</button>
+                  </div>
+                </div>
+
+                <div id="tab-youtube" class="tab-content">
+                  <label>유튜브 라이브 주소 (또는 Video ID):</label>
+                  <div class="input-with-btn">
+                    <input type="text" id="input-yt-url" placeholder="https://www.youtube.com/watch?v=XXXXXX" />
+                    <button id="btn-add-yt" class="btn btn-neon red">+ 방송 추가</button>
+                  </div>
+                </div>
+
+                <div id="tab-custom" class="tab-content">
+                  <label>🤖 [BOT] 가상 시청자 자동 소환 (테스트 / 오프라인용):</label>
+                  <select id="select-sim-speed">
+                    <option value="off">자동 소환 끄기</option>
+                    <option value="slow">느림 (5초마다 소환)</option>
+                    <option value="normal" selected>보통 (2.5초마다 소환)</option>
+                    <option value="fast">폭발적 (1초마다 소환)</option>
+                  </select>
+                </div>
+
+                <div class="connected-channels-section">
+                  <label>📡 현재 연동 목록:</label>
+                  <div id="active-channels-list" class="channel-chips-container"></div>
+                </div>
+
+                <div class="streamer-name-section">
+                  <label>🎨 스트리머(플레이어) 닉네임 <span class="required-mark">*필수</span></label>
+                  <input type="text" id="input-player-nickname" class="input-nickname" required
+                    placeholder="게임에 표시될 스트리머 닉네임을 입력하세요" />
+                </div>
+
+                <div class="participants-section">
+                  <div class="participants-header">
+                    <label>🙋 참여자 명단:</label>
+                    <button id="btn-reset-participants" class="btn-reset-participants" type="button">🗑️ 참여자 초기화</button>
+                  </div>
+                  <div id="participant-list" class="participant-chips-container"></div>
+                </div>
+
+                <p class="chat-option-note">💡 방송 채팅창에 <strong>!참여</strong> 라고 해야 자동참여 됩니다!</p>
+              </div>
             </div>
-          </div>
+          </details>
 
           <div class="platform-indicators">
             <span>지원 플랫폼:</span>
@@ -197,84 +241,6 @@
       </div>
     </main>
 
-    <div id="modal-chat" class="modal-backdrop hidden">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h2>📡 플랫폼 방송 채팅 실시간 연동</h2>
-          <button class="btn-close" data-close="modal-chat">✕</button>
-        </div>
-        <div class="modal-body">
-          <p class="modal-desc">방송 플랫폼을 선택하고 채널 ID를 입력하면 시청자 닉네임과 채팅이 몬스터로 생성됩니다!</p>
-
-          <div class="platform-tabs">
-            <button class="tab-btn active" data-tab="tab-soop">🔵 SOOP (숲/아프리카)</button>
-            <button class="tab-btn" data-tab="tab-chzzk">🟢 치지직 (Chzzk)</button>
-            <button class="tab-btn" data-tab="tab-youtube">🔴 유튜브 라이브</button>
-            <button class="tab-btn" data-tab="tab-custom">💬 시뮬레이션 / 테스트</button>
-          </div>
-
-          <div class="tab-contents">
-            <div id="tab-soop" class="tab-content active">
-              <label>SOOP (아프리카TV) 방송국 주소 (또는 BJ ID):</label>
-              <div class="input-with-btn">
-                <input type="text" id="input-soop-id" placeholder="https://play.sooplive.co.kr/... 주소 전체 복사-붙여넣기" />
-                <button id="btn-add-soop" class="btn btn-neon cyan">+ BJ 추가</button>
-              </div>
-            </div>
-
-            <div id="tab-chzzk" class="tab-content">
-              <label>치지직 방송 주소 (또는 채널 ID):</label>
-              <div class="input-with-btn">
-                <input type="text" id="input-chzzk-id" placeholder="https://chzzk.naver.com/live/... 주소 전체 복사-붙여넣기" />
-                <button id="btn-add-chzzk" class="btn btn-neon green">+ 채널 추가</button>
-              </div>
-            </div>
-
-            <div id="tab-youtube" class="tab-content">
-              <label>유튜브 라이브 주소 (또는 Video ID):</label>
-              <div class="input-with-btn">
-                <input type="text" id="input-yt-url" placeholder="https://www.youtube.com/watch?v=XXXXXX" />
-                <button id="btn-add-yt" class="btn btn-neon red">+ 방송 추가</button>
-              </div>
-            </div>
-
-            <div id="tab-custom" class="tab-content">
-              <label>🤖 [BOT] 가상 시청자 자동 소환 (테스트 / 오프라인용):</label>
-              <select id="select-sim-speed">
-                <option value="off">자동 소환 끄기</option>
-                <option value="slow">느림 (5초마다 소환)</option>
-                <option value="normal" selected>보통 (2.5초마다 소환)</option>
-                <option value="fast">폭발적 (1초마다 소환)</option>
-              </select>
-            </div>
-
-            <div class="connected-channels-section">
-              <label>📡 현재 연동 목록:</label>
-              <div id="active-channels-list" class="channel-chips-container"></div>
-            </div>
-
-            <div class="participants-section">
-              <div class="participants-header">
-                <label>🙋 참여자 명단 <span id="participant-count" class="participant-count">(0명)</span>:</label>
-                <button id="btn-reset-participants" class="btn-reset-participants" type="button">🗑️ 참여자 초기화</button>
-              </div>
-              <div id="participant-list" class="participant-chips-container"></div>
-            </div>
-
-            <p class="chat-option-note">💡 방송 채팅창에 <strong>!참여</strong> 라고 해야 자동참여 됩니다!</p>
-          </div>
-
-          <div class="modal-actions">
-            <button id="btn-connect-chat" class="btn btn-primary" data-close="modal-chat">⚡ 연동 시작</button>
-            <button class="btn btn-secondary" data-close="modal-chat">닫기</button>
-          </div>
-
-          <div class="modal-footer">
-            <div id="ad-container-chat" class="ad-banner-box"></div>
-          </div>
-        </div>
-      </div>
-    </div>
     <div id="modal-words" class="modal-backdrop hidden">
       <div class="modal-card">
         <div class="modal-header">

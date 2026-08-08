@@ -321,6 +321,8 @@ html {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  /* 홈 카드가 화면보다 길어지면(연동 패널 펼침 등) 잘리지 않고 스크롤되도록 */
+  overflow-y: auto;
 }
 
 .screen-overlay.hidden {
@@ -338,6 +340,87 @@ html {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  /* justify-content:center와 함께 쓰면 카드가 길 때 위쪽이 잘리므로 margin auto로 안전하게 중앙 정렬 */
+  margin: auto;
+}
+
+/* ==========================================
+   홈 화면: 방송 채팅 실시간 연동 (접이식 패널)
+   ========================================== */
+.home-chat-panel {
+  border: 1px solid #2a3550;
+  border-radius: 12px;
+  background: rgba(13, 14, 21, 0.55);
+  overflow: hidden;
+}
+
+.home-chat-summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  font-weight: 800;
+  color: #00f3ff;
+  user-select: none;
+}
+
+.home-chat-summary::-webkit-details-marker {
+  display: none;
+}
+
+.home-chat-summary::after {
+  content: '▾';
+  margin-left: auto;
+  color: #a0a5b5;
+  transition: transform 0.2s ease;
+}
+
+.home-chat-panel[open] .home-chat-summary::after {
+  transform: rotate(180deg);
+}
+
+.home-chat-summary:hover {
+  background: rgba(0, 243, 255, 0.06);
+}
+
+.home-chat-summary .participant-count {
+  margin-left: 0;
+}
+
+.home-chat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 6px 14px 14px;
+  border-top: 1px solid #2a3550;
+}
+
+/* 패널 안으로 옮긴 스트리머 닉네임 입력 (참여자 명단 바로 위) */
+.streamer-name-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid #2a2e3d;
+  padding-top: 10px;
+}
+
+.streamer-name-section label {
+  font-size: 0.8rem;
+  color: #a0e8ff;
+  font-weight: 700;
+}
+
+.required-mark {
+  color: #ff6b6b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin-left: 4px;
+}
+
+.streamer-name-section .input-nickname {
+  width: 100%;
 }
 
 .glow-text {
