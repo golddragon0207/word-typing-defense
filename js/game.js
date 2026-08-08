@@ -244,15 +244,19 @@ class GameEngine {
       lbAllBtn.addEventListener('click', () => this.renderLeaderboard(!this.leaderboardShowAll));
     }
 
-    // ⏸ 스페이스바 일시정지/재개 (게임 진행 중에만). 모달이 열려 있으면 무시.
-    //    단어에 공백이 없으므로 입력창에서 스페이스를 가로채도 타이핑에 지장 없음.
+    // ⏸ 일시정지/재개: ESC 키 또는 마우스(일시정지/계속하기 버튼).
+    //    스페이스바는 제시어(특히 라이브 채팅 문구)에 공백이 들어갈 수 있어 사용하지 않는다.
     document.addEventListener('keydown', (e) => {
-      if (e.code !== 'Space') return;
+      if (e.key !== 'Escape') return;
       if (!this.stateManager || this.stateManager.currentState !== 'PLAYING') return;
       if (document.querySelector('.modal-backdrop:not(.hidden)')) return; // 모달 상호작용 우선
       e.preventDefault();
       this.togglePause();
     });
+    const pauseBtn = document.getElementById('btn-pause');
+    if (pauseBtn) pauseBtn.addEventListener('click', () => this.togglePause());
+    const resumeBtn = document.getElementById('btn-pause-resume');
+    if (resumeBtn) resumeBtn.addEventListener('click', () => this.togglePause());
 
     // 닫기 버튼 (모달 닫을 때 게임 중이면 타자 입력창으로 포커스 자동 복원)
     document.querySelectorAll('[data-close]').forEach(btn => {
