@@ -71,35 +71,36 @@ const CONFIG = {
   // - killPerStageBase/Step: 스테이지 클리어에 필요한 처치 수 = killPerStageBase + floor((stage-1) * killPerStageStep)
   // - maxHp: 기지 최대 체력 / damagePerLeak: 몬스터 1마리가 기지에 도달했을 때 입는 피해
   DIFFICULTY: {
-    // ⚠️ 스폰 주기·처치 수는 "스테이지1을 초보(~50타)도 클리어"하도록 완만한 온램프로 튜닝됨.
-    //   stage1: 스폰 약 16초·처치 8마리 → 스테이지가 오를수록 스폰 간격은 좁아지고 처치 수는 늘어난다.
+    // ⚠️ 낙하 속도·스폰 주기·처치 수는 "각 스테이지 최소 클리어 타수가 약 50/60/70/80/90타…로
+    //   완만하게 상승"하도록 시뮬레이션으로 튜닝됨(스테이지 간 난이도 점프 최소화).
+    //   stage1: 낙하 약 23초·스폰 약 9.5초·처치 8마리 → 스테이지마다 조금씩만 빡세짐.
     //   (난이도 선택 UI는 없어 실제로는 normal만 사용되지만, 표는 speedMult를 축으로 일관되게 유지)
     easy: {
       speedMult: 0.75,
       maxMonsterCap: 15,
-      spawnIntervalBase: 18600, spawnIntervalStep: 2600, spawnIntervalMin: 1200,
-      killPerStageBase: 8, killPerStageStep: 2,
+      spawnIntervalBase: 9800, spawnIntervalStep: 320, spawnIntervalMin: 1500,
+      killPerStageBase: 8, killPerStageStep: 1,
       maxHp: 130, damagePerLeak: 8
     },
     normal: {
       speedMult: 1.0,
       maxMonsterCap: 15,
-      spawnIntervalBase: 18600, spawnIntervalStep: 2600, spawnIntervalMin: 1200,
-      killPerStageBase: 8, killPerStageStep: 2,
+      spawnIntervalBase: 9800, spawnIntervalStep: 320, spawnIntervalMin: 1500,
+      killPerStageBase: 8, killPerStageStep: 1,
       maxHp: 100, damagePerLeak: 10
     },
     hard: {
       speedMult: 1.4,
       maxMonsterCap: 15,
-      spawnIntervalBase: 18600, spawnIntervalStep: 2600, spawnIntervalMin: 1200,
-      killPerStageBase: 8, killPerStageStep: 2,
+      spawnIntervalBase: 9800, spawnIntervalStep: 320, spawnIntervalMin: 1500,
+      killPerStageBase: 8, killPerStageStep: 1,
       maxHp: 100, damagePerLeak: 12
     },
     hell: {
       speedMult: 2.0,
       maxMonsterCap: 15, // ⚠️ 계획서상 하드 상한선(Max Monster Cap = 15) — 이 값을 넘기면 안 됨
-      spawnIntervalBase: 18600, spawnIntervalStep: 2600, spawnIntervalMin: 1200,
-      killPerStageBase: 8, killPerStageStep: 2,
+      spawnIntervalBase: 9800, spawnIntervalStep: 320, spawnIntervalMin: 1500,
+      killPerStageBase: 8, killPerStageStep: 1,
       maxHp: 90, damagePerLeak: 15
     }
   },

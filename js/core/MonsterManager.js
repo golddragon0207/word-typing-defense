@@ -40,9 +40,10 @@ class MonsterManager {
             ? getDifficultyConfig(difficulty)
             : { speedMult: 1.0, maxMonsterCap: 15, spawnIntervalBase: 2400, spawnIntervalStep: 150, spawnIntervalMin: 800 };
 
-        // 낙하 속도: 스테이지1은 아주 느리게(초보 ~50타로도 클리어 가능) → 스테이지마다 +0.15로 가속.
-        //   stage1=0.28(낙하 약 25초), stage2=0.43, stage3=0.58 ... (× 난이도 speedMult)
-        this.speed = (0.28 + (stage - 1) * 0.15) * cfg.speedMult;
+        // 낙하 속도: 스테이지마다 +0.04로 완만하게 가속 → 각 스테이지 최소 클리어 타수가
+        //   약 50/60/70/80/90타…로 부드럽게 오르도록 튜닝(스폰·처치 수와 함께 시뮬레이션 검증).
+        //   stage1=0.30(낙하 약 23초), stage2=0.34, stage3=0.38 ... (× 난이도 speedMult)
+        this.speed = (0.30 + (stage - 1) * 0.04) * cfg.speedMult;
         // 절대 상한(CONFIG.MAX_MONSTER_CAP)을 넘지 않도록 항상 clamp
         const hardCap = (typeof CONFIG !== 'undefined' && CONFIG.MAX_MONSTER_CAP) || 15;
         this.MAX_MONSTER_CAP = Math.min(hardCap, cfg.maxMonsterCap);

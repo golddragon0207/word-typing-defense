@@ -76,8 +76,11 @@
 ### 6. 🎚️ 난이도별 밸런스 테이블 (신규 — `CONFIG.DIFFICULTY`)
 *  4단계(Easy/Normal/Hard/Hell) 각각에 대해 아래 값을 차등 적용:
    *  `speedMult`(낙하속도 배율), `maxMonsterCap`(동시 상한, 15 고정), `spawnIntervalBase/Step/Min`(스폰 주기), `killPerStageBase/Step`(스테이지 클리어 처치목표), `maxHp`(기지 체력), `damagePerLeak`(피격 데미지).
-*  **낙하속도는 스테이지가 오를수록 가속**: `speed = (0.28 + (stage-1)*0.15) * speedMult`. 스테이지1은 낙하 약 25초로 매우 느려 **초보(~50타)도 클리어 가능**하고, 스테이지마다 +0.15씩 빨라진다.
-*  **스테이지1 온램프 밸런스**: `spawnIntervalBase 18600·Step 2600·Min 1200`(스테이지1 스폰 약 16초), `killPerStageBase 8·Step 2`(스테이지1 처치 8마리 → 스테이지마다 +2). 초보 타이피스트가 스테이지1을 넘긴 뒤, 스테이지2부터는 점점 더 빠른 타수를 요구하도록 낙하·스폰·처치수가 함께 상승. (난이도 선택 UI는 없어 실제로는 `normal`만 사용되며, 표는 `speedMult`를 축으로 일관되게 유지)
+*  **완만한 난이도 곡선(스테이지별 최소 클리어 타수 ≈ 50/60/70/80/90타…)**: 스테이지 간 난이도 점프를 최소화하도록 낙하·스폰·처치수를 함께 완만하게 상승시킨다(실제 단어팩 획수 분포 + 현실적 플레이 모델로 시뮬레이션 검증).
+   *  낙하 속도: `speed = (0.30 + (stage-1)*0.04) * speedMult` (스테이지1 낙하 약 23초 → 초보 ~50타로 클리어 가능, 이후 완만히 가속).
+   *  스폰 주기: `spawnIntervalBase 9800·Step 320·Min 1500` (스테이지1 약 9.5초 → 스테이지마다 조금씩 단축).
+   *  처치 수: `killPerStageBase 8·Step 1` (스테이지1 8마리 → 스테이지마다 +1).
+   *  검증된 스테이지별 최소 클리어 타수: S1 50 · S2 60 · S3 65 · S4 70 · S5 80 · S6 90 · S8 105 · S10 120타. (난이도 선택 UI는 없어 실제로는 `normal`만 사용되며, 표는 `speedMult`를 축으로 일관되게 유지)
 *  `MonsterManager`/`StateManager`/`game.js`가 `getDifficultyConfig()`로 공용 참조.
 
 ### 7. 💻 PC 전용 UI 및 모달/레이아웃 최적화 (1024x768)
