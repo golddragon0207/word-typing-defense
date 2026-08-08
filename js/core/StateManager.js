@@ -79,11 +79,13 @@ class StateManager {
      * @param {string} word - 명중한 제시어 원문
      * @param {number} scoreValue - 몬스터가 지급하는 점수
      */
-    registerHit(word, scoreValue = 100) {
+    registerHit(word, scoreValue = 100, countKill = true) {
         // 1. 점수 & 처치 수 (피버 모드 중이면 2배 보너스)
+        //    countKill=false면 점수·콤보·타수만 반영하고 처치 수는 늘리지 않는다
+        //    (보스 다중 HP 피격: 한 마리를 여러 번 격파해도 처치 1로 집계하기 위함)
         const finalScore = this.feverActive ? scoreValue * 2 : scoreValue;
         this.score += finalScore;
-        this.totalKills += 1;
+        if (countKill) this.totalKills += 1;
 
         // 2. 콤보
         this.combo += 1;

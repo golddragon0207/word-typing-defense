@@ -126,10 +126,14 @@ class MonsterManager {
 
     /**
      * 🐲 5 Stage 단위 보스 몬스터 소환 (대형 개체, 다중 HP, 전용 단어)
+     *    보스 HP는 스테이지가 오를수록 완만하게 증가한다: hp = 2 + floor(stage/15), 상한 5.
+     *    (Stage 5·10 = 2방, 15~ = 3방, 30~ = 4방, 45~ = 5방) — 매 격파마다 새 제시어로 교체된다.
      */
     spawnBoss() {
         const bossWord = (typeof wordPacks !== 'undefined') ? wordPacks.getBossWord() : '최종방어선돌파';
         const canvasWidth = this.canvas ? (this.canvas.clientWidth || 1024) : 1024;
+
+        const bossHp = Math.min(5, 2 + Math.floor(this.currentStage / 15));
 
         const boss = {
             id: Date.now() + Math.random(),
@@ -140,7 +144,8 @@ class MonsterManager {
             y: 130, // 상단 HUD 상태바 아래에서 등장 (일반 몬스터와 동일 기준선)
             speed: this.speed * 0.55, // 보스는 느리지만 강력하게
             scoreValue: 500 * this.currentStage,
-            hp: 1,
+            hp: bossHp,       // 🐲 다중 HP: 이 횟수만큼 제시어를 격파해야 처치됨
+            maxHp: bossHp,    // 렌더러 HP 표시(하트 pip)용 최대치
             isBoss: true
         };
 
@@ -165,6 +170,30 @@ class MonsterManager {
         }
 
         if (targetIndex !== -1) {
+            const target = this.monsters[targetIndex];
+
+            // 🐲 보스 다중 HP: 아직 HP가 남았으면 처치하지 않고 피격 처리 후 새 제시어로 교체
+            if (target.isBoss && target.hp > 1) {
+                target.hp -= 1;
+                if (typeof wordPacks !== 'undefined') {
+                    // 방금 친 문구와 겹치지 않는 새 보스 제시어로 교체(즉시 반복 회피)
+                    let next = wordPacks.getBossWord();
+                    let guard = 0;
+                    while (next === target.text && guard++ < 8) next = wordPacks.getBossWord();
+                    target.text = next;
+                }
+                return {
+                    success: true,
+                    monster: target,
+                    score: target.scoreValue,
+                    isKilled: false,
+                    isBoss: true,
+                    bossDamaged: true,
+                    remainingHp: target.hp,
+                    maxHp: target.maxHp
+                };
+            }
+
             const killedMonster = this.monsters.splice(targetIndex, 1)[0];
 
             if (killedMonster.isBoss) {
@@ -194,7 +223,8 @@ class MonsterManager {
 
             if (m.y >= bottomY) {
                 this.monsters.splice(i, 1);
-                reachedCount += m.isBoss ? 3 : 1; // 보스가 뚫리면 피해 가중
+                // 보스가 뚫리면 피해 가중(기본 3배). 스테이지가 높을수록 관통 피해도 완만히 증가.
+                reachedCount += m.isBoss ? (3 + Math.floor(this.currentStage / 20)) : 1;
                 if (m.isBoss) this.bossSpawnedForStage = false;
             }
         }

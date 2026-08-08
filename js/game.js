@@ -959,7 +959,7 @@ class GameEngine {
       return;
     }
 
-    const { monster, isKilled, isBoss } = hitResult;
+    const { monster, isKilled, isBoss, bossDamaged } = hitResult;
 
     // 🎯 포탑 조준/사격
     let firedTurret = null;
@@ -973,6 +973,14 @@ class GameEngine {
 
     if (turretPos && this.renderer) {
       this.renderer.addLaserEffect(turretPos, monster);
+    }
+
+    // 🐲 보스 피격(아직 생존): 점수·콤보·타수는 인정하되 처치 수는 늘리지 않고, 피격 연출만 낸다.
+    if (bossDamaged) {
+      if (this.stateManager) this.stateManager.registerHit(text, monster.scoreValue || 100, false);
+      if (window.audioManager) window.audioManager.playExplosion();
+      monster._flashUntil = performance.now() + 170; // 렌더러 피격 플래시(붉게 번쩍)
+      return;
     }
 
     if (isKilled) {
