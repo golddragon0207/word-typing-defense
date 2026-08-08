@@ -51,13 +51,14 @@ const CONFIG = {
     measurementId: "G-K6VVVNWNWM"
   },
 
-  // 💰 수익화: 카카오 애드핏 (Kakao AdFit) 728x90 PC 전용 배너 설정 (총 5개)
+  // 💰 수익화: 카카오 애드핏 (Kakao AdFit) 728x90 PC 전용 배너 설정 (총 6개)
   KAKAO_ADFIT: {
     MAIN: "DAN-sCTP6AnIeAemuGrC",         // 메인_최하단_728x90 ID
     GAMEOVER: "DAN-wtmcwTgfJbkapFIQ",     // 결과창_카드_728x90 ID
     WORDS: "DAN-Jdl49AhXKb3Dg6Ce",        // 모달_단어팩_728x90 ID
     LEADERBOARD: "DAN-4f2Zy9rvtpYIdFwz", // 모달_명예의전당_728x90 ID
     SUPPORT: "DAN-7HAZgjuUDNHfPgph",      // 모달_후원_728x90 ID
+    SUGGESTION: "DAN-REPLACE_ME",         // 모달_건의사항_728x90 ID (⚠️ 애드핏에서 새 슬롯 발급 후 이 값 교체)
     WIDTH: "728",
     HEIGHT: "90"
   },
@@ -128,13 +129,14 @@ function getDifficultyConfig(difficulty) {
 }
 window.getDifficultyConfig = getDifficultyConfig;
 
-// 광고 슬롯 - 컨테이너 ID 맵핑 객체 (총 5개)
+// 광고 슬롯 - 컨테이너 ID 맵핑 객체 (총 6개)
 const AD_CONTAINER_MAP = {
   'ad-container-main': CONFIG.KAKAO_ADFIT.MAIN,
   'ad-container-gameover': CONFIG.KAKAO_ADFIT.GAMEOVER,
   'ad-container-words': CONFIG.KAKAO_ADFIT.WORDS,
   'ad-container-leaderboard': CONFIG.KAKAO_ADFIT.LEADERBOARD,
-  'ad-container-support': CONFIG.KAKAO_ADFIT.SUPPORT
+  'ad-container-support': CONFIG.KAKAO_ADFIT.SUPPORT,
+  'ad-container-suggestion': CONFIG.KAKAO_ADFIT.SUGGESTION
 };
 
 /**
@@ -147,7 +149,8 @@ function refreshAdfitSlot(containerId) {
     if (!container) return;
 
     const adUnitId = AD_CONTAINER_MAP[containerId];
-    if (!adUnitId) return;
+    // 실제 발급 ID가 없거나(플레이스홀더 DAN-REPLACE_ME 포함) 비어 있으면 깨진 광고 주입을 건너뜀
+    if (!adUnitId || adUnitId.indexOf('REPLACE_ME') !== -1) return;
 
     // 기존 자식 요소(ins, script) 제거 후 깔끔하게 재구성 (메모리 누수 차단)
     container.innerHTML = '';

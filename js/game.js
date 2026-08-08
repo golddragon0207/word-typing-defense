@@ -191,7 +191,7 @@ class GameEngine {
       { btnId: 'btn-word-modal', modalId: 'modal-words', adContainerId: 'ad-container-words' },
       { btnId: 'btn-leaderboard-modal', modalId: 'modal-leaderboard', adContainerId: 'ad-container-leaderboard' },
       { btnId: 'btn-support-modal', modalId: 'modal-support', adContainerId: 'ad-container-support' },
-      { btnId: 'btn-suggestion-modal', modalId: 'modal-suggestion', adContainerId: null }
+      { btnId: 'btn-suggestion-modal', modalId: 'modal-suggestion', adContainerId: 'ad-container-suggestion' }
     ];
 
     modalMap.forEach(({ btnId, modalId, adContainerId }) => {

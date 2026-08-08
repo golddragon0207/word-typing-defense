@@ -15,9 +15,10 @@
     rel="stylesheet">
 
   <!-- 🌐 글로벌 명예의 전당(Firestore) + 📊 애널리틱스 연동용 Firebase SDK (compat 버전 — 빌드 도구 없이 <script>로 바로 사용) -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics-compat.js"></script>
+  <!-- defer: 초기 렌더링을 막지 않고 병렬 다운로드 후 DOMContentLoaded 이전에 순서대로 실행 (GlobalLeaderboard.init은 DOMContentLoaded에서 호출) -->
+  <script defer src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics-compat.js"></script>
 </head>
 
 <body>
@@ -366,6 +367,10 @@
         <div class="modal-actions modal-actions-pad">
           <button id="btn-submit-suggestion" class="btn btn-primary">📨 보내기</button>
           <button class="btn btn-neon" data-close="modal-suggestion">닫기</button>
+        </div>
+
+        <div class="modal-footer">
+          <div id="ad-container-suggestion" class="ad-banner-box"></div>
         </div>
       </div>
     </div>

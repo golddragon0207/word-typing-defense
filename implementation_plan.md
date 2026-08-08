@@ -23,7 +23,7 @@
 | **명예의 전당** |  **최고 도달 스테이지 기준 단일 TOP 5**(동점 시 점수순). 로컬(`localStorage`) 기본 + Firebase Firestore **글로벌 리더보드**(설정 시 자동 활성, 미설정 시 로컬 폴백) |
 | **화면 & 모달 최적화** |  카드 너비 `width: min(96%, 800px)` / 세로 `max-height: 72vh`. 버튼 영역(`.modal-actions`)과 광고 영역(`.modal-footer`)을 구조적으로 분리 |
 | **상단 컨트롤바 (7개)** |  📝 단어/닉네임 팩, 🏆 명예의 전당, ☕ 개발자 후원, 💡 건의사항, 💬 라이브 채팅 모드, 📺 OBS 크로마키, 🔊 사운드 ON/OFF (방송 채팅 연동은 홈 화면 인라인 패널) |
-| **수익화 광고 및 후원** | **총 5개** 카카오 애드핏 `728x90` 슬롯 + **카카오뱅크(`3333-28-2684443`) 계좌 복사 & QR(`donation-qr.png`)** 후원 모달 |
+| **수익화 광고 및 후원** | **총 6개** 카카오 애드핏 `728x90` 슬롯(메인/결과/단어팩/명예의전당/후원/건의사항) + **카카오뱅크(`3333-28-2684443`) 계좌 복사 & QR(`donation-qr.png`)** 후원 모달 |
 | **선택형 백엔드** |  Firebase(무료 티어) — Firestore 글로벌 리더보드 + 건의사항(`suggestions`) 저장 + Analytics(GA4). `CONFIG.FIREBASE` 미설정 시 전 기능 자동 비활성/로컬 폴백 |
 
 ---
@@ -117,7 +117,7 @@
 *  두 기능 모두 실패해도 게임 진행에 영향 없음(try/catch 격리).
 
 ### 14. 💰 수익화 광고 & 후원
-*  카카오 애드핏 `728x90` **5개 슬롯**(메인/결과/단어팩/명예의전당/후원). 모달 오픈 시 `refreshAdfitSlot()` 동적 리프레시.
+*  카카오 애드핏 `728x90` **6개 슬롯**(메인/결과/단어팩/명예의전당/후원/건의사항). 모달 오픈 시 `refreshAdfitSlot()` 동적 리프레시(광고 단위 ID가 미발급 플레이스홀더면 주입을 건너뜀).
 *  카카오뱅크 계좌복사(`3333-28-2684443`) 및 QR(`donation-qr.png`) 후원 모달.
 
 ### 15. ✨ UX 연출
@@ -130,14 +130,14 @@
 ## 📂 프로젝트 파일 구조 및 역할
 
 1.  **`index.html`**
-    *  메인 화면(스트리머 닉네임 입력 + 홈 인라인 방송 채팅 연동 패널), 3개 모달(단어팩/명예의전당/후원), 상단 컨트롤바 6개 버튼.
-    *  카카오 애드핏 5개 슬롯, Firebase SDK(app/firestore/analytics compat) 로드, 스크립트 의존성 로드(`globalLeaderboard.js` 포함).
+    *  메인 화면(스트리머 닉네임 입력 + 홈 인라인 방송 채팅 연동 패널), 4개 모달(단어팩/명예의전당/후원/건의사항), 상단 컨트롤바 7개 버튼.
+    *  카카오 애드핏 6개 슬롯, Firebase SDK(app/firestore/analytics compat) 로드, 스크립트 의존성 로드(`globalLeaderboard.js` 포함).
 
 2.  **`style.css`**
     *  1024x768 고정 레이아웃, 모달 잘림 방지, `.modal-actions`/`.modal-footer` 분리, `body.obs-overlay` 투명 스타일, 토스트/등급뱃지/난이도탭/단어칩/피버 등 컴포넌트 스타일.
 
 3.  **`js/config.js`**
-    *  `CONFIG.YOUTUBE_API_KEY`, **`CONFIG.SOOP_PROXY`/`CONFIG.SOOP_DEBUG`(SOOP 프록시·디버그)**, `CONFIG.FIREBASE`(리더보드/애널리틱스), `CONFIG.KAKAO_ADFIT`(5개), **`CONFIG.DIFFICULTY`(난이도 밸런스 테이블)** + `getDifficultyConfig()`, **`CONFIG.MAX_MONSTER_CAP`(동시 출전 절대 상한)·`CONFIG.QUEUE`(참여/큐/봇 보충 튜닝)**, 광고 리프레시 로직.
+    *  `CONFIG.YOUTUBE_API_KEY`, **`CONFIG.SOOP_PROXY`/`CONFIG.SOOP_DEBUG`(SOOP 프록시·디버그)**, `CONFIG.FIREBASE`(리더보드/애널리틱스), `CONFIG.KAKAO_ADFIT`(6개), **`CONFIG.DIFFICULTY`(난이도 밸런스 테이블)** + `getDifficultyConfig()`, **`CONFIG.MAX_MONSTER_CAP`(동시 출전 절대 상한)·`CONFIG.QUEUE`(참여/큐/봇 보충 튜닝)**, 광고 리프레시 로직.
 
 4.  **`js/wordPacks.js`**
     *  단어팩(기본/프리셋/보스), 시청자 대기열(`{nickname, chatWord}`) 관리, `!참여` 처리·참가자 명단, 봇 자동 보충, **라이브 채팅 정제(`sanitizeLiveChatWord`)**, 비속어 필터, 한글 자모 획수 유틸.
