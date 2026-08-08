@@ -301,13 +301,6 @@ class MonsterManager {
         }
     }
 
-    /**
-     * 현재 스테이지가 보스전이며 보스가 아직 생존 중인지 여부
-     */
-    isBossAlive() {
-        return this.monsters.some(m => m.isBoss);
-    }
-
     clear() {
         if (this.spawnInterval) {
             clearInterval(this.spawnInterval);

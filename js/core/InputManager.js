@@ -1,6 +1,7 @@
 /**
  * InputManager.js
- * word-typing-defense — 플레이어 타자 입력창 바인딩, 한글(IME) 관리 및 타깃팅 연산
+ * word-typing-defense — 플레이어 타자 입력창 바인딩 및 한글(IME) 조합 관리
+ *   (일치 몬스터 선별/바닥 우선 타깃팅은 MonsterManager.checkHit이 담당)
  */
 class InputManager {
     constructor() {
@@ -65,52 +66,6 @@ class InputManager {
         });
     }
 
-    /**
-     * 🎯 [계획서 v2.0 필수] 바닥 우선 스마트 타깃팅 유틸리티
-     * 일치하는 단어를 가진 몬스터 중 기지와 가장 가까운(Y좌표가 가장 바닥 쪽인) 몬스터 선별
-     * @param {Array} monsterList - 현재 화면에 존재하는 몬스터 배열
-     * @param {string} inputText - 플레이어가 입력한 단어
-     * @returns {Object|null} 가장 우선순위가 높은 몬스터 객체
-     */
-    findClosestTarget(monsterList, inputText) {
-        if (!Array.isArray(monsterList) || !inputText) return null;
-
-        // 1. 입력된 단어와 제시어가 일치하는 몬스터 필터링
-        // (MonsterManager가 생성하는 몬스터 객체는 제시어를 `.text` 필드에 저장한다)
-        const matchedMonsters = monsterList.filter(m => m && m.text === inputText);
-
-        if (matchedMonsters.length === 0) return null;
-
-        // 2. Y좌표가 가장 큰 (화면 바닥/기지에 가장 가까운) 몬스터 우선 선택
-        matchedMonsters.sort((a, b) => (b.y || 0) - (a.y || 0));
-
-        return matchedMonsters[0];
-    }
-
-    // 구버전 및 서브모듈 호환용 메서드
-    setupInputs(inputElements, callback) {
-        this.bindInputs(inputElements, callback);
-    }
-
-    /**
-     * 특정 플레이어 입력창에 포커스
-     */
-    focus(index = 0) {
-        if (this.inputs && this.inputs[index]) {
-            this.inputs[index].focus();
-        }
-    }
-
-    /**
-     * 모든 입력창 초기화
-     */
-    clearAll() {
-        if (Array.isArray(this.inputs)) {
-            this.inputs.forEach(input => {
-                if (input) input.value = '';
-            });
-        }
-    }
 }
 
 // 전역 window 등록

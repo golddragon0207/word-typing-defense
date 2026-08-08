@@ -97,8 +97,8 @@ SOOP · 치지직 · 유튜브 라이브 **1인 솔로 스트리머**에 최적�
 - [`js/globalLeaderboard.js`](./js/globalLeaderboard.js) : Firebase Firestore 글로벌 리더보드 + 건의사항(`suggestions`) 저장 + Analytics 연동(선택형)
 - [`js/core/StateManager.js`](./js/core/StateManager.js) : 상태 머신, 점수/HP/콤보/CPM·WPM/피버, 최고 도달 스테이지 기준 로컬 TOP5
 - [`js/core/TurretManager.js`](./js/core/TurretManager.js) : 중앙 포탑 좌표·회전각·사격·반동
-- [`js/core/MonsterManager.js`](./js/core/MonsterManager.js) : 난이도별 스폰/속도/상한, 보스전, 낙하 관리
-- [`js/core/InputManager.js`](./js/core/InputManager.js) : 타자 입력, 한글 IME 조합 감지, 바닥 우선 타깃팅
+- [`js/core/MonsterManager.js`](./js/core/MonsterManager.js) : 난이도별 스폰/속도/상한, 보스전, 낙하 관리, 바닥 우선 타깃팅(`checkHit`)
+- [`js/core/InputManager.js`](./js/core/InputManager.js) : 타자 입력창 바인딩, 한글 IME 조합 감지
 - [`js/renderers/CanvasRenderer.js`](./js/renderers/CanvasRenderer.js) : 고해상도 Draw, 2단 몬스터 UI(동적 박스폭), 이펙트
 - [`js/game.js`](./js/game.js) : 메인 루프 오케스트레이터, 전 UI 배선, 스테이지 진행, 연출
 - [`proxy/soop-cors-proxy.worker.js`](./proxy/soop-cors-proxy.worker.js) : SOOP 연동용 무료 Cloudflare Worker CORS 프록시(개발자 1회 배포)

@@ -335,28 +335,9 @@ class GameEngine {
     if (btnCopyAccount) {
       btnCopyAccount.addEventListener('click', () => {
         const accountNumber = '3333-28-2684443';
-        const onCopied = () => {
-          if (window.showToast) window.showToast(`📋 계좌번호가 복사되었습니다! (${accountNumber})`);
-        };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(accountNumber).then(onCopied).catch(() => {
-            const tempInput = document.createElement('input');
-            tempInput.value = accountNumber;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            onCopied();
-          });
-        } else {
-          const tempInput = document.createElement('input');
-          tempInput.value = accountNumber;
-          document.body.appendChild(tempInput);
-          tempInput.select();
-          document.execCommand('copy');
-          document.body.removeChild(tempInput);
-          onCopied();
-        }
+        this.copyToClipboard(accountNumber, () => {
+          this.showToastInternal(`📋 계좌번호가 복사되었습니다! (${accountNumber})`, 'success');
+        });
       });
     }
 
@@ -627,13 +608,7 @@ class GameEngine {
         this._setQcLabel(topBtn, enabled ? '라이브 채팅 모드: ON' : '라이브 채팅 모드: OFF');
       }
 
-      if (modalBtn) {
-        modalBtn.classList.toggle('active', enabled);
-        modalBtn.setAttribute('aria-pressed', String(enabled));
-        modalBtn.textContent = enabled ? '💬 라이브 모드: ON' : '💬 라이브 모드: OFF';
-        const settingsBox = modalBtn.closest('.live-chat-settings');
-        if (settingsBox) settingsBox.classList.toggle('live-active', enabled);
-      }
+      this._syncLiveChatModalBtn(enabled);
     };
 
     const toggleMode = () => {
@@ -658,6 +633,21 @@ class GameEngine {
   }
 
   /**
+   * 💬 단어팩 모달 안의 라이브 채팅 토글 버튼 상태를 현재 모드에 맞춰 동기화한다.
+   *    (상단바 토글·모달 진입 미리보기 양쪽에서 공용 — 라벨/활성/설정박스 테두리 일괄 갱신)
+   * @param {boolean} enabled - 라이브 채팅 모드 ON 여부
+   */
+  _syncLiveChatModalBtn(enabled) {
+    const modalBtn = document.getElementById('btn-modal-live-chat-toggle');
+    if (!modalBtn) return;
+    modalBtn.classList.toggle('active', enabled);
+    modalBtn.setAttribute('aria-pressed', String(enabled));
+    modalBtn.textContent = enabled ? '💬 라이브 모드: ON' : '💬 라이브 모드: OFF';
+    const settingsBox = modalBtn.closest('.live-chat-settings');
+    if (settingsBox) settingsBox.classList.toggle('live-active', enabled);
+  }
+
+  /**
    * 📋 현재 실제로 게임에 사용 중인 단어 목록(프리셋 또는 커스텀)을 모달에 칩 형태로 미리보기
    */
   renderWordPackPreview() {
@@ -669,14 +659,7 @@ class GameEngine {
     const stripSpecialCheck = document.getElementById('chk-live-chat-strip-special');
     if (stripSpecialCheck) stripSpecialCheck.checked = !!wordPacks.liveChatStripSpecial;
 
-    const modalBtn = document.getElementById('btn-modal-live-chat-toggle');
-    if (modalBtn) {
-      const enabled = !!wordPacks.liveChatMode;
-      modalBtn.classList.toggle('active', enabled);
-      modalBtn.textContent = enabled ? '💬 라이브 모드: ON' : '💬 라이브 모드: OFF';
-      const settingsBox = modalBtn.closest('.live-chat-settings');
-      if (settingsBox) settingsBox.classList.toggle('live-active', enabled);
-    }
+    this._syncLiveChatModalBtn(!!wordPacks.liveChatMode);
 
     const words = wordPacks.getActiveWords();
     if (!words || words.length === 0) {
@@ -765,6 +748,29 @@ class GameEngine {
     const div = document.createElement('div');
     div.textContent = str == null ? '' : String(str);
     return div.innerHTML;
+  }
+
+  /**
+   * 📋 클립보드 복사 (Clipboard API 우선, 실패/미지원 시 execCommand 폴백).
+   * @param {string} text - 복사할 문자열
+   * @param {Function} [onCopied] - 복사 완료 시 콜백
+   */
+  copyToClipboard(text, onCopied) {
+    const fallback = () => {
+      const tempInput = document.createElement('input');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      if (onCopied) onCopied();
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => onCopied && onCopied()).catch(fallback);
+    } else {
+      fallback();
+    }
   }
 
   /* ==========================================================

@@ -219,32 +219,6 @@ const wordPacks = {
   },
 
   /**
-   * 🤖 실시간 참여 인원 자동 보충: 실참여자(명단)가 목표 인원보다 적을 때만 그 부족분만큼
-   * [BOT] 가상 시청자를 대기열에 채운다. 실참여자가 많을수록 봇은 줄고, 실참여자가 target 이상이면 0.
-   *   - 채울 봇 목표 = target − 실참여자 명단 수(joinedViewers)
-   *   - 이미 대기열에 있는 봇 수는 빼고 부족분만 추가(매 스테이지 호출 시 중복 보충 방지)
-   * @param {number} target - 실참여자+봇 합쳐 유지할 최소 인원 (기본 CONFIG.QUEUE.TARGET_MIN_POPULATION)
-   */
-  topUpBotsToTarget(target = CONFIG.QUEUE.TARGET_MIN_POPULATION) {
-    // 실참여자(봇 제외 명단) 수를 뺀 만큼만 봇으로 채운다 → 실참여자가 많으면 봇 자동 감소
-    const desiredBots = Math.max(0, target - this.joinedViewers.size);
-
-    // 이미 대기열에 있는 봇 수를 제외한 부족분만 보충
-    let currentBots = 0;
-    for (const e of this.viewerQueue) {
-      if (e.nickname && e.nickname.startsWith('[BOT]')) currentBots++;
-    }
-    const shortage = desiredBots - currentBots;
-    if (shortage <= 0) return 0;
-
-    for (let i = 0; i < shortage; i++) {
-      const botName = this.botNicknames[Math.floor(Math.random() * this.botNicknames.length)];
-      this.enqueueViewer(`[BOT] ${botName}`);
-    }
-    return shortage;
-  },
-
-  /**
    * 현재 선택된 프리셋/커스텀 단어 배열 반환
    */
   getActiveWords() {
@@ -258,17 +232,6 @@ const wordPacks = {
   applyPresetPack(packKey) {
     const preset = this.presetPacks[packKey];
     this._customWords = Array.isArray(preset) && preset.length > 0 ? preset : null;
-  },
-
-  /**
-   * 📋 미리보기용: 특정 프리셋 팩에 실제로 들어있는 단어 목록 반환
-   * ('mixed'이거나 등록되지 않은 키면 기본 words 배열을 반환)
-   * @param {string} packKey
-   * @returns {Array<string>}
-   */
-  getPackWords(packKey) {
-    const preset = this.presetPacks[packKey];
-    return Array.isArray(preset) && preset.length > 0 ? preset : this.words;
   },
 
   /**
@@ -306,13 +269,6 @@ const wordPacks = {
       word: chatWord || randomWord,
       isLiveChat: !!chatWord
     };
-  },
-
-  /**
-   * 보스전 전용 제시어 반환
-   */
-  getBossWord() {
-    return this.bossWords[Math.floor(Math.random() * this.bossWords.length)];
   },
 
   /**

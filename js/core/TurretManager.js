@@ -77,20 +77,6 @@ class TurretManager {
     }
 
     /**
-     * 창 크기 변경 시 중앙 포탑 위치 재배치
-     */
-    repositionTurrets() {
-        if (!this.canvas || this.turrets.length === 0) return;
-
-        const width = this.canvas.clientWidth || this.canvas.width;
-        const height = this.canvas.clientHeight || this.canvas.height;
-        const paddingY = 105; // setupTurrets와 동일 (입력 바가 대포를 가리지 않도록)
-
-        this.turrets[0].x = width / 2;
-        this.turrets[0].y = height - paddingY;
-    }
-
-    /**
      * 타깃 몬스터 조준 및 사격 처리
      * @param {Object} targetMonster - { x, y }
      * @param {number|null} preferredPlayerIdx - 지정 플레이어 인덱스 (0번 고정)
@@ -115,15 +101,6 @@ class TurretManager {
         }
 
         return selectedTurret;
-    }
-
-    /**
-     * game.js 호환용 래퍼 메서드
-     * @param {number} playerIdx 
-     * @param {Object} targetMonster 
-     */
-    fire(playerIdx, targetMonster) {
-        return this.aimAndFire(targetMonster, 0);
     }
 
     /**
