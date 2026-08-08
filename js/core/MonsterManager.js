@@ -101,6 +101,13 @@ class MonsterManager {
         // CanvasRenderer가 논리(CSS) 좌표계로 그리므로 clientWidth(논리 픽셀) 기준으로 스폰 위치 계산
         const safeWidth = this.canvas ? (this.canvas.clientWidth || 1024) : (window.innerWidth || 1024);
 
+        // 🎯 제시어 난이도(한글 자모 획수)에 비례한 점수: 어려운(길고 획수 많은) 단어일수록 높은 점수.
+        //    '획수 × 6 × 스테이지' — 기본팩 평균(≈16획)이 스테이지1에서 ≈100점이 되도록 보정(배수는 조정 가능).
+        const strokes = (typeof wordPacks !== 'undefined' && typeof wordPacks.getHangulStrokeCount === 'function')
+            ? wordPacks.getHangulStrokeCount(data.word)
+            : (data.word ? data.word.length : 1);
+        const scoreValue = Math.max(30, Math.round(strokes * 6)) * this.currentStage;
+
         const monster = {
             id: Date.now() + Math.random(),
             username: data.nickname, // 🏷️ 상단: 시청자 닉네임
@@ -108,9 +115,12 @@ class MonsterManager {
             text: data.word,         // 🎯 하단: 제시어 (라이브 채팅 모드면 실제 채팅 문구)
             isLiveChat: !!data.isLiveChat, // 💬 라이브 채팅 문구가 그대로 쓰인 몬스터인지 (렌더러 강조용)
             x: Math.random() * (safeWidth - 180) + 90, // 화면 좌우 넘침 방지
-            y: 130, // 상단 HUD 상태바(상단 부착 띠) 아래에서 등장 → 제시어가 상태창에 가려지지 않음
+            // 상단 HUD 상태바(스테이지창, 0~71px) '안'에서 생성 → HUD가 캔버스 위에 겹쳐 그려지므로
+            // 제시어가 스테이지창에 가려진 채 시작해 아래로 스르륵 내려오는 연출(잠깐 안 보여도 의도된 것)
+            // + 낙하(반응) 구간 최대 확보.
+            y: 40,
             speed: this.speed,
-            scoreValue: 100 * this.currentStage,
+            scoreValue: scoreValue,
             hp: 1,
             isBoss: false
         };
@@ -259,7 +269,7 @@ class MonsterManager {
     update(deltaTime = 0.016, stage = 1) {
         let reachedCount = 0;
         const canvasHeight = this.canvas ? (this.canvas.clientHeight || 708) : 708;
-        const bottomY = canvasHeight - 160; // CanvasRenderer의 방어선(groundY)과 정렬
+        const bottomY = canvasHeight - 130; // CanvasRenderer의 방어선(groundY)과 정렬
 
         const nowMs = (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
@@ -296,9 +306,23 @@ class MonsterManager {
     _spawnTick() {
         if (typeof document !== 'undefined' && document.hidden) return;
         if (typeof window !== 'undefined' && window.gameEngine && window.gameEngine.isPaused) return; // ⏸ 일시정지 중 스폰 정지
-        if (this.monsters.length < this.MAX_MONSTER_CAP && !(this._isBossStage && !this.bossSpawnedForStage)) {
+        // 🛡️ 보스 스테이지에는 일반 몬스터(산성비)를 절대 스폰하지 않는다 — 보스 하나만 상대.
+        //    (보스가 이미 소환된 뒤에도 주기 스폰이 계속돼 산성비가 쏟아지던 버그 방지)
+        if (this._isBossStage) return;
+        if (this.monsters.length < this.MAX_MONSTER_CAP) {
             this.spawnMonster();
         }
+    }
+
+    /**
+     * 🔥 피버 버스트: 화면의 일반 몬스터를 모두 제거하고 제거된 목록을 반환(보스는 남긴다).
+     *    직접 필터로 없애므로 기지 피해(update의 reached)로 집계되지 않는다.
+     * @returns {Array} 제거된 일반 몬스터 목록
+     */
+    clearNonBoss() {
+        const cleared = this.monsters.filter(m => !m.isBoss);
+        this.monsters = this.monsters.filter(m => m.isBoss);
+        return cleared;
     }
 
     clear() {

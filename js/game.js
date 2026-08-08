@@ -80,12 +80,9 @@ class GameEngine {
       this.monsterManager.onBossAttack = (damage) => this.handleBossAttack(damage);
     }
 
-    // 5. 피버 모드 사운드/배너 콜백 연결
+    // 5. 피버 버스트(화면 클리어 + 보너스 + 소량 회복) 콜백 연결
     if (this.stateManager) {
-      this.stateManager.onFeverStart = () => {
-        if (window.audioManager) window.audioManager.playFever();
-        this.showToastInternal('🔥 FEVER TIME! 점수 2배!', 'success');
-      };
+      this.stateManager.onFeverStart = () => this.triggerFeverBurst();
 
       // 🔒 게임 플레이 중에는 플레이와 무관한 상단바 버튼(단어팩·명예의전당·후원·건의사항)을
       //    비활성화한다. 이 모달들은 열려도 게임을 멈추지 않아, 플레이 중 클릭 시 그냥 지게 되기 때문.
@@ -1028,7 +1025,10 @@ class GameEngine {
     this.stateManager.currentStage += 1;
     this.stageKillCount = 0;
 
-    this.monsterManager.startStage(this.stateManager.currentStage, this.config.difficulty);
+    // ⏱️ 스테이지업 때마다 잠깐 숨 돌릴 여유(기본 5초) 후 다음 몬스터/보스 소환
+    const stageUpDelay = (typeof CONFIG !== 'undefined' && CONFIG.STAGE_UP_SPAWN_DELAY_MS != null)
+      ? CONFIG.STAGE_UP_SPAWN_DELAY_MS : 5000;
+    this.monsterManager.startStage(this.stateManager.currentStage, this.config.difficulty, stageUpDelay);
     this.stateManager.updateHUDUI();
 
     if (window.audioManager) window.audioManager.playStageUp();
@@ -1037,6 +1037,39 @@ class GameEngine {
     if (!isBossStage) {
       this.showBanner(`STAGE ${this.stateManager.currentStage} START!`, '시청자 몬스터를 타자로 방어하세요!', false);
     }
+  }
+
+  /**
+   * 🔥 피버 버스트: 피버 게이지가 다 차면 화면의 일반 몬스터를 한 번에 정리하고
+   *    보너스 점수 + 소량 회복을 준다(보스는 남긴다). '칠 게 없는 타이밍'에도 확실한 보상.
+   */
+  triggerFeverBurst() {
+    if (!this.monsterManager || !this.stateManager) return;
+
+    const cleared = this.monsterManager.clearNonBoss();
+
+    // 정리된 몬스터마다 폭발 이펙트 + 점수 합산 (+ 기본 보너스)
+    let bonus = 0;
+    cleared.forEach(m => {
+      if (this.renderer) this.renderer.addExplosionEffect(m);
+      bonus += (m.scoreValue || 100);
+    });
+    const totalBonus = bonus + 500;
+    this.stateManager.addFeverBonus(totalBonus);
+
+    // 기지 소량 회복 (최대 체력의 10%, 상한 초과분 버림)
+    const heal = Math.round(this.stateManager.maxHp * 0.1);
+    const healed = this.stateManager.healBase(heal);
+
+    if (window.audioManager) {
+      window.audioManager.playFever();
+      window.audioManager.playExplosion();
+    }
+
+    const parts = [`🔥 FEVER! +${totalBonus.toLocaleString()}점`];
+    if (cleared.length > 0) parts.push(`${cleared.length}마리 정리`);
+    if (healed > 0) parts.push(`기지 +${healed}`);
+    this.showToastInternal(parts.join(' · '), 'success');
   }
 
   /**

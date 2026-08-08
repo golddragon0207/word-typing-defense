@@ -80,21 +80,20 @@ class StateManager {
      * @param {number} scoreValue - 몬스터가 지급하는 점수
      */
     registerHit(word, scoreValue = 100, countKill = true) {
-        // 1. 점수 & 처치 수 (피버 모드 중이면 2배 보너스)
+        // 1. 점수 & 처치 수
         //    countKill=false면 점수·콤보·타수만 반영하고 처치 수는 늘리지 않는다
         //    (보스 다중 HP 피격: 한 마리를 여러 번 격파해도 처치 1로 집계하기 위함)
-        const finalScore = this.feverActive ? scoreValue * 2 : scoreValue;
-        this.score += finalScore;
+        this.score += scoreValue;
         if (countKill) this.totalKills += 1;
 
         // 2. 콤보
         this.combo += 1;
         if (this.combo > this.maxCombo) this.maxCombo = this.combo;
 
-        // 2-1. 피버 게이지 누적
+        // 2-1. 피버 게이지 누적 → 만땅이면 피버 버스트(화면 클리어 + 보너스) 발동
         this.fever = Math.min(100, this.fever + 12);
         if (this.fever >= 100 && !this.feverActive) {
-            this.activateFever();
+            this.triggerFeverBurst();
         }
 
         // 3. 한글 자모 획수 기반 타수 누적 및 WPM 갱신
@@ -122,22 +121,35 @@ class StateManager {
     }
 
     /**
-     * 🔥 피버 모드 발동 (6초간 점수 2배, 이후 게이지 초기화)
+     * 🔥 피버 게이지 만땅 → 피버 버스트 발동.
+     *   (기존 '6초간 점수 2배' 방식 대체) 화면의 일반 몬스터를 한 번에 정리하고
+     *   보너스 점수 + 소량 회복을 주는 실제 처리는 game.js의 onFeverStart 콜백(triggerFeverBurst)이 담당한다.
+     *   여기서는 게이지 리셋 + 짧은 HUD 플래시 + 콜백 발동만 담당(지속형 2배 효과 없음).
      */
-    activateFever() {
+    triggerFeverBurst() {
+        this.fever = 0;
+
+        // 짧은 시각 플래시(HUD FEVER 카드 번쩍) — 약 0.9초 후 자동 해제
         this.feverActive = true;
-        this.fever = 100;
-
-        if (typeof this.onFeverStart === 'function') this.onFeverStart();
-
         if (this.feverTimer) clearTimeout(this.feverTimer);
         this.feverTimer = setTimeout(() => {
             this.feverActive = false;
-            this.fever = 0;
             this.feverTimer = null;
             if (typeof this.onFeverEnd === 'function') this.onFeverEnd();
             this.updateHUDUI();
-        }, 6000);
+        }, 900);
+
+        if (typeof this.onFeverStart === 'function') this.onFeverStart();
+        this.updateHUDUI();
+    }
+
+    /**
+     * 🔥 피버 버스트 보너스 점수 반영 (화면 클리어 보상). 처치 수/콤보는 건드리지 않는다.
+     * @param {number} points - 더할 보너스 점수
+     */
+    addFeverBonus(points = 0) {
+        this.score += Math.max(0, Math.round(points));
+        this.updateHUDUI();
     }
 
     /**

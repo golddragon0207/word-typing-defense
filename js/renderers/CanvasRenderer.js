@@ -58,9 +58,9 @@ class CanvasRenderer {
         const width = this.LOGICAL_W;
         const height = this.LOGICAL_H;
 
-        // 하단 타자 입력창(채팅 입력 바)이 대포/방어선을 가리지 않도록 방어선 Y좌표를 위로 올림
-        // (MonsterManager.update의 bottomY = canvasHeight - 160 과 반드시 동일하게 유지)
-        const groundY = height - 160;
+        // 방어선 Y좌표. 낙하(반응) 구간을 넓히려 소폭 하향(-160 → -130).
+        // (MonsterManager.update의 bottomY = canvasHeight - 130 과 반드시 동일하게 유지)
+        const groundY = height - 130;
 
         ctx.save();
 
@@ -223,47 +223,74 @@ class CanvasRenderer {
             ctx.fillText(nickname, cx, pillY + pillH / 2);
             ctx.restore();
 
-            // 1-1. 🐲 차지 보스 UI — 닉네임 뱃지 위에 ①남은 격파 pip + ②차지 게이지 바
+            // 1-1. 🐲 차지 보스 UI — 닉네임 뱃지 위에 ① 보스 HP(♥ 칸) + ② 차지 게이지 바
+            //    표시를 또렷하게: HP는 'HP ♥♥'로 남은 격파 수(=체력)임을, 차지바는 'CHARGE'로 공격 예열 게이지임을 명확히.
             if (isBoss && m.requiredHits) {
                 ctx.save();
+                ctx.lineJoin = 'round';
                 const total = m.requiredHits;
-                const remain = Math.max(0, total - (m.hitsLanded || 0)); // 남은 격파 수
-                // ① 남은 격파 pip (붉음=남음 / 회색=완료)
-                const pipR = Math.round(5 * scale);
-                const gap = Math.round(6 * scale);
-                const totalW = total * (pipR * 2) + (total - 1) * gap;
-                const pipY = Math.round(pillY - 24 * scale);
-                let px = Math.round(cx - totalW / 2 + pipR);
+                const remain = Math.max(0, total - (m.hitsLanded || 0)); // 남은 체력(격파 수)
+
+                // ① 보스 HP — 'HP' 태그 + ♥ 칸(빨강=남음 / 회색=잃음). ♥(U+2665) 텍스트 글리프라 색 제어가 확실함.
+                const hpY = Math.round(pillY - 44 * scale);
+                const tagFont = `800 ${Math.round(11 * scale)}px Orbitron, sans-serif`;
+                const heartFont = `${Math.round(15 * scale)}px "Noto Sans KR", sans-serif`;
+                const heartGap = Math.round(3 * scale);
+                ctx.textBaseline = 'middle';
+                ctx.textAlign = 'left';
+                // 그룹 전체 폭 측정 후 중앙 정렬
+                ctx.font = tagFont;
+                const tagW = ctx.measureText('HP').width;
+                ctx.font = heartFont;
+                const heartW = ctx.measureText('♥').width;
+                const groupW = tagW + Math.round(8 * scale) + total * heartW + (total - 1) * heartGap;
+                let hx = Math.round(cx - groupW / 2);
+                // 'HP' 태그 (OBS 가시성 stroke)
+                ctx.font = tagFont;
+                ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
+                ctx.strokeText('HP', hx, hpY);
+                ctx.fillStyle = '#ffd21f';
+                ctx.fillText('HP', hx, hpY);
+                hx += tagW + Math.round(8 * scale);
+                // ♥ 칸
+                ctx.font = heartFont;
                 for (let k = 0; k < total; k++) {
-                    ctx.beginPath();
-                    ctx.arc(px, pipY, pipR, 0, Math.PI * 2);
-                    ctx.fillStyle = k < remain ? '#ff3b6b' : 'rgba(120, 122, 130, 0.55)';
-                    ctx.fill();
-                    ctx.lineWidth = 1.5;
-                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
-                    ctx.stroke();
-                    px += pipR * 2 + gap;
+                    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
+                    ctx.strokeText('♥', hx, hpY);
+                    ctx.fillStyle = k < remain ? '#ff3b6b' : 'rgba(120, 122, 130, 0.6)';
+                    ctx.fillText('♥', hx, hpY);
+                    hx += heartW + heartGap;
                 }
-                // ② 차지 게이지 바 (찰수록 노랑→빨강, 다 차면 공격)
+
+                // ② 차지 게이지 바 — 'CHARGE' 라벨 + 막대(찰수록 노랑→빨강, 다 차면 공격)
                 const ratio = m.chargeTime ? Math.min(1, (m.chargeElapsed || 0) / m.chargeTime) : 0;
                 const barW = boxW;
-                const barH = Math.round(6 * scale);
+                const barH = Math.round(9 * scale);
                 const barX = boxLeft;
-                const barY = Math.round(pillY - 13 * scale);
-                ctx.fillStyle = 'rgba(10, 12, 20, 0.85)'; // 배경(빈 게이지)
-                if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 3); ctx.fill(); }
+                const barY = Math.round(pillY - 20 * scale);
+                // 'CHARGE' 라벨 (막대 바로 위 왼쪽)
+                ctx.font = `800 ${Math.round(9 * scale)}px Orbitron, sans-serif`;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'bottom';
+                ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
+                ctx.strokeText('CHARGE', barX + 1, barY - 1);
+                ctx.fillStyle = ratio > 0.75 ? '#ff5a5a' : '#ffe14d';
+                ctx.fillText('CHARGE', barX + 1, barY - 1);
+                // 막대 배경(빈 게이지)
+                ctx.fillStyle = 'rgba(10, 12, 20, 0.9)';
+                if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 4); ctx.fill(); }
                 else ctx.fillRect(barX, barY, barW, barH);
                 // 채움: 위험도에 따라 색 변화
                 const fillColor = ratio > 0.75 ? '#ff2b2b' : (ratio > 0.45 ? '#ffaa00' : '#ffe14d');
                 ctx.fillStyle = fillColor;
                 const fw = Math.max(0, Math.round(barW * ratio));
                 if (fw > 0) {
-                    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(barX, barY, fw, barH, 3); ctx.fill(); }
+                    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(barX, barY, fw, barH, 4); ctx.fill(); }
                     else ctx.fillRect(barX, barY, fw, barH);
                 }
-                ctx.lineWidth = 1;
-                ctx.strokeStyle = 'rgba(255, 204, 0, 0.7)';
-                if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 3); ctx.stroke(); }
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = 'rgba(255, 204, 0, 0.85)';
+                if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 4); ctx.stroke(); }
                 else ctx.strokeRect(barX, barY, barW, barH);
                 ctx.restore();
             }
