@@ -94,15 +94,6 @@ html {
   -webkit-text-fill-color: transparent;
 }
 
-.version-tag {
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  background: rgba(0, 243, 255, 0.1);
-  border: 1px solid #00f3ff;
-  border-radius: 4px;
-  color: #00f3ff;
-}
-
 .quick-controls {
   display: flex;
   gap: 10px;

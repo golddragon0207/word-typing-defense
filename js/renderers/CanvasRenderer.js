@@ -87,9 +87,9 @@ class CanvasRenderer {
         ctx.textAlign = 'right';
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 2;
-        ctx.strokeText('⚡ BASE DEFENSE LINE ⚡', width - 15, groundY - 8);
+        ctx.strokeText('🛡️ BASE DEFENSE LINE 🛡️', width - 15, groundY - 8);
         ctx.fillStyle = '#ff0055';
-        ctx.fillText('⚡ BASE DEFENSE LINE ⚡', width - 15, groundY - 8);
+        ctx.fillText('🛡️ BASE DEFENSE LINE 🛡️', width - 15, groundY - 8);
 
         ctx.restore();
     }
