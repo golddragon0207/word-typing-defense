@@ -1441,7 +1441,7 @@ html {
   border-left-color: #3a3f52;
 }
 
-/* 🔥 라이브 경쟁 후보 (다음 몬스터 자리) */
+/* 🔥 라이브 채팅 대기열 항목 (닉네임: 채팅 문구) */
 .queue-item-live {
   color: #ffcc00;
   background: rgba(191, 0, 255, 0.15);

@@ -414,19 +414,14 @@ class GameEngine {
     const queue = wordPacks.viewerQueue || [];
     if (countEl) countEl.textContent = queue.length;
 
-    let html = '';
-
-    // 🔥 라이브 경쟁 후보 (현재 채팅으로 다투는 "다음 몬스터 자리")
-    const cand = wordPacks.liveChatMode ? wordPacks.liveCandidate : null;
-    if (cand && cand.nickname) {
-      html += `<span class="queue-item queue-item-live">🔥 ${this.escapeHtml(cand.nickname)}: ${this.escapeHtml(cand.chatWord || '')}</span>`;
-    }
-
-    // 다음에 소환될 순서대로 앞에서 최대 8개
+    // 다음에 소환될 순서대로 앞에서 최대 8개. 라이브 채팅 문구가 실린 실참여자는 🔥로 강조.
     const upcoming = queue.slice(0, 8);
-    html += upcoming.map(entry => {
+    const html = upcoming.map(entry => {
       const name = entry && entry.nickname ? entry.nickname : '[BOT]';
       const isBot = name.startsWith('[BOT]');
+      if (entry && entry.chatWord) {
+        return `<span class="queue-item queue-item-live">🔥 ${this.escapeHtml(name)}: ${this.escapeHtml(entry.chatWord)}</span>`;
+      }
       return `<span class="queue-item${isBot ? ' queue-item-bot' : ''}">${this.escapeHtml(name)}</span>`;
     }).join('');
 

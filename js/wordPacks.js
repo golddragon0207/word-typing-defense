@@ -7,6 +7,17 @@
  * 비속어 필터링, 한글 자모 분해 및 정밀 획수 계산 유틸리티를 제공합니다.
  */
 
+/**
+ * ⚙️ 시청자 참여/대기열 튜닝 값 — 여기 한 곳에서 조절한다.
+ *   ⚠️ MAX_QUEUE_LENGTH > TARGET_MIN_POPULATION 이라야 봇이 실참여 대기자를 밀어내지 않는다 (30 > 20).
+ */
+const WTD_QUEUE_CONFIG = {
+  MAX_JOINED_VIEWERS: 10000, // 참여자 명단(joinedViewers) 최대 인원. 가득 차면 새 시청자의 `!참여`는 무시(기존 참여자는 계속 동작).
+  MAX_QUEUE_LENGTH: 30,      // 대기열(viewerQueue) 최대 길이. 초과 시 가장 오래된 대기자부터 밀려남.
+  MAX_QUEUE_PER_VIEWER: 2,   // 한 시청자가 큐에 동시에 대기할 수 있는 최대 항목 ([BOT]은 예외 — 물량 보충용).
+  TARGET_MIN_POPULATION: 20, // 실참여자+봇 합쳐 유지할 최소 인원. 봇은 (이 값 − 실참여자 수)만큼만 보충.
+};
+
 const wordPacks = {
   // 1. 기본 게임 타깃 제시어 데이터베이스 (밈, 게임 용어, 개발 단어 등)
   words: [
@@ -59,25 +70,13 @@ const wordPacks = {
   //    - chatIntegration.js가 processChatMessage()를 통해 여기에 적재하고,
   //    - MonsterManager가 getNextMonsterData()를 호출할 때마다 하나씩 소비합니다.
   viewerQueue: [],
-  // 대기열(순번 대기) 상한. 화면 동시 15마리 + 대기 30명 = 순간 최대 45명이 파이프라인에 참여.
-  // 초과 시 가장 오래된 대기자부터 밀려나며, 봇 보충 목표(TARGET_MIN_POPULATION)는 이보다 작아야
-  // 봇이 실참여자를 밀어내지 않는다 (30 > 20 여유 확보).
-  MAX_QUEUE_LENGTH: 30,
-  // 한 시청자가 큐에 동시에 대기할 수 있는 최대 항목 수 (도배로 큐 독점 방지). [BOT]은 예외.
-  MAX_QUEUE_PER_VIEWER: 2,
-  // 참여자 명단(joinedViewers) 최대 인원. 큐/화면 상한이 이미 있어 이 이상은 게임에 의미가 없고,
-  // 무제한 누적을 막기 위한 상한. 가득 차면 새 시청자의 `!참여`는 무시된다(기존 참여자는 계속 동작).
-  MAX_JOINED_VIEWERS: 100,
 
   // `!참여`로 들어온 시청자만 라이브 채팅 제시어 후보가 될 수 있습니다.
   // Set에는 플랫폼 접두사가 포함된 닉네임을 저장해 플랫폼 간 동명이인도 구분합니다.
   joinedViewers: new Set(),
 
-  // '!참여' 실시간 참가자 누적 카운트 (통계용) 및 최소 유지 인원(부족분은 봇으로 보충)
-  // ※ 이 값은 '실참여자가 적을 때 봇으로 채우는 최소 기준선'일 뿐, 실참여자 수를 제한하지 않음
-  //   (실참여자는 대기열에 계속 쌓이고 항상 봇보다 먼저 소환됨 — getNextMonsterData 참고)
+  // '!참여' 실시간 참가자 누적 카운트 (통계용)
   realParticipantCount: 0,
-  TARGET_MIN_POPULATION: 20,
 
   // 💬 라이브 채팅 모드 (하이브리드): 켜면 시청자가 실제로 채팅에 친 문구가
   // (안전하게 정제된 뒤) 타이핑 타깃 단어로 쓰인다. 끄면 항상 단어팩에서만 뽑힘.
@@ -85,11 +84,6 @@ const wordPacks = {
   liveChatMode: false,
   liveChatMaxLen: 10,        // 라이브 채팅 문구 최대 글자수 (단어팩 모달에서 조정 가능)
   liveChatStripSpecial: true, // 이모티콘/특수문자 제거 여부 (단어팩 모달에서 조정 가능)
-
-  // 🔥 다음 몬스터 자리를 두고 시청자들이 채팅으로 경쟁하는 "후보" 슬롯 (마지막 채팅이 덮어씀).
-  // 몬스터가 소환되는 순간 이 후보가 확정되어 그 몬스터로 등장하고, 후보는 비워져 새 경쟁이 시작된다.
-  // { nickname, chatWord } 또는 null.
-  liveCandidate: null,
 
   // 5. 비속어/욕설 간이 필터 목록 (마스킹 처리)
   badWords: [
@@ -133,7 +127,7 @@ const wordPacks = {
     if (hasJoinCommand) {
       const wasJoined = this.joinedViewers.has(safeNickname);
       // 명단이 가득 찼는데(=상한 도달) 새 시청자면 참여 거부. 기존 참여자의 재참여는 계속 허용.
-      if (!wasJoined && this.joinedViewers.size >= this.MAX_JOINED_VIEWERS) {
+      if (!wasJoined && this.joinedViewers.size >= WTD_QUEUE_CONFIG.MAX_JOINED_VIEWERS) {
         return false;
       }
       this.joinedViewers.add(safeNickname);
@@ -142,14 +136,14 @@ const wordPacks = {
       return true;
     }
 
-    // 2) 🔥 라이브 채팅 모드: 이미 `!참여`한 시청자의 후속 채팅은 "다음 몬스터 자리"를 두고 경쟁한다.
-    //    큐에 바로 넣지 않고 경쟁 후보(liveCandidate)를 덮어써서, 마지막에 친 시청자가 승자가 된다.
-    //    (미참여자의 일반 채팅은 절대 후보가 되지 않음)
+    // 2) 💬 라이브 채팅 모드: 이미 `!참여`한 시청자의 후속 채팅을 대기열에 순서대로 누적한다.
+    //    (친 사람이 차례로 다 몬스터가 됨. 대형 방송 폭주는 MAX_QUEUE_LENGTH(30) 상한 +
+    //     1인당 MAX_QUEUE_PER_VIEWER(2) 제한으로 자동 조절 — 한 명이 큐를 독점하지 못한다.)
+    //    (미참여자의 일반 채팅은 절대 큐에 들어가지 않음)
     if (this.liveChatMode && this.joinedViewers.has(safeNickname)) {
       const chatWord = this.sanitizeLiveChatWord(msg);
       if (!chatWord) return false;
-      this.liveCandidate = { nickname: safeNickname, chatWord };
-      return true;
+      return this.enqueueViewer(safeNickname, chatWord);
     }
 
     // 호환성 옵션: 라이브 모드가 꺼졌고 명령어 전용 체크도 해제된 경우에만 닉네임 몬스터를 허용.
@@ -164,13 +158,12 @@ const wordPacks = {
 
   /**
    * 🔄 참여자 명단/대기열 초기화. 새 판 시작 시, 그리고 채팅 모달의 "참여자 초기화" 버튼에서 호출.
-   *    joinedViewers(명단)·viewerQueue(대기열)·realParticipantCount(카운트)·liveCandidate(경쟁 후보)를 모두 비운다.
+   *    joinedViewers(명단)·viewerQueue(대기열)·realParticipantCount(카운트)를 모두 비운다.
    */
   resetParticipants() {
     this.joinedViewers.clear();
     this.viewerQueue = [];
     this.realParticipantCount = 0;
-    this.liveCandidate = null;
   },
 
   /**
@@ -213,23 +206,33 @@ const wordPacks = {
       for (const e of this.viewerQueue) {
         if (e.nickname === nickname) count++;
       }
-      if (count >= this.MAX_QUEUE_PER_VIEWER) return false;
+      if (count >= WTD_QUEUE_CONFIG.MAX_QUEUE_PER_VIEWER) return false;
     }
 
     this.viewerQueue.push({ nickname, chatWord });
-    if (this.viewerQueue.length > this.MAX_QUEUE_LENGTH) {
+    if (this.viewerQueue.length > WTD_QUEUE_CONFIG.MAX_QUEUE_LENGTH) {
       this.viewerQueue.shift();
     }
     return true;
   },
 
   /**
-   * 🤖 실시간 참여 인원 자동 보충: '!참여' 참가자가 목표 인원보다 적으면
-   * 부족한 만큼 [BOT] 가상 시청자를 대기열에 채워 넣어 몬스터 물량을 유지한다.
-   * @param {number} target - 유지하고 싶은 최소 동시 대기 인원 (기본 8명)
+   * 🤖 실시간 참여 인원 자동 보충: 실참여자(명단)가 목표 인원보다 적을 때만 그 부족분만큼
+   * [BOT] 가상 시청자를 대기열에 채운다. 실참여자가 많을수록 봇은 줄고, 실참여자가 target 이상이면 0.
+   *   - 채울 봇 목표 = target − 실참여자 명단 수(joinedViewers)
+   *   - 이미 대기열에 있는 봇 수는 빼고 부족분만 추가(매 스테이지 호출 시 중복 보충 방지)
+   * @param {number} target - 실참여자+봇 합쳐 유지할 최소 인원 (기본 WTD_QUEUE_CONFIG.TARGET_MIN_POPULATION)
    */
-  topUpBotsToTarget(target = this.TARGET_MIN_POPULATION) {
-    const shortage = target - this.viewerQueue.length;
+  topUpBotsToTarget(target = WTD_QUEUE_CONFIG.TARGET_MIN_POPULATION) {
+    // 실참여자(봇 제외 명단) 수를 뺀 만큼만 봇으로 채운다 → 실참여자가 많으면 봇 자동 감소
+    const desiredBots = Math.max(0, target - this.joinedViewers.size);
+
+    // 이미 대기열에 있는 봇 수를 제외한 부족분만 보충
+    let currentBots = 0;
+    for (const e of this.viewerQueue) {
+      if (e.nickname && e.nickname.startsWith('[BOT]')) currentBots++;
+    }
+    const shortage = desiredBots - currentBots;
     if (shortage <= 0) return 0;
 
     for (let i = 0; i < shortage; i++) {
@@ -274,18 +277,6 @@ const wordPacks = {
    * @returns {Object} { nickname, isBot, word, isLiveChat }
    */
   getNextMonsterData(customNickname = null) {
-    // 🔥 라이브 경쟁: 소환 순간 경쟁 후보가 있으면 그 승자(마지막 채팅)가 이 몬스터로 확정된다.
-    if (!customNickname && this.liveChatMode && this.liveCandidate && this.liveCandidate.chatWord) {
-      const winner = this.liveCandidate;
-      this.liveCandidate = null; // 확정 후 후보 비움 → 다음 경쟁 시작
-      return {
-        nickname: winner.nickname,
-        isBot: false,
-        word: winner.chatWord,
-        isLiveChat: true
-      };
-    }
-
     let nickname = customNickname;
     let isBot = false;
     let chatWord = null;
