@@ -96,6 +96,14 @@
         </div>
       </div>
 
+      <!-- ⌨️ 타자 입력 바: 게임플레이라 고정 무대(1024×708) 안에 유지 -->
+      <div id="typing-input-bar" class="typing-bar hidden">
+        <div id="multi-input-container" class="multi-input-grid">
+        </div>
+      </div>
+      </div><!-- /#game-stage : 게임플레이(캔버스/HUD/대기열/배너/입력바)만 포함 -->
+
+      <!-- 🏠 홈/게임오버 화면은 고정 무대 밖(.stage-frame = 상단바 아래 전체 영역)을 채우도록 분리 -->
       <div id="screen-main" class="screen-overlay">
         <div class="main-menu-card">
           <h1 class="glow-text">WORD TYPING DEFENSE</h1>
@@ -226,11 +234,6 @@
         </div>
       </div>
 
-      <div id="typing-input-bar" class="typing-bar hidden">
-        <div id="multi-input-container" class="multi-input-grid">
-        </div>
-      </div>
-      </div><!-- /#game-stage -->
     </main>
 
     <div id="modal-words" class="modal-backdrop hidden">
