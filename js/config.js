@@ -58,7 +58,7 @@ const CONFIG = {
     WORDS: "DAN-Jdl49AhXKb3Dg6Ce",        // 모달_단어팩_728x90 ID
     LEADERBOARD: "DAN-4f2Zy9rvtpYIdFwz", // 모달_명예의전당_728x90 ID
     SUPPORT: "DAN-7HAZgjuUDNHfPgph",      // 모달_후원_728x90 ID
-    SUGGESTION: "DAN-REPLACE_ME",         // 모달_건의사항_728x90 ID (⚠️ 애드핏에서 새 슬롯 발급 후 이 값 교체)
+    SUGGESTION: "DAN-0yaoDJ8fNLA4tD92",   // 모달_건의사항_728x90 ID
     WIDTH: "728",
     HEIGHT: "90"
   },
