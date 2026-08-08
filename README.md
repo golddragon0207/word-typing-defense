@@ -44,10 +44,10 @@ SOOP · 치지직 · 유튜브 라이브 **1인 솔로 스트리머**에 최적�
 ### 6. ♾️ 무한 스테이지 & 5 스테이지 보스전
 - 종료 엔딩 없이 패배할 때까지 무한 진행. **5 스테이지마다 WARNING 배너와 함께 보스**가 등장합니다.
 
-### 7. 👑 등급(SSS~D) & 난이도별 명예의 전당
+### 7. 👑 등급(SSS~D) & 명예의 전당 (최고 도달 스테이지 기준)
 - 점수 기반 등급 부여(0점/0처치 시 D). 신기록 시 `🎉 NEW RECORD!` 연출.
 - **🏅 이번 판 MVP**: 게임오버 결과 화면에 몬스터를 가장 많이 낸 실참여 시청자를 MVP로 표시. **집계 기준은 "등장(참여)"** 라 스트리머가 그 몬스터를 못 죽여도 카운트됩니다(봇만 있었던 판은 표시 안 함).
-- **명예의 전당은 난이도별 TOP 5**로 분리 표시됩니다.
+- **명예의 전당은 최고 도달 스테이지 기준 단일 TOP 5**로 표시됩니다(동점이면 점수순). STAGE를 주지표로 강조하고 등급·점수·WPM·날짜를 함께 보여줍니다.
   - **로컬**: 브라우저 `localStorage`에 난이도별 저장(기본).
   - **글로벌**: Firebase Firestore 연동 시 전 스트리머 공유 글로벌 리더보드(미설정 시 로컬 폴백).
 
@@ -78,7 +78,7 @@ SOOP · 치지직 · 유튜브 라이브 **1인 솔로 스트리머**에 최적�
 - [`js/audio.js`](./js/audio.js) : Web Audio API 효과음 5종(레이저/폭발/피버/오타/팡파르)
 - [`js/chatIntegration.js`](./js/chatIntegration.js) : 치지직/SOOP/유튜브 URL 파서 및 다중 실시간 연동. **SOOP·치지직 채팅 프로토콜 클라이언트**(SOOP: 입장 핸드셰이크·패킷 파싱 / 치지직: live-status·access-token→WS cmd 100 핸드셰이크, 프록시 경유)
 - [`js/globalLeaderboard.js`](./js/globalLeaderboard.js) : Firebase Firestore 글로벌 리더보드 + Analytics 연동(선택형)
-- [`js/core/StateManager.js`](./js/core/StateManager.js) : 상태 머신, 점수/HP/콤보/CPM·WPM/피버, 난이도별 로컬 TOP5
+- [`js/core/StateManager.js`](./js/core/StateManager.js) : 상태 머신, 점수/HP/콤보/CPM·WPM/피버, 최고 도달 스테이지 기준 로컬 TOP5
 - [`js/core/TurretManager.js`](./js/core/TurretManager.js) : 중앙 포탑 좌표·회전각·사격·반동
 - [`js/core/MonsterManager.js`](./js/core/MonsterManager.js) : 난이도별 스폰/속도/상한, 보스전, 낙하 관리
 - [`js/core/InputManager.js`](./js/core/InputManager.js) : 타자 입력, 한글 IME 조합 감지, 바닥 우선 타깃팅

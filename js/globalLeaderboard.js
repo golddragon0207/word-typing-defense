@@ -15,8 +15,8 @@
  *
  * ────────────────────────────────────────────────────────────
  * 🔐 Firestore 보안 규칙 (Firebase 콘솔 > Firestore Database > 규칙 탭에 붙여넣기)
- * ⚠️ 난이도별 명예의 전당을 지원하려면 아래처럼 difficulty 필드 검증이 추가된
- *    최신 규칙으로 반드시 교체 후 다시 "게시"해야 한다.
+ * ⚠️ 랭킹 기준이 '최고 도달 스테이지'로 바뀌었으므로 아래 규칙(difficulty 제거 + stage 검증
+ *    추가)으로 반드시 교체 후 다시 "게시"해야 한다. (기존 문서는 그대로 둬도 읽기는 정상)
  * ────────────────────────────────────────────────────────────
  * rules_version = '2';
  * service cloud.firestore {
@@ -24,28 +24,29 @@
  *     match /leaderboard/{entryId} {
  *       allow read: if true;
  *       allow create: if request.resource.data.keys().hasOnly(
- *                         ['nickname','score','stage','wpm','combo','grade','date','difficulty','createdAt']
+ *                         ['nickname','score','stage','wpm','combo','grade','date','createdAt']
  *                       )
  *                     && request.resource.data.nickname is string
  *                     && request.resource.data.nickname.size() <= 20
  *                     && request.resource.data.score is number
  *                     && request.resource.data.score >= 0
  *                     && request.resource.data.score <= 999999
- *                     && request.resource.data.difficulty in ['easy','normal','hard','hell'];
+ *                     && request.resource.data.stage is number
+ *                     && request.resource.data.stage >= 1
+ *                     && request.resource.data.stage <= 9999;
  *       allow update, delete: if false; // 클라이언트에서 수정/삭제 불가 (스코어 위변조 방지)
  *     }
  *   }
  * }
  * ────────────────────────────────────────────────────────────
  * ⚠️ 참고: 클라이언트(브라우저)에서 직접 점수를 전송하는 구조라 악의적인 시청자가
- * 개발자도구로 임의의 점수를 보낼 가능성 자체를 완전히 막을 수는 없다. 위 규칙은
- * "터무니없는 값(음수, 999999 초과, 필드 조작)"만 최소한으로 걸러내는 수준이다.
+ * 개발자도구로 임의의 값을 보낼 가능성 자체를 완전히 막을 수는 없다. 위 규칙은
+ * "터무니없는 값(음수, 상한 초과, 필드 조작)"만 최소한으로 걸러내는 수준이다.
  *
- * 조회 시 컬렉션 하나를 점수 내림차순으로 넉넉히(최대 200건) 가져온 뒤 난이도별로
- * 클라이언트에서 그룹핑한다 (where+orderBy 조합용 복합 인덱스를 따로 만들 필요가 없다).
+ * 조회 시 컬렉션 하나를 스테이지 내림차순으로 넉넉히(최대 200건) 가져온 뒤, 클라이언트에서
+ * 동점(같은 스테이지)은 점수 내림차순으로 다시 정렬해 상위 N개를 추린다
+ * (단일 필드 orderBy라 복합 인덱스가 필요 없다).
  */
-
-const DIFFICULTY_KEYS = ['easy', 'normal', 'hard', 'hell'];
 
 const GlobalLeaderboard = {
   db: null,
@@ -111,23 +112,21 @@ const GlobalLeaderboard = {
   },
 
   /**
-   * 🏆 글로벌 명예의 전당에 점수 제출 (난이도별로 구분 저장)
-   * @param {{nickname:string, score:number, stage:number, wpm:number, combo:number, grade:string, date:string, difficulty:string}} entry
+   * 🏆 글로벌 명예의 전당에 점수 제출 (랭킹 기준: 최고 도달 스테이지)
+   * @param {{nickname:string, score:number, stage:number, wpm:number, combo:number, grade:string, date:string}} entry
    * @returns {Promise<boolean>} 성공 여부
    */
   async submitScore(entry) {
     if (!this.enabled || !this.db) return false;
     try {
-      const difficulty = DIFFICULTY_KEYS.includes(entry.difficulty) ? entry.difficulty : 'normal';
       await this.db.collection(this.COLLECTION).add({
         nickname: (entry.nickname || '스트리머').slice(0, 20),
         score: Math.max(0, Math.min(999999, Math.floor(entry.score || 0))),
-        stage: entry.stage || 1,
+        stage: Math.max(1, Math.min(9999, Math.floor(entry.stage || 1))),
         wpm: entry.wpm || 0,
         combo: entry.combo || 0,
         grade: entry.grade || 'D',
         date: entry.date || new Date().toISOString().slice(0, 10),
-        difficulty,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       return true;
@@ -138,29 +137,25 @@ const GlobalLeaderboard = {
   },
 
   /**
-   * 🏆 난이도별 글로벌 TOP5를 한 번에 조회
-   * 컬렉션 전체를 점수 내림차순으로 넉넉히 가져온 뒤 클라이언트에서 난이도별로 묶어
-   * 각각 상위 5개만 추린다 (복합 인덱스 불필요).
-   * @returns {Promise<{easy:Array, normal:Array, hard:Array, hell:Array}|null>} 실패 시 null
+   * 🏆 글로벌 단일 TOP N 조회 (랭킹 기준: 최고 도달 스테이지)
+   * 컬렉션을 스테이지 내림차순으로 넉넉히 가져온 뒤, 동점(같은 스테이지)은 클라이언트에서
+   * 점수 내림차순으로 재정렬해 상위 limit개만 추린다 (단일 필드 orderBy → 복합 인덱스 불필요).
+   * @param {number} limit - 반환 개수 (기본 5)
+   * @returns {Promise<Array|null>} 실패 시 null
    */
-  async fetchTopByDifficulty() {
+  async fetchTop(limit = 5) {
     if (!this.enabled || !this.db) return null;
     try {
       const snap = await this.db.collection(this.COLLECTION)
-        .orderBy('score', 'desc')
+        .orderBy('stage', 'desc')
         .limit(200)
         .get();
 
-      const grouped = { easy: [], normal: [], hard: [], hell: [] };
-      snap.docs.forEach(doc => {
-        const data = doc.data();
-        const d = DIFFICULTY_KEYS.includes(data.difficulty) ? data.difficulty : 'normal';
-        if (grouped[d].length < 5) grouped[d].push(data);
-      });
-
-      return grouped;
+      const rows = snap.docs.map(doc => doc.data());
+      rows.sort((a, b) => (b.stage || 1) - (a.stage || 1) || (b.score || 0) - (a.score || 0));
+      return rows.slice(0, limit);
     } catch (e) {
-      console.warn('⚠️ [GlobalLeaderboard] TOP5 조회 실패:', e.message);
+      console.warn('⚠️ [GlobalLeaderboard] TOP 조회 실패:', e.message);
       return null;
     }
   }

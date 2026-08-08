@@ -111,7 +111,6 @@
                 <button class="tab-btn active" data-tab="tab-soop">🔵 SOOP (숲/아프리카)</button>
                 <button class="tab-btn" data-tab="tab-chzzk">🟢 치지직 (Chzzk)</button>
                 <button class="tab-btn" data-tab="tab-youtube">🔴 유튜브 라이브</button>
-                <button class="tab-btn" data-tab="tab-custom">💬 시뮬레이션 / 테스트</button>
               </div>
 
               <div class="tab-contents">
@@ -139,25 +138,9 @@
                   </div>
                 </div>
 
-                <div id="tab-custom" class="tab-content">
-                  <label>🤖 [BOT] 가상 시청자 자동 소환 (테스트 / 오프라인용):</label>
-                  <select id="select-sim-speed">
-                    <option value="off">자동 소환 끄기</option>
-                    <option value="slow">느림 (5초마다 소환)</option>
-                    <option value="normal" selected>보통 (2.5초마다 소환)</option>
-                    <option value="fast">폭발적 (1초마다 소환)</option>
-                  </select>
-                </div>
-
                 <div class="connected-channels-section">
                   <label>📡 현재 연동 목록:</label>
                   <div id="active-channels-list" class="channel-chips-container"></div>
-                </div>
-
-                <div class="streamer-name-section">
-                  <label>🎨 스트리머(플레이어) 닉네임 <span class="required-mark">*필수</span></label>
-                  <input type="text" id="input-player-nickname" class="input-nickname" required
-                    placeholder="게임에 표시될 스트리머 닉네임을 입력하세요" />
                 </div>
 
                 <div class="participants-section">
@@ -166,6 +149,12 @@
                     <button id="btn-reset-participants" class="btn-reset-participants" type="button">🗑️ 참여자 초기화</button>
                   </div>
                   <div id="participant-list" class="participant-chips-container"></div>
+                </div>
+
+                <div class="streamer-name-section">
+                  <label>🎨 스트리머(플레이어) 닉네임 <span class="required-mark">*필수</span></label>
+                  <input type="text" id="input-player-nickname" class="input-nickname" required
+                    placeholder="게임에 표시될 스트리머 닉네임을 입력하세요" />
                 </div>
 
                 <p class="chat-option-note">💡 방송 채팅창에 <strong>!참여</strong> 라고 해야 자동참여 됩니다!</p>
@@ -299,17 +288,11 @@
     <div id="modal-leaderboard" class="modal-backdrop hidden">
       <div class="modal-card">
         <div class="modal-header">
-          <h2>🏆 명예의 전당 (Top 5 High Scores)</h2>
+          <h2>🏆 명예의 전당 (최고 스테이지 Top 5)</h2>
           <button class="btn-close" data-close="modal-leaderboard">✕</button>
         </div>
         <div class="modal-body">
-          <div class="platform-tabs leaderboard-diff-tabs">
-            <button class="tab-btn" data-lb-diff="easy">🟢 쉬움</button>
-            <button class="tab-btn active" data-lb-diff="normal">🟡 보통</button>
-            <button class="tab-btn" data-lb-diff="hard">🔴 어려움</button>
-            <button class="tab-btn" data-lb-diff="hell">💀 헬</button>
-          </div>
-          <p id="leaderboard-source" class="modal-desc">역대 최고 전적 TOP 5입니다.</p>
+          <p id="leaderboard-source" class="modal-desc">최고 도달 스테이지 기준 TOP 5입니다.</p>
           <div id="leaderboard-list" class="leaderboard-grid"></div>
         </div>
 

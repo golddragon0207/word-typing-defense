@@ -234,7 +234,7 @@ class StateManager {
     }
 
     /**
-     * 🏆 localStorage에 저장된 전체 원본 목록 조회 (난이도별로 이미 상위 5개씩만 유지됨)
+     * 🏆 localStorage에 저장된 전체 원본 목록 조회 (상위 STORE_MAX개만 보관됨)
      * @returns {Array<Object>}
      */
     getAllScores() {
@@ -249,28 +249,28 @@ class StateManager {
     }
 
     /**
-     * 🏆 localStorage 기반 난이도별 TOP 5 명예의 전당 조회
-     * @param {string|null} difficulty - 'easy'|'normal'|'hard'|'hell' (없으면 전체 원본 반환, 하위호환용)
+     * 🏆 localStorage 기반 단일 통합 TOP 명예의 전당 조회
+     *    '최고 도달 스테이지 내림차순, 동점이면 점수 내림차순'으로 정렬해 상위 limit개 반환.
+     *    (난이도 구분 없음 — 옛 난이도별 데이터도 이 기준으로 자동 재정렬되어 함께 랭크됨)
+     * @param {number} limit - 반환 개수 (기본 5)
      * @returns {Array<Object>}
      */
-    getTopScores(difficulty = null) {
-        const all = this.getAllScores();
-        if (!difficulty) return all;
-
-        return all
-            .filter(e => (e.difficulty || 'normal') === difficulty)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 5);
+    getTopScores(limit = 5) {
+        return this.getAllScores()
+            .slice()
+            .sort((a, b) => (b.stage || 1) - (a.stage || 1) || (b.score || 0) - (a.score || 0))
+            .slice(0, limit);
     }
 
     /**
-     * 🏆 현재 전적을 localStorage에 저장 — 난이도별로 각각 상위 5개씩 유지
-     * (예: easy 5개 + normal 5개 + hard 5개 + hell 5개 = 최대 20개 저장)
+     * 🏆 현재 전적을 localStorage에 저장 — '최고 도달 스테이지' 기준 단일 통합 랭킹.
+     *    스테이지 내림차순(동점이면 점수 내림차순)으로 정렬해 상위 STORE_MAX개만 보관한다.
      * @param {string} nickname
      * @returns {{isNewRecord: boolean, list: Array<Object>}}
      */
     saveScore(nickname = '스트리머') {
-        const difficulty = (this.config && this.config.difficulty) || 'normal';
+        const STORE_MAX = 20;   // 보관 개수(표시는 상위 DISPLAY_TOP개). 재랭킹 여유분 포함.
+        const DISPLAY_TOP = 5;
 
         const entry = {
             nickname: (nickname || '스트리머').slice(0, 20),
@@ -279,29 +279,17 @@ class StateManager {
             wpm: this.maxWpm,
             combo: this.maxCombo,
             grade: this.calculateRankGrade(),
-            date: new Date().toISOString().slice(0, 10),
-            difficulty
+            date: new Date().toISOString().slice(0, 10)
         };
 
         const all = this.getAllScores();
         all.push(entry);
+        all.sort((a, b) => (b.stage || 1) - (a.stage || 1) || (b.score || 0) - (a.score || 0));
+        const finalList = all.slice(0, STORE_MAX);
 
-        // 난이도별로 그룹핑해서 각각 상위 5개씩만 남긴다
-        const grouped = {};
-        all.forEach(e => {
-            const d = e.difficulty || 'normal';
-            if (!grouped[d]) grouped[d] = [];
-            grouped[d].push(e);
-        });
-
-        let finalList = [];
-        Object.keys(grouped).forEach(d => {
-            grouped[d].sort((a, b) => b.score - a.score);
-            finalList = finalList.concat(grouped[d].slice(0, 5));
-        });
-
-        const isNewRecord = this.score > 0 &&
-            (grouped[difficulty] || []).slice(0, 5).indexOf(entry) !== -1;
+        // 신기록: 이번 판이 유효(점수>0 또는 스테이지>1)하고 상위 DISPLAY_TOP 안에 들었는지
+        const isNewRecord = (this.score > 0 || this.currentStage > 1) &&
+            finalList.slice(0, DISPLAY_TOP).indexOf(entry) !== -1;
 
         try {
             localStorage.setItem(WTD_LEADERBOARD_STORAGE_KEY, JSON.stringify(finalList));
@@ -309,7 +297,7 @@ class StateManager {
             console.warn('[StateManager] 명예의 전당 저장 실패:', e);
         }
 
-        return { isNewRecord, list: this.getTopScores(difficulty) };
+        return { isNewRecord, list: this.getTopScores(DISPLAY_TOP) };
     }
 
     /**

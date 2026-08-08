@@ -5,7 +5,7 @@
 
 > **v3.1 변경 요약**: **SOOP(숲/아프리카) 실시간 채팅 실제 연동 구현**(입장 핸드셰이크·패킷 파싱 + 전용 무료 Cloudflare Worker CORS 프록시 `CONFIG.SOOP_PROXY`, 스트리머는 URL만 붙여넣으면 자동), SOOP를 연동 모달 **기본/맨 왼쪽 탭**·시작화면 배지 선두로 배치, 라이브 채팅 설정 박스 **테두리 ON/OFF 상태 표시**, 후원 모달 **QR·계좌 가로 배치 + 헤더 '카카오뱅크'**, SOOP URL 파서 `sooplive.com` 도메인 지원.
 >
-> **v3.0 변경 요약**: 난이도별 밸런스 테이블 도입, `!참여` 단일 명령어 + 봇 자동 보충, 💬 라이브 채팅 하이브리드 모드(실제 채팅 문구를 타깃으로), 난이도별 명예의 전당(로컬 + Firebase 글로벌), Firebase Analytics(GA4) 게임 이벤트 수집, 피버 모드, 단어팩 미리보기, 토스트 알림, 배경 파티클 연출 추가.
+> **v3.0 변경 요약**: 난이도별 밸런스 테이블 도입, `!참여` 단일 명령어 + 봇 자동 보충, 💬 라이브 채팅 하이브리드 모드(실제 채팅 문구를 타깃으로), 명예의 전당(최고 도달 스테이지 기준, 로컬 + Firebase 글로벌), Firebase Analytics(GA4) 게임 이벤트 수집, 피버 모드, 단어팩 미리보기, 토스트 알림, 배경 파티클 연출 추가.
 
 ---
 
@@ -20,7 +20,7 @@
 | **방송 채팅 연동 방식** |  **원클릭 방송 URL 파싱 연동** (스트리머가 방송 주소 입력 시 자동 ID 추출). SOOP/치지직/유튜브 **동시 다중 연동**. SOOP는 전용 무료 Cloudflare Worker 프록시(`CONFIG.SOOP_PROXY`, 개발자 1회 배포) 경유 — 스트리머는 URL만 입력 |
 | **몬스터 UI 시스템** |  **2단 UI** (상단: 시청자 닉네임 Pill Tag / 하단: 제시어 Box). 보스는 금색·확대, 라이브 채팅 문구는 보라색으로 강조. **Max Cap 15마리** 고정 상한 |
 | **난이도 밸런스** |  밸런스 테이블(`CONFIG.DIFFICULTY`)로 낙하속도·스폰주기·기지 체력·피격 데미지·스테이지 처치목표 차등. **난이도 선택 UI는 제거**되어 표준(`normal`)으로 고정 실행(스테이지별 자동 상승은 유지) |
-| **명예의 전당** |  **난이도별 TOP 5**. 로컬(`localStorage`) 기본 + Firebase Firestore **글로벌 리더보드**(설정 시 자동 활성, 미설정 시 로컬 폴백) |
+| **명예의 전당** |  **최고 도달 스테이지 기준 단일 TOP 5**(동점 시 점수순). 로컬(`localStorage`) 기본 + Firebase Firestore **글로벌 리더보드**(설정 시 자동 활성, 미설정 시 로컬 폴백) |
 | **화면 & 모달 최적화** |  카드 너비 `width: min(96%, 800px)` / 세로 `max-height: 72vh`. 버튼 영역(`.modal-actions`)과 광고 영역(`.modal-footer`)을 구조적으로 분리 |
 | **상단 컨트롤바 (6개)** |  📝 단어/닉네임 팩, 🏆 명예의 전당, ☕ 개발자 후원, 💬 라이브 채팅 모드, 📺 OBS 크로마키, 🔊 사운드 ON/OFF (방송 채팅 연동은 홈 화면 인라인 패널) |
 | **수익화 광고 및 후원** | **총 5개** 카카오 애드핏 `728x90` 슬롯 + **카카오뱅크(`3333-28-2684443`) 계좌 복사 & QR(`donation-qr.png`)** 후원 모달 |
@@ -101,16 +101,16 @@
 *  처치목표(`killPerStageBase + floor((stage-1)*killPerStageStep)`) 달성 시 다음 스테이지로 진행.
 *  **5 Stage마다 보스전**: WARNING 배너 → 보스 소환(확대·다중 피해). 보스 처치 시 즉시 다음 스테이지.
 
-### 12. 👑 등급 뱃지(SSS~D) & 난이도별 명예의 전당
+### 12. 👑 등급 뱃지(SSS~D) & 명예의 전당 (최고 도달 스테이지 기준)
 *  점수 기반 등급(`calculateRankGrade`), **0점/0처치 시 'D' 예외 처리**.
-*  **난이도별 TOP 5** 저장/조회:
-   *  로컬: `localStorage`에 난이도별 각 5개(최대 20개) 유지. 명예의 전당 모달에 난이도 탭(쉬움/보통/어려움/헬).
-   *  글로벌: Firebase Firestore(`leaderboard` 컬렉션). 점수 내림차순으로 넉넉히 조회 후 클라이언트에서 난이도별 그룹핑(복합 인덱스 불필요). 미설정/오류 시 로컬 폴백.
-*  명예의 전당 모달은 순위 조회 전용으로 구성되며 UI를 깔끔하게 유지합니다.
+*  **최고 도달 스테이지 기준 단일 TOP 5** 저장/조회 (동점이면 점수 내림차순 타이브레이크). 난이도 선택 제거에 맞춰 난이도별 분리·탭을 걷어낸 통합 랭킹:
+   *  로컬: `localStorage`에 단일 리스트로 상위 20개 보관·상위 5개 표시. 옛 난이도별 데이터도 이 기준으로 자동 재정렬.
+   *  글로벌: Firebase Firestore(`leaderboard` 컬렉션). `stage` 내림차순으로 넉넉히 조회 후 클라이언트에서 동점은 점수순으로 재정렬(단일 필드 orderBy → 복합 인덱스 불필요). 미설정/오류 시 로컬 폴백.
+*  표시는 STAGE를 금색 주지표로 강조하고 등급·점수·WPM·날짜는 보조로 배치. 명예의 전당 모달은 순위 조회 전용.
 *  **🏅 이번 판 MVP**: 게임오버 결과 화면에 실참여 시청자(봇·보스 제외) 중 몬스터를 가장 많이 낸 닉네임을 MVP 배너로 표시. **집계 기준은 처치가 아니라 "등장(참여)"** — 스폰 시점에 `MonsterManager.spawnMonster`가 `window.gameEngine.trackMvpAppearance(닉네임)`을 호출해 닉네임별 등장 수를 누적(`game.mvpTracker`)하므로 스트리머가 못 죽여도 카운트됨. 동점이면 먼저 참여한 시청자 우선(`computeMvp`), 참여자가 없으면(봇만) 배너 자동 숨김. 닉네임은 시청자 입력값이라 `innerText`로 안전 출력.
 
 ### 13. 🌐 Firebase 글로벌 리더보드 & 📊 Analytics (신규 — 선택형)
-*  **Firestore 글로벌 리더보드**: `CONFIG.FIREBASE.apiKey` 설정 시 자동 활성. 보안 규칙으로 읽기 공개 + 최소 검증(점수 범위/난이도 값/닉네임 길이)만 허용, 클라이언트 수정·삭제 금지.
+*  **Firestore 글로벌 리더보드**: `CONFIG.FIREBASE.apiKey` 설정 시 자동 활성. 보안 규칙으로 읽기 공개 + 최소 검증(점수·스테이지 범위/닉네임 길이)만 허용, 클라이언트 수정·삭제 금지. ⚠️ 스테이지 기준 개편에 맞춰 규칙을 `difficulty` 제거 + `stage` 검증본으로 교체·게시 필요(`js/globalLeaderboard.js` 상단 주석 참고).
 *  **Analytics(GA4)**: `measurementId` 설정 시 활성. `game_start`/`game_over`/`difficulty_selected`/`chat_platform_connected` 이벤트 수집(개인식별정보 미전송).
 *  두 기능 모두 실패해도 게임 진행에 영향 없음(try/catch 격리).
 
@@ -147,10 +147,10 @@
     *  플랫폼별 URL 파서, SOOP/치지직/유튜브 다중 연동, **SOOP·치지직 채팅 프로토콜 클라이언트**(SOOP: 핸드셰이크·패킷 빌드/파싱 / 치지직: live-status·access-token→WS cmd 100·PING/PONG·CHAT 파싱, `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY` 경유), Smart Fallback 토스트 안내, `handleIncomingChat` → `wordPacks.processChatMessage` 전달.
 
 7.  **`js/globalLeaderboard.js`**
-    *  Firebase 초기화, Firestore 점수 제출/난이도별 조회(`submitScore`/`fetchTopByDifficulty`), Analytics `logEvent`. 미설정 시 자동 비활성. 상단 주석에 Firestore 보안 규칙 포함.
+    *  Firebase 초기화, Firestore 점수 제출/스테이지 기준 조회(`submitScore`/`fetchTop`), Analytics `logEvent`. 미설정 시 자동 비활성. 상단 주석에 Firestore 보안 규칙 포함.
 
 8.  **`js/core/StateManager.js`**
-    *  상태 머신, 무한 Stage/HP/점수/콤보/CPM·WPM/피버 관리, 난이도별 체력·데미지 적용, 등급 환산, **난이도별 로컬 TOP5** 저장/조회.
+    *  상태 머신, 무한 Stage/HP/점수/콤보/CPM·WPM/피버 관리, 난이도별 체력·데미지 적용, 등급 환산, **최고 도달 스테이지 기준 단일 로컬 TOP5** 저장/조회.
 
 9.  **`js/core/TurretManager.js`**
     *  중앙 포탑 좌표(논리 픽셀 기준)·회전각·사격·반동.

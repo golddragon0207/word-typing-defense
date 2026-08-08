@@ -27,12 +27,10 @@ class GameEngine {
     // 🏅 이번 판 MVP 집계: 실제 참여 시청자(봇/보스 제외) 닉네임별 몬스터 "등장(참여)" 수 누적
     //    (처치 여부와 무관 — 스폰 시점에 MonsterManager가 trackMvpAppearance로 보고)
     this.mvpTracker = new Map();
-    this.simInterval = null; // 가상 시청자 자동 소환(테스트) 타이머
     this.bgStars = [];
     this.bgAnimId = null;
 
-    this.leaderboardDifficulty = 'normal'; // 명예의 전당 모달에서 현재 선택된 난이도 탭
-    this.leaderboardCache = null;          // { source, grouped: {easy,normal,hard,hell} }
+    this.leaderboardCache = null;          // 명예의 전당 캐시 { source: 'global'|'local', scores: Array }
   }
 
   /**
@@ -312,7 +310,6 @@ class GameEngine {
     this.bindChatModalEvents();
     this.bindWordPackModalEvents();
     this.bindLiveChatToggle();
-    this.bindLeaderboardEvents();
     this.bindObsToggle();
     this.bindSfxToggle();
   }
@@ -354,27 +351,6 @@ class GameEngine {
 
     const btnAddYt = document.getElementById('btn-add-yt');
     if (btnAddYt) btnAddYt.addEventListener('click', () => addChannelHandler('youtube', 'input-yt-url'));
-
-    // 🤖 [BOT] 가상 시청자 자동 소환 (테스트/오프라인 시뮬레이션)
-    const simSelect = document.getElementById('select-sim-speed');
-    if (simSelect) {
-      simSelect.addEventListener('change', () => {
-        if (this.simInterval) {
-          clearInterval(this.simInterval);
-          this.simInterval = null;
-        }
-        const speedMap = { slow: 5000, normal: 2500, fast: 1000 };
-        const interval = speedMap[simSelect.value];
-        if (interval) {
-          this.simInterval = setInterval(() => {
-            if (typeof wordPacks === 'undefined') return;
-            const name = wordPacks.botNicknames[Math.floor(Math.random() * wordPacks.botNicknames.length)];
-            wordPacks.enqueueViewer(`[BOT] ${name}`);
-          }, interval);
-          this.showToastInternal('🤖 가상 시청자 자동 소환을 시작합니다.', 'info');
-        }
-      });
-    }
   }
 
   renderActiveChannels() {
@@ -587,72 +563,55 @@ class GameEngine {
   }
 
   /* ==========================================================
-   * 🏆 명예의 전당 (난이도별 TOP 5, localStorage + 글로벌)
+   * 🏆 명예의 전당 (최고 도달 스테이지 기준 단일 TOP 5, localStorage + 글로벌)
    * ========================================================== */
-  bindLeaderboardEvents() {
-    // 난이도 탭 전환 (쉬움/보통/어려움/헬) — 이미 불러온 캐시에서 바로 다시 그림 (재조회 없음)
-    document.querySelectorAll('.leaderboard-diff-tabs .tab-btn').forEach(tabBtn => {
-      tabBtn.addEventListener('click', () => {
-        document.querySelectorAll('.leaderboard-diff-tabs .tab-btn').forEach(b => b.classList.remove('active'));
-        tabBtn.classList.add('active');
-        this.leaderboardDifficulty = tabBtn.dataset.lbDiff;
-        this.renderLeaderboardList();
-      });
-    });
-  }
 
   /**
-   * 🏆 명예의 전당 데이터 로드: 글로벌(Firestore)이 설정돼 있으면 난이도별로 한 번에 조회해 캐시하고,
-   * 미설정이거나 네트워크 실패 시 로컬(localStorage) 난이도별 TOP5로 자동 폴백한다.
+   * 🏆 명예의 전당 데이터 로드: 글로벌(Firestore)이 설정돼 있으면 스테이지 기준으로 조회해 캐시하고,
+   * 미설정이거나 네트워크 실패 시 로컬(localStorage) 스테이지 기준 TOP5로 자동 폴백한다.
    */
   async renderLeaderboard() {
     const listEl = document.getElementById('leaderboard-list');
     const sourceEl = document.getElementById('leaderboard-source');
     if (!listEl || !this.stateManager) return;
 
-    if (!this.leaderboardDifficulty) this.leaderboardDifficulty = 'normal';
-
-    let grouped = null;
+    let scores = null;
     let source = 'local';
 
     if (window.GlobalLeaderboard && window.GlobalLeaderboard.enabled) {
       if (sourceEl) sourceEl.textContent = '🌐 글로벌 기록 불러오는 중...';
-      grouped = await window.GlobalLeaderboard.fetchTopByDifficulty();
-      if (grouped) source = 'global';
+      scores = await window.GlobalLeaderboard.fetchTop(5);
+      if (scores) source = 'global';
     }
 
-    if (!grouped) {
+    if (!scores) {
       source = 'local';
-      grouped = {
-        easy: this.stateManager.getTopScores('easy'),
-        normal: this.stateManager.getTopScores('normal'),
-        hard: this.stateManager.getTopScores('hard'),
-        hell: this.stateManager.getTopScores('hell')
-      };
+      scores = this.stateManager.getTopScores(5);
     }
 
-    this.leaderboardCache = { source, grouped };
+    this.leaderboardCache = { source, scores };
 
     if (sourceEl) {
       sourceEl.textContent = source === 'global'
-        ? '🌐 모든 스트리머가 함께 보는 난이도별 글로벌 TOP5입니다.'
-        : '💾 이 브라우저에만 저장된 난이도별 로컬 TOP5입니다. (글로벌 미설정 또는 연결 실패)';
+        ? '🌐 모든 스트리머가 함께 보는 글로벌 TOP 5 (최고 도달 스테이지 기준)입니다.'
+        : '💾 이 브라우저에만 저장된 로컬 TOP 5 (최고 도달 스테이지 기준)입니다. (글로벌 미설정 또는 연결 실패)';
     }
 
     this.renderLeaderboardList();
   }
 
   /**
-   * 캐시된 데이터에서 현재 선택된 난이도 탭의 TOP5만 다시 그린다 (네트워크 재조회 없음)
+   * 캐시된 단일 TOP 리스트를 그린다 (네트워크 재조회 없음).
+   * 랭킹 기준이 '최고 도달 스테이지'이므로 스테이지를 주지표로 강조한다.
    */
   renderLeaderboardList() {
     const listEl = document.getElementById('leaderboard-list');
     if (!listEl || !this.leaderboardCache) return;
 
-    const scores = this.leaderboardCache.grouped[this.leaderboardDifficulty] || [];
+    const scores = this.leaderboardCache.scores || [];
 
     if (scores.length === 0) {
-      listEl.innerHTML = '<p class="leaderboard-empty">아직 이 난이도의 저장된 전적이 없습니다. 첫 기록에 도전해보세요!</p>';
+      listEl.innerHTML = '<p class="leaderboard-empty">아직 저장된 전적이 없습니다. 첫 기록에 도전해보세요!</p>';
       return;
     }
 
@@ -661,9 +620,9 @@ class GameEngine {
       <div class="leaderboard-row">
         <span class="lb-rank">${medals[idx] || (idx + 1)}</span>
         <span class="lb-nickname">${this.escapeHtml(entry.nickname)}</span>
+        <span class="lb-stage">STAGE ${entry.stage || 1}</span>
         <span class="lb-grade rank-${(entry.grade || 'D').toLowerCase()}">${entry.grade}</span>
-        <span class="lb-score">${(entry.score || 0).toLocaleString()}점</span>
-        <span class="lb-meta">STAGE ${entry.stage || 1} · ${entry.wpm || 0}WPM</span>
+        <span class="lb-meta">${(entry.score || 0).toLocaleString()}점 · ${entry.wpm || 0}WPM</span>
         <span class="lb-date">${entry.date || ''}</span>
       </div>
     `).join('');
@@ -726,10 +685,6 @@ class GameEngine {
    */
   startGame() {
     if (this.monsterManager) this.monsterManager.clear();
-    if (this.simInterval) {
-      clearInterval(this.simInterval);
-      this.simInterval = null;
-    }
 
     // 스트리머 닉네임 필수: 비어 있으면 시작을 막고 입력을 유도한다.
     const nicknameInput = document.getElementById('input-player-nickname');
@@ -996,11 +951,6 @@ class GameEngine {
     const queuePanel = document.getElementById('queue-panel');
     if (queuePanel) queuePanel.classList.add('hidden');
 
-    if (this.simInterval) {
-      clearInterval(this.simInterval);
-      this.simInterval = null;
-    }
-
     const gameOverScreen = document.getElementById('screen-gameover');
     if (gameOverScreen && this.stateManager) {
       gameOverScreen.classList.remove('hidden');
@@ -1069,8 +1019,7 @@ class GameEngine {
           wpm: this.stateManager.maxWpm,
           combo: this.stateManager.maxCombo,
           grade: rank,
-          date: new Date().toISOString().slice(0, 10),
-          difficulty: this.config.difficulty
+          date: new Date().toISOString().slice(0, 10)
         }).then(ok => {
           if (ok) this.showToastInternal('🌐 글로벌 명예의 전당에 기록을 제출했습니다.', 'info');
         });
