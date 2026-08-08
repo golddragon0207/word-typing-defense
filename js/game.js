@@ -73,9 +73,11 @@ class GameEngine {
     // 4. 보스 WARNING 배너 콜백 연결
     if (this.monsterManager) {
       this.monsterManager.onBossWarning = (stage) => {
-        this.showBanner(`⚠️ STAGE ${stage} BOSS WARNING ⚠️`, '강력한 보스 몬스터가 접근 중입니다!', true);
+        this.showBanner(`⚠️ STAGE ${stage} BOSS WARNING ⚠️`, '보스가 기를 모읍니다! 게이지가 차기 전에 제시어를 격파하세요!', true);
         if (window.audioManager) window.audioManager.playFever();
       };
+      // 🐲 보스 차지 게이지가 다 차면(공격 발동) 기지에 정액 피해
+      this.monsterManager.onBossAttack = (damage) => this.handleBossAttack(damage);
     }
 
     // 5. 피버 모드 사운드/배너 콜백 연결
@@ -1022,6 +1024,21 @@ class GameEngine {
     const isBossStage = this.stateManager.currentStage % 5 === 0;
     if (!isBossStage) {
       this.showBanner(`STAGE ${this.stateManager.currentStage} START!`, '시청자 몬스터를 타자로 방어하세요!', false);
+    }
+  }
+
+  /**
+   * 🐲 보스 차지 공격 발동: 게이지가 다 차면 기지에 정액 피해를 입힌다(느릴수록 누적).
+   * @param {number} damage
+   */
+  handleBossAttack(damage) {
+    if (!this.stateManager || this.stateManager.currentState !== 'PLAYING') return;
+    const isDead = this.stateManager.damageBaseFlat(damage);
+    if (window.audioManager) window.audioManager.playExplosion();
+    this.showToastInternal(`💥 보스 공격! 기지 -${damage}`, 'warn');
+    if (isDead) {
+      this.stateManager.changeState('GAME_OVER');
+      this.showGameOverScreen();
     }
   }
 

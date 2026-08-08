@@ -155,6 +155,18 @@ class StateManager {
     }
 
     /**
+     * 🐲 보스 차지 공격 등 정액(고정 수치) 기지 피해. 콤보를 끊고 HP를 직접 차감한다.
+     * @param {number} amount - 차감할 체력
+     * @returns {boolean} 사망 여부
+     */
+    damageBaseFlat(amount = 0) {
+        this.hp = Math.max(0, this.hp - Math.max(0, amount));
+        this.combo = 0;
+        this.updateHUDUI();
+        return this.hp <= 0;
+    }
+
+    /**
      * 상단 HUD 체력바, 체력%, 점수, 스테이지, 콤보, WPM 실시간 갱신
      */
     updateHUDUI() {

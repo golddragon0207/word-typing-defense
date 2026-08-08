@@ -223,15 +223,16 @@ class CanvasRenderer {
             ctx.fillText(nickname, cx, pillY + pillH / 2);
             ctx.restore();
 
-            // 1-1. 🐲 보스 HP pip(남은 격파 횟수) — 닉네임 뱃지 위에 하트 형태 원으로 표시
-            if (isBoss && m.maxHp > 1) {
+            // 1-1. 🐲 차지 보스 UI — 닉네임 뱃지 위에 ①남은 격파 pip + ②차지 게이지 바
+            if (isBoss && m.requiredHits) {
                 ctx.save();
-                const total = m.maxHp;
-                const remain = Math.max(0, m.hp);
+                const total = m.requiredHits;
+                const remain = Math.max(0, total - (m.hitsLanded || 0)); // 남은 격파 수
+                // ① 남은 격파 pip (붉음=남음 / 회색=완료)
                 const pipR = Math.round(5 * scale);
                 const gap = Math.round(6 * scale);
                 const totalW = total * (pipR * 2) + (total - 1) * gap;
-                const pipY = Math.round(pillY - 13 * scale);
+                const pipY = Math.round(pillY - 24 * scale);
                 let px = Math.round(cx - totalW / 2 + pipR);
                 for (let k = 0; k < total; k++) {
                     ctx.beginPath();
@@ -243,20 +244,43 @@ class CanvasRenderer {
                     ctx.stroke();
                     px += pipR * 2 + gap;
                 }
+                // ② 차지 게이지 바 (찰수록 노랑→빨강, 다 차면 공격)
+                const ratio = m.chargeTime ? Math.min(1, (m.chargeElapsed || 0) / m.chargeTime) : 0;
+                const barW = boxW;
+                const barH = Math.round(6 * scale);
+                const barX = boxLeft;
+                const barY = Math.round(pillY - 13 * scale);
+                ctx.fillStyle = 'rgba(10, 12, 20, 0.85)'; // 배경(빈 게이지)
+                if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 3); ctx.fill(); }
+                else ctx.fillRect(barX, barY, barW, barH);
+                // 채움: 위험도에 따라 색 변화
+                const fillColor = ratio > 0.75 ? '#ff2b2b' : (ratio > 0.45 ? '#ffaa00' : '#ffe14d');
+                ctx.fillStyle = fillColor;
+                const fw = Math.max(0, Math.round(barW * ratio));
+                if (fw > 0) {
+                    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(barX, barY, fw, barH, 3); ctx.fill(); }
+                    else ctx.fillRect(barX, barY, fw, barH);
+                }
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(255, 204, 0, 0.7)';
+                if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 3); ctx.stroke(); }
+                else ctx.strokeRect(barX, barY, barW, barH);
                 ctx.restore();
             }
 
             // 2. 📦 [2단] 하단 타깃 제시어 상자 (Target Box)
             // 💬 라이브 채팅 모드로 실제 채팅 문구가 그대로 쓰인 몬스터는 보라색으로 강조
             const isLiveChat = !!m.isLiveChat && !isBoss;
-            // 🐲 보스 피격 플래시: 방금 맞았으면 잠깐 붉게 번쩍이며 후광을 키운다
-            const bossFlashing = isBoss && m._flashUntil && (typeof performance !== 'undefined' ? performance.now() : Date.now()) < m._flashUntil;
+            // 🐲 보스 플래시: 격파(정타) 시 분홍, 공격 발동 시 강한 빨강으로 번쩍인다
+            const nowP = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+            const hitFlash = isBoss && m._flashUntil && nowP < m._flashUntil;
+            const atkFlash = isBoss && m._attackFlashUntil && nowP < m._attackFlashUntil;
             // 🔆 대비 극대화: 배경 박스를 완전 불투명·진한 색으로 하여 흰 글자가 매우 또렷하게
-            ctx.fillStyle = isBoss ? (bossFlashing ? 'rgb(255, 90, 120)' : 'rgb(130, 0, 26)') : (isLiveChat ? 'rgb(74, 0, 140)' : 'rgb(168, 0, 52)');
+            ctx.fillStyle = isBoss ? (atkFlash ? 'rgb(255, 40, 40)' : (hitFlash ? 'rgb(255, 90, 120)' : 'rgb(130, 0, 26)')) : (isLiveChat ? 'rgb(74, 0, 140)' : 'rgb(168, 0, 52)');
             ctx.strokeStyle = isLiveChat ? '#bf00ff' : '#ffcc00';
             ctx.lineWidth = isBoss ? 4 : 2.5;
-            ctx.shadowColor = isBoss ? 'rgba(255, 204, 0, 0.8)' : (isLiveChat ? 'rgba(191, 0, 255, 0.7)' : 'transparent');
-            ctx.shadowBlur = isBoss ? (bossFlashing ? 32 : 18) : (isLiveChat ? 12 : 0);
+            ctx.shadowColor = isBoss ? (atkFlash ? 'rgba(255, 40, 40, 0.95)' : 'rgba(255, 204, 0, 0.8)') : (isLiveChat ? 'rgba(191, 0, 255, 0.7)' : 'transparent');
+            ctx.shadowBlur = isBoss ? (atkFlash ? 42 : (hitFlash ? 32 : 18)) : (isLiveChat ? 12 : 0);
             ctx.beginPath();
             const boxY = Math.round(cy - 16 * scale);
             const boxHeightR = Math.round(boxHeight);

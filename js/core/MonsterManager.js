@@ -14,6 +14,7 @@ class MonsterManager {
         this.bossTimeout = null;  // 보스 소환 지연 타이머
         this.speed = 1.0;
         this.onBossWarning = null; // game.js에서 주입하는 콜백 (stage) => void
+        this.onBossAttack = null;  // game.js에서 주입: 차지 게이지가 다 차면 (damage) => void 로 기지 피해
         this.bossSpawnedForStage = false;
 
         // MAX_MONSTER_CAP: 대형 방송 마비 방지용 동시 출전 몬스터 상한.
@@ -125,32 +126,63 @@ class MonsterManager {
     }
 
     /**
-     * 🐲 5 Stage 단위 보스 몬스터 소환 (대형 개체, 다중 HP, 전용 단어)
-     *    보스 HP는 스테이지가 오를수록 완만하게 증가한다: hp = 2 + floor(stage/15), 상한 5.
-     *    (Stage 5·10 = 2방, 15~ = 3방, 30~ = 4방, 45~ = 5방) — 매 격파마다 새 제시어로 교체된다.
+     * 🐲 5 Stage 단위 "기 모으기(차지)" 보스 소환.
+     *    보스는 낙하하지 않고 고정 위치에서 차지 게이지를 채운다.
+     *      - 게이지가 다 차기 전에 제시어를 격파(정타)하면 게이지를 절반 밀어내고(공격 저지) 새 제시어로 교체.
+     *      - 필요 격파 횟수(requiredHits)를 모두 채우면 처치 → 다음 스테이지. (진행도는 절대 사라지지 않음)
+     *      - 게이지가 다 차면 보스 공격 발동 → 기지에 attackDamage 피해 후 게이지만 0으로 리셋(진행도 유지).
+     *    스테이지가 오를수록 필요 격파·차지 시간·공격력이 함께 커진다.
      */
     spawnBoss() {
-        const bossWord = (typeof wordPacks !== 'undefined') ? wordPacks.getBossWord() : '최종방어선돌파';
+        const stage = this.currentStage;
         const canvasWidth = this.canvas ? (this.canvas.clientWidth || 1024) : 1024;
 
-        const bossHp = Math.min(5, 2 + Math.floor(this.currentStage / 15));
+        // 후반 보스일수록 더 긴(어려운) 제시어를 우선 출제
+        const bossWord = this._pickBossWord(stage);
+
+        const requiredHits = Math.min(5, 2 + Math.floor(stage / 20)); // 낮은 스테이지 2 → 최대 5
+        const chargeTime = requiredHits * 6000;                        // 필요 격파에 비례(후반 게이지 길어짐)
+        const attackDamage = 10 + Math.floor(stage / 15) * 3;          // 게이지 만땅 시 기지 피해(후반 상승)
 
         const boss = {
             id: Date.now() + Math.random(),
-            username: `👑 STAGE ${this.currentStage} BOSS`,
+            username: `👑 STAGE ${stage} BOSS`,
             isBot: true,
             text: bossWord,
             x: canvasWidth / 2,
-            y: 130, // 상단 HUD 상태바 아래에서 등장 (일반 몬스터와 동일 기준선)
-            speed: this.speed * 0.55, // 보스는 느리지만 강력하게
-            scoreValue: 500 * this.currentStage,
-            hp: bossHp,       // 🐲 다중 HP: 이 횟수만큼 제시어를 격파해야 처치됨
-            maxHp: bossHp,    // 렌더러 HP 표시(하트 pip)용 최대치
-            isBoss: true
+            y: 260,             // 상단 HUD·게이지/pip 장식이 겹치지 않는 고정 위치(낙하하지 않음)
+            speed: 0,           // 차지 보스는 이동하지 않음
+            scoreValue: 500 * stage,
+            isBoss: true,
+            // ⚡ 차지 보스 전용 상태
+            requiredHits,
+            hitsLanded: 0,
+            chargeTime,
+            chargeElapsed: 0,
+            attackDamage
         };
 
         this.monsters.push(boss);
         this.bossSpawnedForStage = true;
+    }
+
+    /**
+     * 🎯 스테이지에 맞는 보스 제시어 선택. 후반일수록 획수가 긴 상위 티어에서 우선 출제한다.
+     * @param {number} stage
+     * @returns {string}
+     */
+    _pickBossWord(stage) {
+        if (typeof wordPacks === 'undefined' || !Array.isArray(wordPacks.bossWords) || wordPacks.bossWords.length === 0) {
+            return '최종방어선돌파';
+        }
+        const pool = wordPacks.bossWords;
+        // 획수 오름차순 정렬 후, 스테이지가 높을수록 뒤쪽(더 긴) 절반으로 후보를 좁힌다.
+        const sorted = pool.slice().sort((a, b) =>
+            wordPacks.getHangulStrokeCount(a) - wordPacks.getHangulStrokeCount(b));
+        let candidates = sorted;
+        if (stage >= 30) candidates = sorted.slice(Math.floor(sorted.length / 2)); // 상위 50% (긴 문구)
+        else if (stage >= 15) candidates = sorted.slice(Math.floor(sorted.length / 4)); // 하위 25% 제외
+        return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
     /**
@@ -172,14 +204,30 @@ class MonsterManager {
         if (targetIndex !== -1) {
             const target = this.monsters[targetIndex];
 
-            // 🐲 보스 다중 HP: 아직 HP가 남았으면 처치하지 않고 피격 처리 후 새 제시어로 교체
-            if (target.isBoss && target.hp > 1) {
-                target.hp -= 1;
+            // 🐲 차지 보스: 정타하면 진행도 +1 + 차지 게이지 절반 밀어내기(공격 저지) + 새 제시어.
+            //    필요 격파 수를 모두 채우기 전까지는 처치되지 않는다(진행도는 유지).
+            if (target.isBoss) {
+                target.hitsLanded = (target.hitsLanded || 0) + 1;
+
+                if (target.hitsLanded >= target.requiredHits) {
+                    // ✅ 완전 격파 → 처치(공격 실패 연출은 game.js)
+                    this.monsters.splice(targetIndex, 1);
+                    this.bossSpawnedForStage = false;
+                    return {
+                        success: true,
+                        monster: target,
+                        score: target.scoreValue,
+                        isKilled: true,
+                        isBoss: true
+                    };
+                }
+
+                // 아직 남음: 게이지를 절반 밀어내고(공격 지연) 새 제시어로 교체
+                target.chargeElapsed = Math.max(0, (target.chargeElapsed || 0) - target.chargeTime * 0.5);
                 if (typeof wordPacks !== 'undefined') {
-                    // 방금 친 문구와 겹치지 않는 새 보스 제시어로 교체(즉시 반복 회피)
-                    let next = wordPacks.getBossWord();
+                    let next = this._pickBossWord(this.currentStage);
                     let guard = 0;
-                    while (next === target.text && guard++ < 8) next = wordPacks.getBossWord();
+                    while (next === target.text && guard++ < 8) next = this._pickBossWord(this.currentStage);
                     target.text = next;
                 }
                 return {
@@ -189,23 +237,19 @@ class MonsterManager {
                     isKilled: false,
                     isBoss: true,
                     bossDamaged: true,
-                    remainingHp: target.hp,
-                    maxHp: target.maxHp
+                    hitsLanded: target.hitsLanded,
+                    requiredHits: target.requiredHits
                 };
             }
 
             const killedMonster = this.monsters.splice(targetIndex, 1)[0];
-
-            if (killedMonster.isBoss) {
-                this.bossSpawnedForStage = false; // 보스 처치 후 다음 스테이지 준비
-            }
 
             return {
                 success: true,
                 monster: killedMonster,
                 score: killedMonster.scoreValue,
                 isKilled: true,
-                isBoss: !!killedMonster.isBoss
+                isBoss: false
             };
         }
 
@@ -217,15 +261,27 @@ class MonsterManager {
         const canvasHeight = this.canvas ? (this.canvas.clientHeight || 708) : 708;
         const bottomY = canvasHeight - 160; // CanvasRenderer의 방어선(groundY)과 정렬
 
+        const nowMs = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
         for (let i = this.monsters.length - 1; i >= 0; i--) {
             const m = this.monsters[i];
+
+            // 🐲 차지 보스: 낙하하지 않고 게이지를 채운다. 다 차면 공격 발동 후 게이지만 리셋(진행도 유지).
+            if (m.isBoss) {
+                m.chargeElapsed = (m.chargeElapsed || 0) + deltaTime * 1000;
+                if (m.chargeElapsed >= m.chargeTime) {
+                    m.chargeElapsed = 0;
+                    m._attackFlashUntil = nowMs + 450; // 렌더러 공격 플래시
+                    if (typeof this.onBossAttack === 'function') this.onBossAttack(m.attackDamage || 10);
+                }
+                continue; // 보스는 낙하/기지 도달 로직을 건너뜀
+            }
+
             m.y += m.speed * (deltaTime * 60);
 
             if (m.y >= bottomY) {
                 this.monsters.splice(i, 1);
-                // 보스가 뚫리면 피해 가중(기본 3배). 스테이지가 높을수록 관통 피해도 완만히 증가.
-                reachedCount += m.isBoss ? (3 + Math.floor(this.currentStage / 20)) : 1;
-                if (m.isBoss) this.bossSpawnedForStage = false;
+                reachedCount += 1;
             }
         }
 
