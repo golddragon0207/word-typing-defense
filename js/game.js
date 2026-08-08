@@ -55,10 +55,13 @@ class GameEngine {
 
     // 3. 렌더러 & 포탑 셋업 (1인 포탑 중앙 배치)
     if (this.renderer) {
+      // 🖥️ 무대(1024×768 고정)를 창에 맞춰 비율 스케일 → 그 뒤 백버퍼 해상도 갱신
+      this.fitStage();
       this.renderer.resizeCanvas();
+      this.resizeBgCanvas();
       window.addEventListener('resize', () => {
-        if (this.renderer) this.renderer.resizeCanvas();
-        if (this.turretManager) this.turretManager.repositionTurrets();
+        this.fitStage();                                   // 무대 스케일 재계산 (게임 좌표는 불변)
+        if (this.renderer) this.renderer.resizeCanvas();   // 새 표시 크기에 맞춰 백버퍼만 갱신 → 선명도 유지
         this.resizeBgCanvas();
       });
     }
@@ -153,12 +156,30 @@ class GameEngine {
     this.bgAnimId = requestAnimationFrame(loop);
   }
 
+  /**
+   * 🖥️ 고정 무대(1024×768)를 상단 바 아래 남는 영역에 "비율 유지"로 맞춘다.
+   *    내부 논리 좌표는 그대로 두고 CSS transform:scale 배율(--stage-scale)만 조정하므로
+   *    창을 키우거나 줄여도 게임 좌표·방어선·몬스터 위치가 절대 바뀌지 않는다.
+   */
+  fitStage() {
+    const frame = document.querySelector('.stage-frame');
+    const stage = document.getElementById('game-stage');
+    if (!frame || !stage) return;
+    const availW = frame.clientWidth;
+    const availH = frame.clientHeight;
+    if (availW <= 0 || availH <= 0) return;
+    const scale = Math.min(availW / 1024, availH / 768);
+    stage.style.setProperty('--stage-scale', String(scale));
+  }
+
   resizeBgCanvas() {
     const canvas = document.getElementById('bg-canvas');
-    const container = canvas ? canvas.parentElement : null;
-    if (!canvas || !container) return;
-    canvas.width = container.clientWidth || 1024;
-    canvas.height = container.clientHeight || 768;
+    if (!canvas) return;
+    // 표시 크기(무대 scale 반영) × DPR 로 백버퍼를 잡아 어떤 배율에서도 선명하게
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.max(1, Math.round((rect.width || 1024) * dpr));
+    canvas.height = Math.max(1, Math.round((rect.height || 768) * dpr));
   }
 
   renderBackgroundStarfield() {
@@ -543,7 +564,8 @@ class GameEngine {
       if (topBtn) {
         topBtn.classList.toggle('active', enabled);
         topBtn.setAttribute('aria-pressed', String(enabled));
-        topBtn.textContent = enabled ? '💬 라이브 채팅 모드: ON' : '💬 라이브 채팅 모드: OFF';
+        // 아이콘(💬)은 고정, 라벨 span만 갱신 → 아이콘 축소 모드/툴팁 구조 유지
+        this._setQcLabel(topBtn, enabled ? '라이브 채팅 모드: ON' : '라이브 채팅 모드: OFF');
       }
 
       if (modalBtn) {
@@ -687,7 +709,7 @@ class GameEngine {
     btn.addEventListener('click', () => {
       const active = document.body.classList.toggle('obs-overlay');
       btn.classList.toggle('active', active);
-      btn.innerHTML = active ? '📺 OBS 모드: ON (배경 투명)' : '📺 OBS 크로마키 (배경 투명)';
+      this._setQcLabel(btn, active ? 'OBS 모드: ON (배경 투명)' : 'OBS 크로마키 (배경 투명)');
       this.showToastInternal(active ? '📺 OBS 크로마키 모드가 켜졌습니다.' : '📺 OBS 크로마키 모드가 꺼졌습니다.', 'info');
     });
   }
@@ -698,8 +720,30 @@ class GameEngine {
     btn.addEventListener('click', () => {
       if (!window.audioManager) return;
       const enabled = window.audioManager.toggleSound();
-      btn.innerHTML = enabled ? '🔊 사운드: ON' : '🔇 사운드: OFF';
+      // 사운드는 아이콘도 상태에 따라 바뀜(🔊/🔇)
+      this._setQcLabel(btn, enabled ? '사운드: ON' : '사운드: OFF', enabled ? '🔊' : '🔇');
     });
+  }
+
+  /**
+   * 상단 컨트롤 버튼(.qc-btn)의 라벨 span과 툴팁(data-tip)을 갱신한다.
+   * 아이콘 축소 모드에서 라벨이 숨겨져도 data-tip(호버 툴팁)으로 현재 상태를 보여준다.
+   * @param {HTMLElement} btn - 대상 버튼
+   * @param {string} label - 라벨 텍스트(아이콘 제외)
+   * @param {string} [icon] - 지정 시 아이콘 span도 교체(사운드 on/off처럼 아이콘이 바뀌는 경우)
+   */
+  _setQcLabel(btn, label, icon) {
+    if (!btn) return;
+    const txEl = btn.querySelector('.qc-tx');
+    const icEl = btn.querySelector('.qc-ic');
+    if (icon && icEl) icEl.textContent = icon;
+    if (txEl) {
+      txEl.textContent = label;
+    } else {
+      // 방어적 폴백: span 구조가 없으면 통째로 설정
+      btn.textContent = (icon || (icEl ? icEl.textContent : '')) + ' ' + label;
+    }
+    btn.setAttribute('data-tip', label);
   }
 
   /**

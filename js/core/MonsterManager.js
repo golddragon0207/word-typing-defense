@@ -72,11 +72,8 @@ class MonsterManager {
                 this.spawnMonster();
             }
 
-            this.spawnInterval = setInterval(() => {
-                if (this.monsters.length < this.MAX_MONSTER_CAP && !(isBossStage && !this.bossSpawnedForStage)) {
-                    this.spawnMonster();
-                }
-            }, spawnInterval);
+            this._isBossStage = isBossStage;
+            this.spawnInterval = setInterval(() => this._spawnTick(), spawnInterval);
         };
 
         if (startDelayMs > 0) {
@@ -200,6 +197,18 @@ class MonsterManager {
         }
 
         return reachedCount;
+    }
+
+    /**
+     * ⏱️ 주기 스폰 1틱. 탭이 백그라운드(document.hidden)일 때는 스폰을 건너뛴다.
+     *    (움직임은 requestAnimationFrame이라 탭 숨김 시 자동 정지되지만, setInterval은 계속
+     *     실행되어 몬스터가 화면 밖에서 쌓이는 문제를 방지 — 다른 화면 갔다 오면 몰려있던 버그)
+     */
+    _spawnTick() {
+        if (typeof document !== 'undefined' && document.hidden) return;
+        if (this.monsters.length < this.MAX_MONSTER_CAP && !(this._isBossStage && !this.bossSpawnedForStage)) {
+            this.spawnMonster();
+        }
     }
 
     /**

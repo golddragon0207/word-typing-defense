@@ -80,7 +80,9 @@
 *  `MonsterManager`/`StateManager`/`game.js`가 `getDifficultyConfig()`로 공용 참조.
 
 ### 7. 💻 PC 전용 UI 및 모달/레이아웃 최적화 (1024x768)
-*  모달 너비 `min(96%, 800px)`, 높이 `max-height: 72vh`, `.modal-body` 독립 스크롤.
+*  **1024×768 고정 무대 + 비율 스케일(scale-to-fit)**: 게임 무대(`#game-stage.game-viewport`)를 논리 크기 **1024×768로 고정**하고, 부모 프레임(`.stage-frame`)에서 `transform: scale(var(--stage-scale))`로 창에 맞춰 비율 유지하며 확대/축소한다(`GameEngine.fitStage()`가 상단바 아래 남는 영역 기준으로 배율 계산). 게임 좌표·방어선·몬스터 위치가 창 크기와 무관하게 **불변** → 창 리사이즈/탭 복귀로 인한 좌표·방어선 급변 버그를 원천 차단. 무대보다 큰/작은 창은 레터박스 처리(OBS에선 투명).
+*  **반응형 상단바(아이콘 접힘 + 호버 툴팁)**: 각 컨트롤 버튼(`.qc-btn`)을 `아이콘(.qc-ic) + 라벨(.qc-tx)` span으로 구성하고 `data-tip` 부여. `@media (max-width:1439px)`에서 라벨을 숨겨 아이콘만 표시하고 `:hover::after`로 이름(토글은 현재 상태)을 툴팁 표시 → 좁은 폭에서도 넘침 없음. 토글 버튼(라이브/OBS/사운드)은 `GameEngine._setQcLabel()`로 라벨/아이콘 span과 `data-tip`만 갱신(전체 innerHTML 교체를 피해 구조 유지).
+*  모달 너비 `min(96%, 800px)`, 높이 `max-height: 72vh`, `.modal-body` 독립 스크롤. (모달은 무대 스케일과 무관하게 전체 화면 오버레이 유지)
 *  **버튼/광고 구역 분리**: `.modal-actions`(버튼, 위) + `.modal-footer`(광고, 아래)를 별도 구역으로 구조화. 단일/소수 버튼은 가장자리 여백(`.modal-actions-pad`) 확보.
 *  후원 모달 레이아웃 최적화(카카오뱅크 QR·계좌 복사 가로 배치).
 
@@ -90,7 +92,7 @@
 
 ### 9. 👤 1인 솔로 모드 & 중앙 포탑
 *  스트리머 닉네임 단일 입력(**필수** — 입력값이 실제 포탑/저장에 반영). 난이도 선택 UI는 제거되어 표준(`normal`) 밸런스로 고정 실행(스테이지 상승 시 난이도 테이블에 따라 자동 가속).
-*  중앙 단일 포탑 회전각($\theta$)·레이저 빔·폭발 파티클·반동. **좌표는 `clientWidth/clientHeight`(논리 픽셀) 기준**으로 계산해 4K/Retina(DPR≠1)에서도 정위치.
+*  중앙 단일 포탑 회전각($\theta$)·레이저 빔·폭발 파티클·반동. **좌표는 `clientWidth/clientHeight`(고정 1024×768 논리 픽셀) 기준**으로 계산해 창 크기 변화·4K/Retina(DPR≠1)에서도 정위치(무대 스케일은 CSS transform이므로 `clientWidth`는 항상 1024로 불변).
 *  **포탑·방어선 하단 배치**: 하단 타자 입력 바가 대포를 가리지 않도록 포탑(`height−105`)과 방어선/몬스터 도달선(`groundY = height−190`)을 함께 위로 올려 배치(대포~방어선 간격 85px 유지).
 
 ### 10. ⌨️ 한글 자모 획수 기반 CPM/WPM & 콤보 & 피버
@@ -159,12 +161,13 @@
 
 10. **`js/core/MonsterManager.js`**
     *  난이도별 스폰/속도/상한, 대기열 소비, 5 Stage 보스전(WARNING), `isLiveChat` 플래그 전달, 낙하 관리.
+    *  **탭 백그라운드 스폰 정지**: 주기 스폰은 `setInterval`이지만 `_spawnTick()`에서 `document.hidden`이면 스폰을 건너뛴다. 낙하(움직임)는 `requestAnimationFrame`이라 탭 숨김 시 자동 정지되므로, 다른 탭을 보는 동안 몬스터가 화면 밖에서 쌓였다가 복귀 시 한꺼번에 몰리는 현상을 방지.
 
 11. **`js/core/InputManager.js`**
     *  단일 타자 입력, 한글 IME 조합 감지, 바닥 우선 타깃팅 유틸(`.text` 기준).
 
 12. **`js/renderers/CanvasRenderer.js`**
-    *  `devicePixelRatio` 고해상도 Draw, 2단 몬스터 UI(보스 금색·확대 / 라이브 채팅 보라색), OBS 가시성 Stroke·Shadow, 이펙트.
+    *  **논리 좌표계 1024×768 고정** Draw. `resizeCanvas()`는 백버퍼를 `getBoundingClientRect()`(무대 scale 반영) × `devicePixelRatio`로 잡고 `setTransform`으로 1024×768 논리 좌표를 매핑 → 어떤 창 배율·DPR에서도 선명. 2단 몬스터 UI(보스 금색·확대 / 라이브 채팅 보라색, 흰 글자+불투명 상자+정수 픽셀 정렬로 가독성 강화), OBS 가시성 Stroke·Shadow, 이펙트.
 
 13. **`js/game.js`**
     *  메인 루프 오케스트레이터. 전 UI 배선(모달·닉네임 필수·홈 인라인 채팅연동 패널·단어팩·명예의전당·OBS·사운드·**라이브 채팅 토글**), 스테이지 진행, 사운드/피버/보스 배너 연출, 배경 파티클, 토스트, 글로벌 리더보드/애널리틱스 연동.
