@@ -59,7 +59,8 @@ class CanvasRenderer {
         const height = this.LOGICAL_H;
 
         // 하단 타자 입력창(채팅 입력 바)이 대포/방어선을 가리지 않도록 방어선 Y좌표를 위로 올림
-        const groundY = height - 190;
+        // (MonsterManager.update의 bottomY = canvasHeight - 160 과 반드시 동일하게 유지)
+        const groundY = height - 160;
 
         ctx.save();
 

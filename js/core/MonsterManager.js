@@ -40,7 +40,9 @@ class MonsterManager {
             ? getDifficultyConfig(difficulty)
             : { speedMult: 1.0, maxMonsterCap: 15, spawnIntervalBase: 2400, spawnIntervalStep: 150, spawnIntervalMin: 800 };
 
-        this.speed = (1.0 + (stage - 1) * 0.2) * cfg.speedMult;
+        // 낙하 속도: 스테이지1은 아주 느리게(초보 ~50타로도 클리어 가능) → 스테이지마다 +0.15로 가속.
+        //   stage1=0.28(낙하 약 25초), stage2=0.43, stage3=0.58 ... (× 난이도 speedMult)
+        this.speed = (0.28 + (stage - 1) * 0.15) * cfg.speedMult;
         // 절대 상한(CONFIG.MAX_MONSTER_CAP)을 넘지 않도록 항상 clamp
         const hardCap = (typeof CONFIG !== 'undefined' && CONFIG.MAX_MONSTER_CAP) || 15;
         this.MAX_MONSTER_CAP = Math.min(hardCap, cfg.maxMonsterCap);
@@ -104,7 +106,7 @@ class MonsterManager {
             text: data.word,         // 🎯 하단: 제시어 (라이브 채팅 모드면 실제 채팅 문구)
             isLiveChat: !!data.isLiveChat, // 💬 라이브 채팅 문구가 그대로 쓰인 몬스터인지 (렌더러 강조용)
             x: Math.random() * (safeWidth - 180) + 90, // 화면 좌우 넘침 방지
-            y: 40,
+            y: 130, // 상단 HUD 상태바(상단 부착 띠) 아래에서 등장 → 제시어가 상태창에 가려지지 않음
             speed: this.speed,
             scoreValue: 100 * this.currentStage,
             hp: 1,
@@ -134,7 +136,7 @@ class MonsterManager {
             isBot: true,
             text: bossWord,
             x: canvasWidth / 2,
-            y: 40,
+            y: 130, // 상단 HUD 상태바 아래에서 등장 (일반 몬스터와 동일 기준선)
             speed: this.speed * 0.55, // 보스는 느리지만 강력하게
             scoreValue: 500 * this.currentStage,
             hp: 1,
@@ -183,7 +185,7 @@ class MonsterManager {
     update(deltaTime = 0.016, stage = 1) {
         let reachedCount = 0;
         const canvasHeight = this.canvas ? (this.canvas.clientHeight || 708) : 708;
-        const bottomY = canvasHeight - 190; // CanvasRenderer의 방어선(groundY)과 정렬
+        const bottomY = canvasHeight - 160; // CanvasRenderer의 방어선(groundY)과 정렬
 
         for (let i = this.monsters.length - 1; i >= 0; i--) {
             const m = this.monsters[i];

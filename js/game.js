@@ -271,7 +271,7 @@ class GameEngine {
     if (btnStart) btnStart.addEventListener('click', () => this.startGame());
 
     const btnRestart = document.getElementById('btn-restart');
-    if (btnRestart) btnRestart.addEventListener('click', () => this.restartAndRegather());
+    if (btnRestart) btnRestart.addEventListener('click', () => this.restartWithSameParticipants());
 
     // 메인으로 돌아가기 버튼 (클래스/ID 다중 바인딩 처리)
     document.querySelectorAll('#btn-return-main, .btn-return-main').forEach(btn => {
@@ -859,13 +859,12 @@ class GameEngine {
   }
 
   /**
-   * 🔄 '다시 도전하기': 메인 화면으로 돌아가 시청자를 다시 모집한다.
-   *    returnToMain()이 참여자 명단을 리셋하고 홈의 채팅 연동 패널을 자동으로 펼치므로,
-   *    시청자는 `!참여`로 새로 모집된다. 방송 채팅 연결(WebSocket)은 그대로 유지되어
-   *    URL 재입력 없이 바로 다시 모을 수 있다. (모집이 끝나면 스트리머가 '게임 시작'을 누른다)
+   * 🔄 '다시 도전하기': 참여자 명단을 그대로 유지한 채 즉시 새 판을 시작한다.
+   *    startGame()은 참여자 명단(wordPacks)을 리셋하지 않으므로, 방금 판에 모인 시청자가
+   *    그대로 다음 판에 이어진다. (참여자 리셋은 '메인 화면으로'(returnToMain)에서만 수행)
    */
-  restartAndRegather() {
-    this.returnToMain();
+  restartWithSameParticipants() {
+    this.startGame();
   }
 
   /**

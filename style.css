@@ -225,20 +225,22 @@ html {
 /* ==========================================
    HUD OVERLAY (상단 게임 상태 카드)
    ========================================== */
+/* 상단바(.top-bar) 바로 아래에 "부착"되는 전체 폭 상태바.
+   무대 상단(top:0)에 밀착시키고 하단 경계선으로 상단바와 이어지게 보이도록 한다. */
 .hud-overlay {
   position: absolute;
-  top: 15px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
+  width: 100%;
   z-index: 10;
   display: flex;
-  gap: 15px;
-  background: rgba(13, 14, 21, 0.85);
-  padding: 10px 20px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 243, 255, 0.3);
+  justify-content: center;
+  gap: 28px;
+  background: linear-gradient(180deg, rgba(15, 17, 26, 0.97), rgba(13, 14, 21, 0.9));
+  padding: 8px 20px;
+  border-bottom: 2px solid rgba(0, 243, 255, 0.35);
   backdrop-filter: blur(8px);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
 .hud-overlay.hidden {
@@ -1512,7 +1514,7 @@ html {
    ========================================== */
 .queue-panel {
   position: absolute;
-  top: 15px;
+  top: 80px; /* 상단 부착형 HUD 상태바(약 71px) 아래로 내려 겹침 방지 */
   left: 15px;
   z-index: 10;
   width: 168px;
