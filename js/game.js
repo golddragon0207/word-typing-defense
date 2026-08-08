@@ -717,7 +717,9 @@ class GameEngine {
 
     if (this.stateManager) this.stateManager.resetGame(this.config);
     if (this.turretManager) this.turretManager.setupTurrets(1, this.config.playerNames, canvas);
-    if (this.monsterManager) this.monsterManager.startStage(this.stateManager ? this.stateManager.currentStage : 1, this.config.difficulty);
+    // 게임 시작 직후엔 시청자가 !참여로 모일 여유(그레이스 타임)를 두고 첫 몬스터를 소환한다.
+    const startDelayMs = (typeof CONFIG !== 'undefined' && CONFIG.START_SPAWN_DELAY_MS) || 0;
+    if (this.monsterManager) this.monsterManager.startStage(this.stateManager ? this.stateManager.currentStage : 1, this.config.difficulty, startDelayMs);
 
     if (this.stateManager) this.stateManager.changeState('PLAYING');
 

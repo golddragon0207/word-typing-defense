@@ -10,6 +10,8 @@ class MonsterManager {
         this.monsters = [];
         this.currentStage = 1;
         this.spawnInterval = null;
+        this.startTimeout = null; // 게임 시작 그레이스 타임(첫 스폰 지연) 타이머
+        this.bossTimeout = null;  // 보스 소환 지연 타이머
         this.speed = 1.0;
         this.onBossWarning = null; // game.js에서 주입하는 콜백 (stage) => void
         this.bossSpawnedForStage = false;
@@ -28,7 +30,7 @@ class MonsterManager {
      * @param {number} stage - 스테이지 번호
      * @param {string} difficulty - 난이도 ('easy' | 'normal' | 'hard' | 'hell')
      */
-    startStage(stage = 1, difficulty = 'normal') {
+    startStage(stage = 1, difficulty = 'normal', startDelayMs = 0) {
         this.clear();
         this.currentStage = stage;
         this.bossSpawnedForStage = false;
@@ -43,35 +45,45 @@ class MonsterManager {
         const hardCap = (typeof CONFIG !== 'undefined' && CONFIG.MAX_MONSTER_CAP) || 15;
         this.MAX_MONSTER_CAP = Math.min(hardCap, cfg.maxMonsterCap);
 
-        // 🤖 '!참여' 실시간 참가자가 목표 인원보다 적으면 부족한 만큼 봇을 자동 보충
-        if (typeof wordPacks !== 'undefined' && typeof wordPacks.topUpBotsToTarget === 'function') {
-            wordPacks.topUpBotsToTarget();
-        }
+        // 🤖 봇 보충은 큐를 미리 채우지 않는다. 스폰 시점에 대기열이 비어 있으면
+        //    getNextMonsterData가 봇을 하나씩 생성하므로, 봇도 실참여자와 똑같이
+        //    스폰 주기마다 한 명씩 등장한다(시작하자마자 큐가 봇으로 가득 차는 문제 방지).
 
         const isBossStage = stage > 0 && stage % 5 === 0;
 
-        console.log(`[MonsterManager] Stage ${stage} 시작! (난이도: ${difficulty}, 동시상한: ${this.MAX_MONSTER_CAP}, 보스전: ${isBossStage ? 'YES' : 'NO'})`);
+        console.log(`[MonsterManager] Stage ${stage} 시작! (난이도: ${difficulty}, 동시상한: ${this.MAX_MONSTER_CAP}, 보스전: ${isBossStage ? 'YES' : 'NO'}, 시작지연: ${startDelayMs}ms)`);
 
-        if (isBossStage) {
-            // 🛡️ 5 Stage 단위 보스전: WARNING 배너 콜백 후 약간의 텀을 두고 보스 소환
-            if (typeof this.onBossWarning === 'function') {
-                this.onBossWarning(stage);
-            }
-            setTimeout(() => this.spawnBoss(), 1800);
-        } else {
-            this.spawnMonster();
-        }
-
-        // 주기적 몬스터 생성 (난이도별 스폰 주기 + Max Monster Cap 적용)
+        // 주기적 몬스터 생성 주기 (난이도별 스폰 주기 + Max Monster Cap 적용)
         const spawnInterval = Math.max(
             cfg.spawnIntervalMin,
             cfg.spawnIntervalBase - (stage * cfg.spawnIntervalStep)
         );
-        this.spawnInterval = setInterval(() => {
-            if (this.monsters.length < this.MAX_MONSTER_CAP && !(isBossStage && !this.bossSpawnedForStage)) {
+
+        // 실제 몬스터 등장 시작 로직 (게임 시작 시 startDelayMs 만큼 그레이스 타임 후 실행)
+        const beginSpawning = () => {
+            this.startTimeout = null;
+            if (isBossStage) {
+                // 🛡️ 5 Stage 단위 보스전: WARNING 배너 콜백 후 약간의 텀을 두고 보스 소환
+                if (typeof this.onBossWarning === 'function') {
+                    this.onBossWarning(stage);
+                }
+                this.bossTimeout = setTimeout(() => this.spawnBoss(), 1800);
+            } else {
                 this.spawnMonster();
             }
-        }, spawnInterval);
+
+            this.spawnInterval = setInterval(() => {
+                if (this.monsters.length < this.MAX_MONSTER_CAP && !(isBossStage && !this.bossSpawnedForStage)) {
+                    this.spawnMonster();
+                }
+            }, spawnInterval);
+        };
+
+        if (startDelayMs > 0) {
+            this.startTimeout = setTimeout(beginSpawning, startDelayMs);
+        } else {
+            beginSpawning();
+        }
     }
 
     /**
@@ -201,6 +213,14 @@ class MonsterManager {
         if (this.spawnInterval) {
             clearInterval(this.spawnInterval);
             this.spawnInterval = null;
+        }
+        if (this.startTimeout) {
+            clearTimeout(this.startTimeout);
+            this.startTimeout = null;
+        }
+        if (this.bossTimeout) {
+            clearTimeout(this.bossTimeout);
+            this.bossTimeout = null;
         }
         this.monsters = [];
     }
