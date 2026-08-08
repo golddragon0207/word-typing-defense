@@ -46,11 +46,11 @@ class TurretManager {
         this.playerCount = 1;
         this.turrets = [];
 
-        // ⚠️ canvas.width/height는 devicePixelRatio가 곱해진 내부(물리) 해상도이므로
-        // CanvasRenderer가 ctx.scale(dpr, dpr)로 그리는 논리 좌표계와 일치하는
-        // clientWidth/clientHeight(CSS 픽셀)를 기준으로 좌표를 계산해야 한다.
-        const width = this.canvas.clientWidth || this.canvas.width || 1024;
-        const height = this.canvas.clientHeight || this.canvas.height || 768;
+        // ⚠️ canvas.width/height는 백버퍼(표시크기×DPR) 해상도이므로,
+        // CanvasRenderer가 setTransform으로 매핑하는 논리 좌표계(1024×708)와 일치하는
+        // clientWidth/clientHeight(고정 CSS 픽셀)를 기준으로 좌표를 계산해야 한다.
+        const width = this.canvas.clientWidth || 1024;
+        const height = this.canvas.clientHeight || 708;
 
         // 하단 타자 입력창(채팅 입력 바)이 대포를 가리지 않도록 포탑을 위로 올린다.
         // (방어선 groundY = height-190 과 짝을 이뤄 대포~방어선 간격 유지)

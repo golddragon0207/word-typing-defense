@@ -55,7 +55,7 @@ class GameEngine {
 
     // 3. 렌더러 & 포탑 셋업 (1인 포탑 중앙 배치)
     if (this.renderer) {
-      // 🖥️ 무대(1024×768 고정)를 창에 맞춰 비율 스케일 → 그 뒤 백버퍼 해상도 갱신
+      // 🖥️ 무대(1024×708 고정)를 창에 맞춰 비율 스케일 → 그 뒤 백버퍼 해상도 갱신
       this.fitStage();
       this.renderer.resizeCanvas();
       this.resizeBgCanvas();
@@ -157,9 +157,10 @@ class GameEngine {
   }
 
   /**
-   * 🖥️ 고정 무대(1024×768)를 상단 바 아래 남는 영역에 "비율 유지"로 맞춘다.
+   * 🖥️ 고정 무대(1024×708)를 상단 바 아래 남는 영역에 "비율 유지"로 맞춘다.
    *    내부 논리 좌표는 그대로 두고 CSS transform:scale 배율(--stage-scale)만 조정하므로
    *    창을 키우거나 줄여도 게임 좌표·방어선·몬스터 위치가 절대 바뀌지 않는다.
+   *    (상단바 60px + 무대 708px = 1024×768 PC 최소 해상도에 정확히 맞음)
    */
   fitStage() {
     const frame = document.querySelector('.stage-frame');
@@ -168,7 +169,7 @@ class GameEngine {
     const availW = frame.clientWidth;
     const availH = frame.clientHeight;
     if (availW <= 0 || availH <= 0) return;
-    const scale = Math.min(availW / 1024, availH / 768);
+    const scale = Math.min(availW / 1024, availH / 708);
     stage.style.setProperty('--stage-scale', String(scale));
   }
 
@@ -179,7 +180,7 @@ class GameEngine {
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
     canvas.width = Math.max(1, Math.round((rect.width || 1024) * dpr));
-    canvas.height = Math.max(1, Math.round((rect.height || 768) * dpr));
+    canvas.height = Math.max(1, Math.round((rect.height || 708) * dpr));
   }
 
   renderBackgroundStarfield() {

@@ -182,7 +182,7 @@ class MonsterManager {
 
     update(deltaTime = 0.016, stage = 1) {
         let reachedCount = 0;
-        const canvasHeight = this.canvas ? (this.canvas.clientHeight || 768) : 768;
+        const canvasHeight = this.canvas ? (this.canvas.clientHeight || 708) : 708;
         const bottomY = canvasHeight - 190; // CanvasRenderer의 방어선(groundY)과 정렬
 
         for (let i = this.monsters.length - 1; i >= 0; i--) {

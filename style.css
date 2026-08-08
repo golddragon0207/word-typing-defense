@@ -190,14 +190,15 @@ html {
   background: #0b0c10;
 }
 
-/* 🎯 게임 무대: 내부 좌표계 1024×768로 "고정".
+/* 🎯 게임 무대: 내부 좌표계 1024×708로 "고정".
+   상단바(60px) + 무대(708px) = 1024×768(PC 최소 해상도)에 딱 맞도록 높이를 708로 잡는다.
    창 크기가 바뀌어도 이 박스의 논리 크기는 그대로이고, --stage-scale(JS가 계산)로
    비율을 유지한 채 확대/축소만 된다 → 게임 좌표·방어선·몬스터 위치가 절대 리플로우되지 않음. */
 .game-viewport {
   position: relative;
   flex: none;
   width: 1024px;
-  height: 768px;
+  height: 708px;
   overflow: hidden;
   transform: scale(var(--stage-scale, 1));
   transform-origin: center center;
