@@ -14,9 +14,9 @@ class MonsterManager {
         this.onBossWarning = null; // game.js에서 주입하는 콜백 (stage) => void
         this.bossSpawnedForStage = false;
 
-        // MAX_MONSTER_CAP: 대형 방송 마비 방지용 동시 출전 몬스터 상한 (난이도별로 재설정되지만
-        // CONFIG.DIFFICULTY.hell.maxMonsterCap=15가 계획서상 절대 상한이므로 기본값도 15로 둔다)
-        this.MAX_MONSTER_CAP = 15;
+        // MAX_MONSTER_CAP: 대형 방송 마비 방지용 동시 출전 몬스터 상한.
+        //   절대 상한은 CONFIG.MAX_MONSTER_CAP(천장)이며, startStage에서 난이도별 값과 clamp된다.
+        this.MAX_MONSTER_CAP = (typeof CONFIG !== 'undefined' && CONFIG.MAX_MONSTER_CAP) || 15;
     }
 
     getMonsters() {
@@ -39,8 +39,9 @@ class MonsterManager {
             : { speedMult: 1.0, maxMonsterCap: 15, spawnIntervalBase: 2400, spawnIntervalStep: 150, spawnIntervalMin: 800 };
 
         this.speed = (1.0 + (stage - 1) * 0.2) * cfg.speedMult;
-        // 계획서상 절대 상한(15)을 넘지 않도록 항상 clamp
-        this.MAX_MONSTER_CAP = Math.min(15, cfg.maxMonsterCap);
+        // 절대 상한(CONFIG.MAX_MONSTER_CAP)을 넘지 않도록 항상 clamp
+        const hardCap = (typeof CONFIG !== 'undefined' && CONFIG.MAX_MONSTER_CAP) || 15;
+        this.MAX_MONSTER_CAP = Math.min(hardCap, cfg.maxMonsterCap);
 
         // 🤖 '!참여' 실시간 참가자가 목표 인원보다 적으면 부족한 만큼 봇을 자동 보충
         if (typeof wordPacks !== 'undefined' && typeof wordPacks.topUpBotsToTarget === 'function') {

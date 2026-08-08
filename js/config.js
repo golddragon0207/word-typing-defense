@@ -98,6 +98,19 @@ const CONFIG = {
       killPerStageBase: 30, killPerStageStep: 1,
       maxHp: 90, damagePerLeak: 15
     }
+  },
+
+  // 🛡️ 화면 동시 출전 몬스터 절대 상한 (방송 마비 방지 — 계획서상 하드 상한선).
+  //    MonsterManager가 난이도별 maxMonsterCap과 Math.min으로 clamp하는 "천장" 값.
+  MAX_MONSTER_CAP: 15,
+
+  // ⚙️ 시청자 참여/대기열 튜닝 값 (참여 명단·큐·봇 보충 최소 인원) — 여기 한 곳에서 조절.
+  //    ⚠️ MAX_QUEUE_LENGTH > TARGET_MIN_POPULATION 이라야 봇이 실참여 대기자를 밀어내지 않는다 (30 > 20).
+  QUEUE: {
+    MAX_JOINED_VIEWERS: 10000, // 참여자 명단 최대 인원 (가득 차면 새 !참여 무시, 기존 참여자는 계속 동작)
+    MAX_QUEUE_LENGTH: 30,      // 대기열 최대 길이 (초과 시 가장 오래된 대기자부터 밀려남)
+    MAX_QUEUE_PER_VIEWER: 2,   // 한 시청자가 큐에 동시에 대기할 수 있는 최대 항목 ([BOT]은 예외)
+    TARGET_MIN_POPULATION: 20  // 실참여자+봇 합쳐 유지할 최소 인원 (봇은 target − 실참여자 만큼만 보충)
   }
 };
 

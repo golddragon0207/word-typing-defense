@@ -73,7 +73,7 @@ SOOP · 치지직 · 유튜브 라이브 **1인 솔로 스트리머**에 최적�
 
 - [`index.html`](./index.html) : 메인 화면(홈 인라인 방송 채팅 연동 패널 포함), 3개 모달(단어팩/명예의전당/후원), 상단 컨트롤바 6개, 광고 슬롯, Firebase SDK 로드
 - [`style.css`](./style.css) : 사이버펑크 네온 CSS, 1024×768 고정 레이아웃, 모달/토스트/등급뱃지/난이도탭 스타일, OBS 투명 오버레이
-- [`js/config.js`](./js/config.js) : 유튜브 API 키, Firebase 설정, 카카오 애드핏 ID, **난이도 밸런스 테이블(`CONFIG.DIFFICULTY`)**
+- [`js/config.js`](./js/config.js) : 유튜브 API 키, Firebase 설정, 카카오 애드핏 ID, **난이도 밸런스 테이블(`CONFIG.DIFFICULTY`)**, 몬스터 동시 출전 상한(`CONFIG.MAX_MONSTER_CAP`), 참여/큐 튜닝(`CONFIG.QUEUE`)
 - [`js/wordPacks.js`](./js/wordPacks.js) : 단어팩(프리셋/보스), 시청자 대기열·참가자 명단, `!참여` 처리·봇 보충, 라이브 채팅 큐 누적/정제, 한글 자모 획수 유틸
 - [`js/audio.js`](./js/audio.js) : Web Audio API 효과음 5종(레이저/폭발/피버/오타/팡파르)
 - [`js/chatIntegration.js`](./js/chatIntegration.js) : 치지직/SOOP/유튜브 URL 파서 및 다중 실시간 연동. **SOOP·치지직 채팅 프로토콜 클라이언트**(SOOP: 입장 핸드셰이크·패킷 파싱 / 치지직: live-status·access-token→WS cmd 100 핸드셰이크, 프록시 경유)

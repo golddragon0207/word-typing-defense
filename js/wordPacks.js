@@ -7,16 +7,7 @@
  * 비속어 필터링, 한글 자모 분해 및 정밀 획수 계산 유틸리티를 제공합니다.
  */
 
-/**
- * ⚙️ 시청자 참여/대기열 튜닝 값 — 여기 한 곳에서 조절한다.
- *   ⚠️ MAX_QUEUE_LENGTH > TARGET_MIN_POPULATION 이라야 봇이 실참여 대기자를 밀어내지 않는다 (30 > 20).
- */
-const WTD_QUEUE_CONFIG = {
-  MAX_JOINED_VIEWERS: 10000, // 참여자 명단(joinedViewers) 최대 인원. 가득 차면 새 시청자의 `!참여`는 무시(기존 참여자는 계속 동작).
-  MAX_QUEUE_LENGTH: 30,      // 대기열(viewerQueue) 최대 길이. 초과 시 가장 오래된 대기자부터 밀려남.
-  MAX_QUEUE_PER_VIEWER: 2,   // 한 시청자가 큐에 동시에 대기할 수 있는 최대 항목 ([BOT]은 예외 — 물량 보충용).
-  TARGET_MIN_POPULATION: 20, // 실참여자+봇 합쳐 유지할 최소 인원. 봇은 (이 값 − 실참여자 수)만큼만 보충.
-};
+// ⚙️ 시청자 참여/대기열 튜닝 값은 config.js의 CONFIG.QUEUE 한 곳에서 관리한다 (아래 메서드들이 참조).
 
 const wordPacks = {
   // 1. 기본 게임 타깃 제시어 데이터베이스 (밈, 게임 용어, 개발 단어 등)
@@ -127,7 +118,7 @@ const wordPacks = {
     if (hasJoinCommand) {
       const wasJoined = this.joinedViewers.has(safeNickname);
       // 명단이 가득 찼는데(=상한 도달) 새 시청자면 참여 거부. 기존 참여자의 재참여는 계속 허용.
-      if (!wasJoined && this.joinedViewers.size >= WTD_QUEUE_CONFIG.MAX_JOINED_VIEWERS) {
+      if (!wasJoined && this.joinedViewers.size >= CONFIG.QUEUE.MAX_JOINED_VIEWERS) {
         return false;
       }
       this.joinedViewers.add(safeNickname);
@@ -206,11 +197,11 @@ const wordPacks = {
       for (const e of this.viewerQueue) {
         if (e.nickname === nickname) count++;
       }
-      if (count >= WTD_QUEUE_CONFIG.MAX_QUEUE_PER_VIEWER) return false;
+      if (count >= CONFIG.QUEUE.MAX_QUEUE_PER_VIEWER) return false;
     }
 
     this.viewerQueue.push({ nickname, chatWord });
-    if (this.viewerQueue.length > WTD_QUEUE_CONFIG.MAX_QUEUE_LENGTH) {
+    if (this.viewerQueue.length > CONFIG.QUEUE.MAX_QUEUE_LENGTH) {
       this.viewerQueue.shift();
     }
     return true;
@@ -221,9 +212,9 @@ const wordPacks = {
    * [BOT] 가상 시청자를 대기열에 채운다. 실참여자가 많을수록 봇은 줄고, 실참여자가 target 이상이면 0.
    *   - 채울 봇 목표 = target − 실참여자 명단 수(joinedViewers)
    *   - 이미 대기열에 있는 봇 수는 빼고 부족분만 추가(매 스테이지 호출 시 중복 보충 방지)
-   * @param {number} target - 실참여자+봇 합쳐 유지할 최소 인원 (기본 WTD_QUEUE_CONFIG.TARGET_MIN_POPULATION)
+   * @param {number} target - 실참여자+봇 합쳐 유지할 최소 인원 (기본 CONFIG.QUEUE.TARGET_MIN_POPULATION)
    */
-  topUpBotsToTarget(target = WTD_QUEUE_CONFIG.TARGET_MIN_POPULATION) {
+  topUpBotsToTarget(target = CONFIG.QUEUE.TARGET_MIN_POPULATION) {
     // 실참여자(봇 제외 명단) 수를 뺀 만큼만 봇으로 채운다 → 실참여자가 많으면 봇 자동 감소
     const desiredBots = Math.max(0, target - this.joinedViewers.size);
 

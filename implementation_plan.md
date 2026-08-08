@@ -53,7 +53,7 @@
 ### 3. 💬 라이브 채팅 하이브리드 모드 (신규)
 *  **기본(OFF)**: 몬스터 제시어는 항상 안전한 프리셋 단어팩에서 추출 — 방송 사고 방지.
 *  **라이브 모드(ON)**: `!참여`한 시청자가 친 채팅 문구를 정제(`sanitizeLiveChatWord`)해 **타이핑 타깃으로 사용**. 정제 규칙: `!참여` 토큰 제거 → (설정 시) 이모티콘·특수문자 제거 → 비속어 필터 → 최대 글자수 컷.
-*  **💬 채팅 대기열 누적**: 라이브 모드에선 `!참여`한 시청자의 후속 채팅이 **순서대로 대기열(`viewerQueue`)에 쌓여** 차례차례 몬스터로 등장한다(친 사람 모두 반영). 대형 방송의 채팅 폭주는 `WTD_QUEUE_CONFIG.MAX_QUEUE_LENGTH`(30) + 1인당 `MAX_QUEUE_PER_VIEWER`(2)로 자동 조절되고, 아무도 안 치면 봇 보충으로 폴백. 라이브 문구 몬스터는 좌상단 대기열 패널에 `🔥`로 강조.
+*  **💬 채팅 대기열 누적**: 라이브 모드에선 `!참여`한 시청자의 후속 채팅이 **순서대로 대기열(`viewerQueue`)에 쌓여** 차례차례 몬스터로 등장한다(친 사람 모두 반영). 대형 방송의 채팅 폭주는 `CONFIG.QUEUE.MAX_QUEUE_LENGTH`(30) + 1인당 `MAX_QUEUE_PER_VIEWER`(2)로 자동 조절되고, 아무도 안 치면 봇 보충으로 폴백. 라이브 문구 몬스터는 좌상단 대기열 패널에 `🔥`로 강조.
 *  **토글 위치**: 상단 컨트롤바 `💬 라이브 채팅 모드` 버튼으로 **게임 중에도 즉시 ON/OFF**(OBS·사운드 토글과 동일한 라이브 컨트롤 성격).
 *  **세부 설정**: 단어/닉네임 팩 모달에서 최대 글자수·특수문자 제거 여부 설정. 라이브 채팅 설정 박스는 **모드 ON일 때만 보라색 테두리+글로우로 활성 상태를 표시**(OFF 시 테두리 꺼짐, `.live-active` 클래스로 양쪽 토글 동기화). 상태 전환 토스트는 🟢 ON / 🔴 OFF 스위치 표기.
 *  **시각 강조**: 라이브 채팅 문구가 그대로 쓰인 몬스터는 하단 박스를 **보라색**으로 렌더링해 팩 단어 몬스터와 구분.
@@ -69,8 +69,8 @@
 *  ※ 자율 커스텀 단어장은 라이브 채팅 모드와 역할이 겹쳐 제거함(프리셋 + 라이브 채팅 조합으로 대체).
 *  라이브 채팅 제시어: 시청자가 길게 치면 최대 글자수(모달 설정 6/8/10/14, 기본 10)로 **잘라서(truncate)** 사용.
 
-### 5. 🛡️ 대형 방송 마비 방지 (Max Monster Cap = 15)
-*  화면 동시 출전 몬스터를 **최대 15마리로 고정 제한**(난이도와 무관한 하드 상한). 난이도 테이블의 `maxMonsterCap`도 15로 clamp.
+### 5. 🛡️ 대형 방송 마비 방지 (Max Monster Cap)
+*  화면 동시 출전 몬스터를 **`CONFIG.MAX_MONSTER_CAP`(기본 15)로 고정 제한**(난이도와 무관한 하드 상한). MonsterManager가 난이도 테이블의 `maxMonsterCap`과 `Math.min`으로 clamp.
 
 ### 6. 🎚️ 난이도별 밸런스 테이블 (신규 — `CONFIG.DIFFICULTY`)
 *  4단계(Easy/Normal/Hard/Hell) 각각에 대해 아래 값을 차등 적용:
@@ -135,7 +135,7 @@
     *  1024x768 고정 레이아웃, 모달 잘림 방지, `.modal-actions`/`.modal-footer` 분리, `body.obs-overlay` 투명 스타일, 토스트/등급뱃지/난이도탭/단어칩/피버 등 컴포넌트 스타일.
 
 3.  **`js/config.js`**
-    *  `CONFIG.YOUTUBE_API_KEY`, **`CONFIG.SOOP_PROXY`/`CONFIG.SOOP_DEBUG`(SOOP 프록시·디버그)**, `CONFIG.FIREBASE`(리더보드/애널리틱스), `CONFIG.KAKAO_ADFIT`(5개), **`CONFIG.DIFFICULTY`(난이도 밸런스 테이블)** + `getDifficultyConfig()`, 광고 리프레시 로직.
+    *  `CONFIG.YOUTUBE_API_KEY`, **`CONFIG.SOOP_PROXY`/`CONFIG.SOOP_DEBUG`(SOOP 프록시·디버그)**, `CONFIG.FIREBASE`(리더보드/애널리틱스), `CONFIG.KAKAO_ADFIT`(5개), **`CONFIG.DIFFICULTY`(난이도 밸런스 테이블)** + `getDifficultyConfig()`, **`CONFIG.MAX_MONSTER_CAP`(동시 출전 절대 상한)·`CONFIG.QUEUE`(참여/큐/봇 보충 튜닝)**, 광고 리프레시 로직.
 
 4.  **`js/wordPacks.js`**
     *  단어팩(기본/프리셋/보스), 시청자 대기열(`{nickname, chatWord}`) 관리, `!참여` 처리·참가자 명단, 봇 자동 보충, **라이브 채팅 정제(`sanitizeLiveChatWord`)**, 비속어 필터, 한글 자모 획수 유틸.
