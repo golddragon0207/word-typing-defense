@@ -84,6 +84,11 @@ class GameEngine {
         if (window.audioManager) window.audioManager.playFever();
         this.showToastInternal('🔥 FEVER TIME! 점수 2배!', 'success');
       };
+
+      // 🔒 게임 플레이 중에는 플레이와 무관한 상단바 버튼(단어팩·명예의전당·후원·건의사항)을
+      //    비활성화한다. 이 모달들은 열려도 게임을 멈추지 않아, 플레이 중 클릭 시 그냥 지게 되기 때문.
+      //    (라이브 채팅 모드·OBS 크로마키·사운드는 방송 중 즉시 조정이 필요하므로 잠그지 않는다)
+      this.stateManager.onStateChange = (newState) => this.updateTopBarLock(newState);
     }
 
     // 6. UI 및 이벤트 바인딩
@@ -221,6 +226,9 @@ class GameEngine {
       const modal = document.getElementById(modalId);
       if (btn && modal) {
         btn.addEventListener('click', () => {
+          // 🔒 게임 플레이 중 잠긴 버튼은 클릭 무시 (updateTopBarLock이 qc-locked 부여)
+          if (btn.classList.contains('qc-locked')) return;
+
           // ⚡ 1. 클릭하는 순간 모달창부터 0ms 만에 즉시 띄움
           modal.classList.remove('hidden');
 
@@ -569,6 +577,34 @@ class GameEngine {
         wordPacks.liveChatStripSpecial = stripSpecialCheck.checked;
       });
     }
+  }
+
+  /**
+   * 🔒 상단바 버튼 잠금 토글: 게임 플레이 중(PLAYING/READY)에는 플레이와 무관한 모달 버튼을 막는다.
+   *    막는 대상은 게임을 멈추지 않는 모달(단어팩·명예의전당·후원·건의사항)뿐이며,
+   *    라이브 채팅 모드·OBS·사운드는 방송 중 즉시 조정이 필요하므로 항상 활성 상태로 둔다.
+   * @param {string} [state] - 현재 상태. 생략 시 stateManager에서 읽는다.
+   */
+  updateTopBarLock(state) {
+    const current = state || (this.stateManager ? this.stateManager.currentState : 'MENU');
+    const inGame = current === 'PLAYING' || current === 'READY';
+
+    const lockIds = ['btn-word-modal', 'btn-leaderboard-modal', 'btn-support-modal', 'btn-suggestion-modal'];
+    lockIds.forEach(id => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      // disabled 속성 대신 클래스로 잠근다: disabled면 hover가 안 잡혀 안내 툴팁이 뜨지 않기 때문.
+      // 실제 클릭 차단은 bindUIEvents의 모달 핸들러에서 qc-locked를 검사해 막는다.
+      btn.classList.toggle('qc-locked', inGame);
+      btn.setAttribute('aria-disabled', String(inGame));
+      // 게임 중에는 툴팁으로 이유를 안내, 아니면 원래 안내로 복원
+      if (inGame) {
+        btn.dataset.tipRest = btn.dataset.tipRest || btn.getAttribute('data-tip') || '';
+        btn.setAttribute('data-tip', '게임 중에는 사용할 수 없어요 (일시정지 후 이용)');
+      } else if (btn.dataset.tipRest) {
+        btn.setAttribute('data-tip', btn.dataset.tipRest);
+      }
+    });
   }
 
   /**

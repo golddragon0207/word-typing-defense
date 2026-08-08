@@ -31,6 +31,8 @@ class StateManager {
         this.feverTimer = null;
         this.onFeverStart = null;  // game.js가 주입하는 콜백 () => void (사운드/토스트 연출용)
         this.onFeverEnd = null;
+
+        this.onStateChange = null; // game.js가 주입하는 콜백 (newState) => void (상단바 버튼 잠금 등)
     }
 
     resetGame(config = {}) {
@@ -68,6 +70,7 @@ class StateManager {
     changeState(newState) {
         if (this.currentState === newState) return;
         this.currentState = newState;
+        if (typeof this.onStateChange === 'function') this.onStateChange(newState);
     }
 
     /**
