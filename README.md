@@ -39,19 +39,31 @@ SOOP · 치지직 · 유튜브 라이브 **1인 솔로 스트리머**를 위한 
 
 ## 📁 파일 구조
 
-- [`index.html`](./index.html) : 메인 화면·모달 4개·상단 컨트롤바·광고 슬롯·Firebase SDK 로드
-- [`style.css`](./style.css) : 사이버펑크 네온 스타일, 1024×768 고정 레이아웃 + 비율 스케일, OBS 투명 오버레이
-- [`js/config.js`](./js/config.js) : API 키·Firebase·애드핏 설정, 밸런스 테이블(`CONFIG.DIFFICULTY`), 큐/봇 튜닝
-- [`js/wordPacks.js`](./js/wordPacks.js) : 단어팩(프리셋/보스), 시청자 대기열·참가자 명단, `!참여`·봇 보충, 라이브 채팅 정제
-- [`js/audio.js`](./js/audio.js) : Web Audio API 효과음
-- [`js/chatIntegration.js`](./js/chatIntegration.js) : SOOP·치지직·유튜브 URL 파서 및 실시간 채팅 클라이언트
-- [`js/globalLeaderboard.js`](./js/globalLeaderboard.js) : Firebase 글로벌 리더보드 + 건의사항 + Analytics (선택형)
-- [`js/core/`](./js/core/) : `StateManager`(상태·점수·피버) · `TurretManager`(포탑) · `MonsterManager`(스폰·보스·낙하) · `InputManager`(타자·IME)
-- [`js/renderers/CanvasRenderer.js`](./js/renderers/CanvasRenderer.js) : 고해상도 Draw, 2단 몬스터 UI, 이펙트
-- [`js/game.js`](./js/game.js) : 메인 루프 오케스트레이터, 전 UI 배선, 스테이지 진행, 연출
-- [`proxy/soop-cors-proxy.worker.js`](./proxy/soop-cors-proxy.worker.js) : SOOP·치지직 연동용 Cloudflare Worker CORS 프록시(개발자 1회 배포)
-- [`docs/SOOP_연동_설정.md`](./docs/SOOP_연동_설정.md) : 프록시 배포·설정 가이드
-- [`implementation_plan.md`](./implementation_plan.md) : 상세 기술 구현 계획서
+```
+word-typing-defense/
+├─ index.html                    메인 화면·모달·상단 컨트롤바·광고 슬롯·Firebase SDK 로드
+├─ style.css                     사이버펑크 네온 스타일, 1024×768 고정 레이아웃 + 비율 스케일, OBS 투명
+├─ js/
+│  ├─ config.js                  API 키·Firebase·애드핏 설정, 밸런스 테이블(CONFIG.DIFFICULTY), 큐/봇 튜닝
+│  ├─ wordPacks.js               단어팩(프리셋/보스), 시청자 대기열·명단, !참여·봇 보충, 라이브 채팅 정제
+│  ├─ audio.js                   Web Audio API 효과음
+│  ├─ chatIntegration.js         SOOP·치지직·유튜브 URL 파서 및 실시간 채팅 클라이언트
+│  ├─ globalLeaderboard.js       Firebase 글로벌 리더보드 + 건의사항 + Analytics (선택형)
+│  ├─ game.js                    메인 루프 오케스트레이터, 전 UI 배선, 스테이지 진행, 연출
+│  ├─ core/
+│  │  ├─ StateManager.js         상태·점수·피버
+│  │  ├─ TurretManager.js        포탑
+│  │  ├─ MonsterManager.js       스폰·보스·낙하
+│  │  └─ InputManager.js         타자·IME
+│  └─ renderers/
+│     └─ CanvasRenderer.js       고해상도 Draw, 2단 몬스터 UI, 이펙트
+├─ proxy/
+│  └─ soop-cors-proxy.worker.js  SOOP·치지직 연동용 Cloudflare Worker CORS 프록시(개발자 1회 배포)
+├─ docs/
+│  └─ SOOP_연동_설정.md           프록시 배포·설정 가이드
+├─ donation-qr.png               후원 QR 이미지
+└─ implementation_plan.md        상세 기술 구현 계획서
+```
 
 ---
 
