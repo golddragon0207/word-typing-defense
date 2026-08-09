@@ -597,7 +597,7 @@ class GameEngine {
       this._syncLiveChatModalBtn(enabled);
     };
 
-    const toggleMode = () => {
+    const toggleMode = (btn) => {
       if (typeof wordPacks === 'undefined') return;
       wordPacks.liveChatMode = !wordPacks.liveChatMode;
       updateUI();
@@ -610,10 +610,11 @@ class GameEngine {
       if (window.GlobalLeaderboard) {
         window.GlobalLeaderboard.logEvent('live_chat_mode_toggled', { enabled: wordPacks.liveChatMode });
       }
+      this._blurQuickControl(btn);
     };
 
-    if (topBtn) topBtn.addEventListener('click', toggleMode);
-    if (modalBtn) modalBtn.addEventListener('click', toggleMode);
+    if (topBtn) topBtn.addEventListener('click', () => toggleMode(topBtn));
+    if (modalBtn) modalBtn.addEventListener('click', () => toggleMode(modalBtn));
 
     updateUI();
   }
@@ -770,6 +771,7 @@ class GameEngine {
       btn.classList.toggle('active', active);
       this._setQcLabel(btn, active ? 'OBS 모드: ON (배경 투명)' : 'OBS 크로마키 (배경 투명)');
       this.showToastInternal(active ? '📺 OBS 크로마키 모드가 켜졌습니다.' : '📺 OBS 크로마키 모드가 꺼졌습니다.', 'info');
+      this._blurQuickControl(btn);
     });
   }
 
@@ -781,7 +783,24 @@ class GameEngine {
       const enabled = window.audioManager.toggleSound();
       // 사운드는 아이콘도 상태에 따라 바뀜(🔊/🔇)
       this._setQcLabel(btn, enabled ? '사운드: ON' : '사운드: OFF', enabled ? '🔊' : '🔇');
+      this._blurQuickControl(btn);
     });
+  }
+
+  /**
+   * 상단 라이브 컨트롤 버튼(라이브 채팅/OBS/사운드) 클릭 후처리.
+   *   마우스 클릭 시 버튼에 포커스가 남으면, 이어지는 Enter가 그 버튼을 재클릭
+   *   (토글 재발동)해 방송 중 모드가 의도치 않게 뒤집힌다. 클릭 직후 포커스를 떼고,
+   *   게임 진행 중이면 제시어 입력창으로 되돌려 곧바로 타이핑을 이어갈 수 있게 한다.
+   * @param {HTMLElement} btn - 방금 클릭된 버튼
+   */
+  _blurQuickControl(btn) {
+    if (btn && typeof btn.blur === 'function') btn.blur();
+    // 게임 플레이 중(일시정지·모달 아님)이면 입력창으로 포커스 복귀
+    const playing = this.stateManager && this.stateManager.currentState === 'PLAYING' && !this.isPaused;
+    if (!playing) return;
+    const input = document.querySelector('.game-typing-input');
+    if (input) input.focus();
   }
 
   /**
