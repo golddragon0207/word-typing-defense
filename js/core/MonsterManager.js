@@ -71,7 +71,7 @@ class MonsterManager {
                 if (typeof this.onBossWarning === 'function') {
                     this.onBossWarning(stage);
                 }
-                this.bossTimeout = setTimeout(() => this.spawnBoss(), 1800);
+                this.bossTimeout = setTimeout(() => { this.bossTimeout = null; this.spawnBoss(); }, 1800);
             } else {
                 this.spawnMonster();
             }
@@ -93,6 +93,9 @@ class MonsterManager {
      */
     spawnMonster() {
         if (this.monsters.length >= this.MAX_MONSTER_CAP) return;
+        // ⏸ 일시정지 중에는 스폰하지 않는다. (시작 그레이스/스테이지업 지연 타이머(setTimeout)는
+        //    정지와 무관하게 발화하므로, 여기서 막지 않으면 정지 중에 몬스터가 튀어나온다.)
+        if (typeof window !== 'undefined' && window.gameEngine && window.gameEngine.isPaused) return;
 
         const data = (typeof wordPacks !== 'undefined')
             ? wordPacks.getNextMonsterData()
@@ -100,6 +103,17 @@ class MonsterManager {
 
         // CanvasRenderer가 논리(CSS) 좌표계로 그리므로 clientWidth(논리 픽셀) 기준으로 스폰 위치 계산
         const safeWidth = this.canvas ? (this.canvas.clientWidth || 1024) : (window.innerWidth || 1024);
+
+        // 🕒 좌상단 '출전 대기열' 패널(우측끝 ≈ 183px)에 몬스터가 가려지지 않도록,
+        //    닉네임/제시어 길이로 박스 폭을 추정해 몬스터 중심 x의 최소값을 확보한다.
+        //    (짧은 단어는 살짝만, 긴 단어는 더 오른쪽에서 등장 → 패널을 절대 침범하지 않음)
+        const estLen = Math.max(String(data.word || '').length, String(data.nickname || '').length);
+        const estBoxW = Math.max(110, estLen * 20 + 26); // CanvasRenderer의 박스 폭 계산과 동일한 감각
+        const QUEUE_PANEL_RIGHT = 190;                   // 패널 우측끝(183) + 여백
+        const rightMargin = 90;
+        const minX = QUEUE_PANEL_RIGHT + estBoxW / 2;
+        const maxX = safeWidth - rightMargin;
+        const spawnX = (minX < maxX) ? (Math.random() * (maxX - minX) + minX) : (safeWidth / 2);
 
         // 🎯 제시어 난이도(한글 자모 획수)에 비례한 점수: 어려운(길고 획수 많은) 단어일수록 높은 점수.
         //    '획수 × 6 × 스테이지' — 기본팩 평균(≈16획)이 스테이지1에서 ≈100점이 되도록 보정(배수는 조정 가능).
@@ -114,7 +128,7 @@ class MonsterManager {
             isBot: data.isBot,
             text: data.word,         // 🎯 하단: 제시어 (라이브 채팅 모드면 실제 채팅 문구)
             isLiveChat: !!data.isLiveChat, // 💬 라이브 채팅 문구가 그대로 쓰인 몬스터인지 (렌더러 강조용)
-            x: Math.random() * (safeWidth - 180) + 90, // 화면 좌우 넘침 방지
+            x: spawnX, // 좌상단 대기열 패널을 피해(좌측 확보) 좌우 넘침도 방지한 스폰 위치
             // 상단 HUD 상태바(스테이지창, 0~71px) '안'에서 생성 → HUD가 캔버스 위에 겹쳐 그려지므로
             // 제시어가 스테이지창에 가려진 채 시작해 아래로 스르륵 내려오는 연출(잠깐 안 보여도 의도된 것)
             // + 낙하(반응) 구간 최대 확보.
@@ -144,6 +158,11 @@ class MonsterManager {
      *    스테이지가 오를수록 필요 격파·차지 시간·공격력이 함께 커진다.
      */
     spawnBoss() {
+        // ⏸ 일시정지 중이면 보스도 소환하지 않는다(재개 시 resumeSpawns가 이어서 소환).
+        if (typeof window !== 'undefined' && window.gameEngine && window.gameEngine.isPaused) return;
+        // 🛡️ 스테이지당 보스는 하나만 — 타이머와 재개 복구가 겹쳐도 이중 소환되지 않도록 가드.
+        if (this.bossSpawnedForStage) return;
+
         const stage = this.currentStage;
         const canvasWidth = this.canvas ? (this.canvas.clientWidth || 1024) : 1024;
 
@@ -310,6 +329,22 @@ class MonsterManager {
         //    (보스가 이미 소환된 뒤에도 주기 스폰이 계속돼 산성비가 쏟아지던 버그 방지)
         if (this._isBossStage) return;
         if (this.monsters.length < this.MAX_MONSTER_CAP) {
+            this.spawnMonster();
+        }
+    }
+
+    /**
+     * ▶ 일시정지 해제 시 호출 — 정지 중 타이머가 발화하며 스킵됐던 '스테이지 첫 등장'을 복구한다.
+     *    (spawnMonster/spawnBoss는 isPaused일 때 스폰을 건너뛰므로, 재개 후 화면이 비는 것을 방지)
+     *    - 보스 스테이지: 보스 소환 타이머가 이미 발화(bossTimeout=null)했는데 아직 보스가 없으면 지금 소환.
+     *    - 일반 스테이지: 스폰이 시작됐는데(spawnInterval 활성) 화면에 몬스터가 하나도 없으면 하나 소환.
+     */
+    resumeSpawns() {
+        if (this._isBossStage) {
+            if (!this.bossSpawnedForStage && !this.startTimeout && !this.bossTimeout) {
+                this.spawnBoss();
+            }
+        } else if (this.spawnInterval && this.monsters.length === 0) {
             this.spawnMonster();
         }
     }

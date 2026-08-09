@@ -943,19 +943,22 @@ html {
 }
 
 @keyframes bannerPop {
+  /* ⚠️ 이 카드는 부모 .stage-banner-overlay가 이미 translate(-50%,-50%)로 중앙 정렬한다.
+     여기서 translate를 다시 주면 카드가 자기 크기의 절반만큼 좌상단으로 밀려
+     "왼쪽에서 나타나는" 것처럼 보인다 → scale/opacity만 애니메이션한다. */
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.85);
+    transform: scale(0.85);
   }
 
   60% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.04);
+    transform: scale(1.04);
   }
 
   100% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
 }
 

@@ -1118,6 +1118,8 @@ class GameEngine {
       this._pauseStart = null;
       if (overlay) overlay.classList.add('hidden');
       if (input) { input.disabled = false; setTimeout(() => input.focus(), 30); }
+      // ▶ 정지 동안 타이머가 발화하며 스킵된 '스테이지 첫 등장'을 복구 (재개 후 빈 화면 방지)
+      if (this.monsterManager) this.monsterManager.resumeSpawns();
     }
   }
 
