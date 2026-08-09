@@ -302,6 +302,13 @@ class MonsterManager {
                     m.chargeElapsed = 0;
                     m._attackFlashUntil = nowMs + 450; // 렌더러 공격 플래시
                     if (typeof this.onBossAttack === 'function') this.onBossAttack(m.attackDamage || 10);
+                    // 공격 발동 후 새 제시어로 교체 (정타 밀어내기와 동일하게)
+                    if (typeof wordPacks !== 'undefined') {
+                        let next = this._pickBossWord(this.currentStage);
+                        let guard = 0;
+                        while (next === m.text && guard++ < 8) next = this._pickBossWord(this.currentStage);
+                        m.text = next;
+                    }
                 }
                 continue; // 보스는 낙하/기지 도달 로직을 건너뜀
             }
