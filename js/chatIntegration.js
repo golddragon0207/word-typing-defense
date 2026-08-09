@@ -505,19 +505,6 @@ class ChatIntegrationEngine {
   }
 
   /**
-   * 5. 외부 연결 인터페이스 통제
-   */
-  connect(platform, config = {}) {
-    if (platform === 'custom') {
-      this.disconnect();
-      console.log(`[ChatIntegration] 커스텀/시뮬레이션 모드는 시뮬레이션 매니저를 이용하세요.`);
-    } else if (config.channelId || config.bjId || config.ytUrl || config.targetInput) {
-      const target = config.targetInput || config.channelId || config.bjId || config.ytUrl;
-      this.addChannel(platform, target);
-    }
-  }
-
-  /**
    * 현재 연동 중인 채널 목록 반환 (UI 렌더링용)
    */
   getActiveChannels() {
