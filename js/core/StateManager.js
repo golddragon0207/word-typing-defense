@@ -121,7 +121,12 @@ class StateManager {
      */
     registerMiss() {
         this.combo = 0;
-        this.fever = Math.max(0, this.fever - 20);
+        // ⚠️ 보스 스테이지(5의 배수)에서는 피버 게이지를 건드리지 않는다(채우지도·깎지도 않음).
+        //    보스전엔 게이지를 채울 수 없으니(registerHit도 스킵), 오타로 깎이기만 하면 억울하므로 완전 동결.
+        const isBossStage = (this.currentStage % 5) === 0;
+        if (!isBossStage) {
+            this.fever = Math.max(0, this.fever - 20);
+        }
         this.updateHUDUI();
     }
 
