@@ -725,7 +725,7 @@ class GameEngine {
         <span class="lb-nickname">${this.escapeHtml(entry.nickname)}</span>
         <span class="lb-stage">STAGE ${entry.stage || 1}</span>
         <span class="lb-grade rank-${(entry.grade || 'D').toLowerCase()}">${entry.grade}</span>
-        <span class="lb-meta">${(entry.score || 0).toLocaleString()}점 · ${entry.wpm || 0}WPM</span>
+        <span class="lb-meta">${(entry.score || 0).toLocaleString()}점 · 방어속도 ${entry.wpm || 0}</span>
         <span class="lb-date">${entry.date || ''}</span>
       </div>
     `).join('');
