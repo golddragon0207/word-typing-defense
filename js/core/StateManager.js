@@ -16,7 +16,7 @@ class StateManager {
         this.combo = 0;
         this.maxCombo = 0;
 
-        this.totalStrokes = 0;   // 한글 자모 획수 기반 누적 타수
+        this.totalStrokes = 0;   // 실제 키 입력(2벌식) 누적 타수 (CPM/WPM 표시용)
         this.startTime = null;   // 플레이 시작 시각 (performance.now())
         this.wpm = 0;
         this.maxWpm = 0;
@@ -101,9 +101,9 @@ class StateManager {
             }
         }
 
-        // 3. 한글 자모 획수 기반 타수 누적 및 WPM 갱신
+        // 3. 실제 키 입력 타수(2벌식) 누적 및 WPM 갱신 (표시용 — 점수는 획수 기반과 별개)
         const strokes = (typeof wordPacks !== 'undefined' && word)
-            ? wordPacks.getHangulStrokeCount(word)
+            ? wordPacks.getKeystrokeCount(word)
             : (word ? word.length : 0);
         this.totalStrokes += strokes;
 
