@@ -878,6 +878,8 @@ class GameEngine {
     // 게임 시작 직후엔 시청자가 !참여로 모일 여유(그레이스 타임)를 두고 첫 몬스터를 소환한다.
     const startDelayMs = (typeof CONFIG !== 'undefined' && CONFIG.START_SPAWN_DELAY_MS) || 0;
     if (this.monsterManager) this.monsterManager.startStage(this.stateManager ? this.stateManager.currentStage : 1, this.config.difficulty, startDelayMs);
+    // ⏱️ 그레이스 타임 동안 화면 중앙에 카운트다운 표시(시청자 !참여 유도)
+    if (startDelayMs > 0) this.showStartCountdown(startDelayMs);
 
     if (this.stateManager) this.stateManager.changeState('PLAYING');
 
@@ -897,6 +899,7 @@ class GameEngine {
     this._pauseStart = null;
     const pauseOverlay = document.getElementById('pause-overlay');
     if (pauseOverlay) pauseOverlay.classList.add('hidden');
+    this.stopStartCountdown(); // ⏱️ 진행 중이던 시작 카운트다운 정리
 
     const gameOverScreen = document.getElementById('screen-gameover');
     const gameHud = document.getElementById('game-hud');
@@ -1092,6 +1095,51 @@ class GameEngine {
 
     clearTimeout(this._bannerTimeout);
     this._bannerTimeout = setTimeout(() => banner.classList.add('hidden'), 2000);
+  }
+
+  /**
+   * ⏱️ 게임 시작 그레이스 타임 카운트다운 표시.
+   *   첫 몬스터 스폰까지 남은 초를 화면 중앙에 크게 보여주며(5→4→3→2→1),
+   *   그 사이 시청자가 '!참여'로 모일 수 있음을 안내한다.
+   * @param {number} delayMs - 첫 스폰까지의 그레이스 타임(ms)
+   */
+  showStartCountdown(delayMs) {
+    const overlay = document.getElementById('start-countdown');
+    const numEl = document.getElementById('start-countdown-num');
+    if (!overlay || !numEl) return;
+
+    this.stopStartCountdown(); // 혹시 남아있던 이전 카운트다운 정리
+
+    let remaining = Math.ceil(delayMs / 1000);
+    const render = () => {
+      numEl.innerText = remaining;
+      // tick 애니메이션 재생(클래스 재적용을 위해 리플로우 강제)
+      numEl.classList.remove('tick');
+      void numEl.offsetWidth;
+      numEl.classList.add('tick');
+    };
+
+    overlay.classList.remove('hidden');
+    render();
+
+    this._countdownInterval = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        this.stopStartCountdown();
+        return;
+      }
+      render();
+    }, 1000);
+  }
+
+  /** 카운트다운 오버레이/타이머 정리 */
+  stopStartCountdown() {
+    if (this._countdownInterval) {
+      clearInterval(this._countdownInterval);
+      this._countdownInterval = null;
+    }
+    const overlay = document.getElementById('start-countdown');
+    if (overlay) overlay.classList.add('hidden');
   }
 
   /**

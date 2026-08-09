@@ -1106,6 +1106,64 @@ html {
   text-shadow: 0 0 16px #ff0055;
 }
 
+/* ⏱️ 게임 시작 카운트다운 오버레이 (시청자 모집 그레이스 타임) */
+.start-countdown-overlay {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 155;
+  pointer-events: none;
+  text-align: center;
+}
+
+.start-countdown-card {
+  background: rgba(10, 12, 20, 0.82);
+  border: 2px solid #00f3ff;
+  border-radius: 18px;
+  padding: 20px 54px;
+  box-shadow: 0 0 35px rgba(0, 243, 255, 0.5);
+}
+
+.start-countdown-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #a0e8ff;
+  letter-spacing: 2px;
+}
+
+.start-countdown-num {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 5rem;
+  font-weight: 900;
+  line-height: 1.05;
+  color: #ffffff;
+  text-shadow: 0 0 22px #00f3ff, 0 0 40px rgba(0, 243, 255, 0.6);
+}
+
+/* 매 초 숫자가 바뀔 때 팝 애니메이션 (JS가 클래스를 토글) */
+.start-countdown-num.tick {
+  animation: countdownTick 0.5s ease-out;
+}
+
+@keyframes countdownTick {
+  0% { opacity: 0; transform: scale(1.6); }
+  40% { opacity: 1; transform: scale(0.94); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.start-countdown-hint {
+  margin-top: 4px;
+  font-size: 0.95rem;
+  color: #ffcc00;
+  text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+}
+
+.start-countdown-hint b {
+  color: #00ffa0;
+}
+
 /* ==========================================
    RANK GRADE BADGES (👑 SSS ~ D)
    ========================================== */
