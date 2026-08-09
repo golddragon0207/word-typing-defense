@@ -25,7 +25,7 @@ class StateManager {
         this.config = null;
         this.damagePerLeak = 10; // 몬스터 1마리가 기지에 도달했을 때 입는 피해 (난이도별로 resetGame에서 재설정)
 
-        // 🔥 피버 모드 (콤보 누적 시 점수 2배 보너스)
+        // 🔥 피버 모드 (콤보 누적으로 게이지 만땅 시 화면 클리어 + 보너스 점수·소량 회복 버스트)
         this.fever = 0;            // 0~100
         this.feverActive = false;
         this.feverTimer = null;

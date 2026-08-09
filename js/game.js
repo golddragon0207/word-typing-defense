@@ -282,17 +282,6 @@ class GameEngine {
       });
     });
 
-    // 난이도 선택 버튼
-    const diffBtns = document.querySelectorAll('.btn-diff');
-    diffBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        diffBtns.forEach(b => b.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-        this.config.difficulty = e.currentTarget.dataset.diff;
-        if (window.GlobalLeaderboard) window.GlobalLeaderboard.logEvent('difficulty_selected', { difficulty: this.config.difficulty });
-      });
-    });
-
     // 게임 시작 / 재시작 / 메인 이동 버튼
     const btnStart = document.getElementById('btn-start-game');
     if (btnStart) btnStart.addEventListener('click', () => this.startGame());

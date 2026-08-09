@@ -553,59 +553,6 @@ html {
   color: #00f3ff;
 }
 
-.difficulty-buttons-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-top: 6px;
-}
-
-.btn-diff {
-  background: rgba(22, 25, 38, 0.8) !important;
-  border: 2px solid #2a2e3d !important;
-  border-radius: 10px !important;
-  padding: 12px 8px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out !important;
-}
-
-.btn-diff .diff-title {
-  font-size: 1rem !important;
-  font-weight: 800 !important;
-  color: #a0a5b5;
-  margin-bottom: 4px;
-}
-
-.btn-diff .diff-desc {
-  font-size: 0.72rem !important;
-  color: #6c7280;
-}
-
-.btn-diff:hover {
-  border-color: #00f3ff !important;
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(0, 243, 255, 0.3) !important;
-}
-
-.btn-diff.active {
-  background: rgba(0, 243, 255, 0.15) !important;
-  border: 2px solid #00f3ff !important;
-  box-shadow: 0 0 20px rgba(0, 243, 255, 0.5) !important;
-}
-
-.btn-diff.active .diff-title {
-  color: #ffffff !important;
-  text-shadow: 0 0 8px #00f3ff;
-}
-
-.btn-diff.active .diff-desc {
-  color: #00f3ff !important;
-}
-
 /* 스트리머 닉네임 단일 입력창 시각 강조 */
 .solo-nickname-box {
   margin-top: 4px;
