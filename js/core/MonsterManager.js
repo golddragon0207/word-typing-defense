@@ -231,6 +231,18 @@ class MonsterManager {
     }
 
     /**
+     * 🔁 보스 제시어를 직전과 겹치지 않는 새 문구로 교체(정타 밀어내기·공격 발동 공용).
+     * @param {Object} boss - 교체 대상 보스 몬스터
+     */
+    _rerollBossWord(boss) {
+        if (typeof wordPacks === 'undefined' || !boss) return;
+        let next = this._pickBossWord(this.currentStage);
+        let guard = 0;
+        while (next === boss.text && guard++ < 8) next = this._pickBossWord(this.currentStage);
+        boss.text = next;
+    }
+
+    /**
      * 동일 단어 존재 시 기지(바닥)와 가장 가까운(Y좌표가 가장 큰) 몬스터 우선 타깃팅
      */
     checkHit(text) {
@@ -269,12 +281,7 @@ class MonsterManager {
 
                 // 아직 남음: 게이지를 절반 밀어내고(공격 지연) 새 제시어로 교체
                 target.chargeElapsed = Math.max(0, (target.chargeElapsed || 0) - target.chargeTime * 0.5);
-                if (typeof wordPacks !== 'undefined') {
-                    let next = this._pickBossWord(this.currentStage);
-                    let guard = 0;
-                    while (next === target.text && guard++ < 8) next = this._pickBossWord(this.currentStage);
-                    target.text = next;
-                }
+                this._rerollBossWord(target);
                 return {
                     success: true,
                     monster: target,
@@ -319,17 +326,11 @@ class MonsterManager {
                     m._attackFlashUntil = nowMs + 450; // 렌더러 공격 플래시
                     if (typeof this.onBossAttack === 'function') this.onBossAttack(m.attackDamage || 10);
                     // ⏳ 공격이 기지에 명중할 때마다 다음 차지 시간을 늘려(공격 간격↑) 연속 피격을 완화.
-                    //    기준값의 +50%씩 누적, 최대 2배까지(예: 12s → 18s → 24s).
+                    //    기준값의 +50%씩 누적, 최대 2배까지(예: s5 base 20s → 30s → 40s).
                     m.chargeAttackCount = (m.chargeAttackCount || 0) + 1;
                     const base = m.baseChargeTime || m.chargeTime;
                     m.chargeTime = Math.min(base * 2, base * (1 + 0.5 * m.chargeAttackCount));
-                    // 공격 발동 후 새 제시어로 교체 (정타 밀어내기와 동일하게)
-                    if (typeof wordPacks !== 'undefined') {
-                        let next = this._pickBossWord(this.currentStage);
-                        let guard = 0;
-                        while (next === m.text && guard++ < 8) next = this._pickBossWord(this.currentStage);
-                        m.text = next;
-                    }
+                    this._rerollBossWord(m); // 공격 발동 후 새 제시어로 교체(정타 밀어내기와 동일)
                 }
                 continue; // 보스는 낙하/기지 도달 로직을 건너뜀
             }
