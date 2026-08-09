@@ -91,9 +91,14 @@ class StateManager {
         if (this.combo > this.maxCombo) this.maxCombo = this.combo;
 
         // 2-1. 피버 게이지 누적 → 만땅이면 피버 버스트(화면 클리어 + 보너스) 발동
-        this.fever = Math.min(100, this.fever + 12);
-        if (this.fever >= 100 && !this.feverActive) {
-            this.triggerFeverBurst();
+        //    ⚠️ 보스 스테이지(5의 배수)에서는 게이지를 채우지 않는다.
+        //    보스전엔 정리할 잡몹이 없어 버스트가 의미 없이 터지던 문제 방지(게이지는 그대로 다음 스테이지로 이월).
+        const isBossStage = (this.currentStage % 5) === 0;
+        if (!isBossStage) {
+            this.fever = Math.min(100, this.fever + 12);
+            if (this.fever >= 100 && !this.feverActive) {
+                this.triggerFeverBurst();
+            }
         }
 
         // 3. 한글 자모 획수 기반 타수 누적 및 WPM 갱신
