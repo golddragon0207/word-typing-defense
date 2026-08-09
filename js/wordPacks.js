@@ -344,34 +344,33 @@ const wordPacks = {
   },
 
   /**
-   * ⌨️ 실제 키 입력 타수(2벌식, 한컴 타자연습 기준) 계산 — HUD의 CPM/WPM 표시용.
-   *   자판을 실제로 몇 번 누르는지 센다(Shift도 1타로 포함). 획수는 점수 계산에만, 이 값은 타수 표시에만 쓴다.
-   *   - 초성: 쌍자음 ㄲㄸㅃㅆㅉ = Shift+자음 = 2키, 나머지 1키
-   *   - 중성: ㅒㅖ(Shift) + 겹모음 ㅘㅙㅚㅝㅞㅟㅢ(두 키) = 2키, 나머지 1키
-   *   - 종성: 없음 0키 / 쌍받침 ㄲㅆ(Shift)·겹받침 ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ(두 키) = 2키 / 나머지 1키
-   *   예: "떡볶이" = 떡(ㄸ2+ㅓ1+ㄱ1) + 볶(ㅂ1+ㅗ1+ㄲ2) + 이(ㅇ1+ㅣ1) = 10타
+   * ⌨️ 타수 계산 — HUD의 CPM/WPM 표시용. **한컴 타자연습 "자소 단위" 방식과 일치**.
+   *   자소(자모) 하나당 1타로 세되, 두 자모를 조합해 한 키 위치가 없는 것만 2타로 센다.
+   *   (쌍자음 ㄲㄸㅃㅆㅉ·ㅒㅖ은 Shift로 입력해도 한컴 기준 1타. 획수 기반 점수와는 별개 단위.)
+   *   - 초성: 쌍자음 포함 항상 1타
+   *   - 중성: 겹모음 ㅘㅙㅚㅝㅞㅟㅢ = 2타(두 자모 조합), 나머지(ㅒㅖ 포함) 1타
+   *   - 종성: 없음 0타 / 겹받침 ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ = 2타 / 나머지(쌍받침 ㄲㅆ 포함) 1타
+   *   예: "떡볶이" = 떡(1+1+1) + 볶(1+1+1) + 이(1+1) = 8타, "김치찌개" = 9타
    * @param {string} text
-   * @returns {number} 총 키 입력 수
+   * @returns {number} 총 타수(자소 단위)
    */
   getKeystrokeCount(text) {
     if (!text) return 0;
-    const INITIAL_TWO = new Set([1, 4, 8, 10, 13]);                      // 쌍자음 ㄲㄸㅃㅆㅉ (Shift)
-    const MEDIAL_TWO = new Set([3, 7, 9, 10, 11, 14, 15, 16, 19]);       // ㅒㅖ(Shift) + 겹모음 ㅘㅙㅚㅝㅞㅟㅢ
-    const FINAL_TWO = new Set([2, 3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18, 20]); // 쌍받침 ㄲㅆ(Shift) + 겹받침
+    const MEDIAL_DOUBLE = new Set([9, 10, 11, 14, 15, 16, 19]);           // 겹모음 ㅘㅙㅚㅝㅞㅟㅢ
+    const FINAL_DOUBLE = new Set([3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18]); // 겹받침
 
     let keys = 0;
     for (let i = 0; i < text.length; i++) {
       const charCode = text.charCodeAt(i);
       if (charCode >= 0xac00 && charCode <= 0xd7a3) {
         const h = charCode - 0xac00;
-        const initialIndex = Math.floor(h / 588);
         const medialIndex = Math.floor((h % 588) / 28);
         const finalIndex = h % 28;
-        keys += INITIAL_TWO.has(initialIndex) ? 2 : 1;
-        keys += MEDIAL_TWO.has(medialIndex) ? 2 : 1;
-        keys += finalIndex === 0 ? 0 : (FINAL_TWO.has(finalIndex) ? 2 : 1);
+        keys += 1;                                   // 초성(쌍자음 포함) 1타
+        keys += MEDIAL_DOUBLE.has(medialIndex) ? 2 : 1;
+        keys += finalIndex === 0 ? 0 : (FINAL_DOUBLE.has(finalIndex) ? 2 : 1);
       } else {
-        keys += 1; // 영문/숫자/기호 1키
+        keys += 1; // 영문/숫자/기호 1타
       }
     }
     return keys;
