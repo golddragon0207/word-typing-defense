@@ -494,14 +494,11 @@ class ChatIntegrationEngine {
    * 4. 수신된 실시간 채팅 데이터를 wordPacks 데이터 매니저로 전달
    */
   handleIncomingChat(nickname, messageText, prefix) {
-    const chkKeywordOnly = document.getElementById('chk-keyword-only');
-    const keywordMode = chkKeywordOnly ? chkKeywordOnly.checked : false;
-
     const fullNickname = prefix ? `${prefix} ${nickname}` : nickname;
 
     // 계획서 v2.0 표준 객체인 wordPacks에 채팅 메시지 전달
     if (typeof wordPacks !== 'undefined' && typeof wordPacks.processChatMessage === 'function') {
-      wordPacks.processChatMessage(fullNickname, messageText, keywordMode);
+      wordPacks.processChatMessage(fullNickname, messageText);
     } else {
       console.warn('[ChatIntegration] wordPacks 객체를 찾을 수 없습니다.');
     }

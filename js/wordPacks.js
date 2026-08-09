@@ -138,14 +138,14 @@ const wordPacks = {
 
   /**
    * 📡 실시간 채팅 메시지 수신 처리 (chatIntegration.js에서 호출)
-   * - '!참여' 단일 명령어 입력 시 시청자 대기열(Queue)에 자동 등록
+   * - '!참여' 입력 시 참가자 명단(joinedViewers)에 등록 + 대기열(Queue)에 소환 예약
+   * - '!참여'하지 않은 시청자의 일반 채팅은 무시(라이브 모드 여부와 무관)
    * - 비속어 필터링 적용
-   * - 💬 라이브 채팅 모드가 켜져 있으면, 채팅 원문을 정제해서 타이핑 타깃으로도 함께 저장
+   * - 💬 라이브 채팅 모드가 켜져 있으면, '!참여' 등록자의 후속 채팅 원문을 정제해 타이핑 타깃으로 저장
    * @param {string} nickname - 채팅 발화 시청자 닉네임(플랫폼 접두사 포함)
    * @param {string} messageText - 채팅 원문
-   * @param {boolean} keywordOnly - true면 '!참여' 명령어 입력자만 등록
    */
-  processChatMessage(nickname, messageText, keywordOnly = false) {
+  processChatMessage(nickname, messageText) {
     if (!nickname) return false;
 
     const msg = (messageText || '').trim();
@@ -175,13 +175,7 @@ const wordPacks = {
       return this.enqueueViewer(safeNickname, chatWord);
     }
 
-    // 호환성 옵션: 라이브 모드가 꺼졌고 명령어 전용 체크도 해제된 경우에만 닉네임 몬스터를 허용.
-    // 라이브 채팅 제시어 후보는 항상 위의 `!참여` 등록자에게만 제한됩니다.
-    if (!this.liveChatMode && !keywordOnly) {
-      this.enqueueViewer(safeNickname);
-      return true;
-    }
-
+    // `!참여`하지 않은 시청자의 일반 채팅은 무시한다(라이브 모드 여부와 무관).
     return false;
   },
 
