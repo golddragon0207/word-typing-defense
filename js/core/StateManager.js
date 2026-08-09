@@ -254,7 +254,13 @@ class StateManager {
             feverBarEl.classList.toggle('fever-ready', this.feverActive);
         }
         const feverCardEl = document.querySelector('.fever-card');
-        if (feverCardEl) feverCardEl.classList.toggle('fever-active', this.feverActive);
+        if (feverCardEl) {
+            feverCardEl.classList.toggle('fever-active', this.feverActive);
+            // 🔒 보스 스테이지(5의 배수)에서는 피버 게이지가 동결(충전·감소 정지)된다.
+            //    막대가 멈춰 있는 게 버그처럼 보이지 않도록 카드에 잠금 상태를 표시(CSS: 회색+🔒).
+            const bossStageLock = (this.currentStage % 5) === 0;
+            feverCardEl.classList.toggle('fever-locked', bossStageLock);
+        }
     }
 
     /**
