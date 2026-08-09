@@ -344,30 +344,32 @@ const wordPacks = {
   },
 
   /**
-   * ⌨️ 실제 키 입력 타수(2벌식 기준) 계산 — HUD의 CPM/WPM 표시용.
-   *   getHangulStrokeCount(획수)와 달리, 키보드 자판을 실제로 몇 번 누르는지 센다
-   *   (한컴 타자연습식 "타수"). 획수는 점수 계산에만, 이 값은 타수 표시에만 쓴다.
-   *   - 초성: 항상 1키 (된소리 ㄲㄸㅃㅆㅉ는 Shift+자음 = 1키로 취급)
-   *   - 중성: 겹모음(ㅘㅙㅚㅝㅞㅟㅢ) 2키, 나머지 1키
-   *   - 종성: 없음 0키 / 겹받침(ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ) 2키 / 나머지 1키
+   * ⌨️ 실제 키 입력 타수(2벌식, 한컴 타자연습 기준) 계산 — HUD의 CPM/WPM 표시용.
+   *   자판을 실제로 몇 번 누르는지 센다(Shift도 1타로 포함). 획수는 점수 계산에만, 이 값은 타수 표시에만 쓴다.
+   *   - 초성: 쌍자음 ㄲㄸㅃㅆㅉ = Shift+자음 = 2키, 나머지 1키
+   *   - 중성: ㅒㅖ(Shift) + 겹모음 ㅘㅙㅚㅝㅞㅟㅢ(두 키) = 2키, 나머지 1키
+   *   - 종성: 없음 0키 / 쌍받침 ㄲㅆ(Shift)·겹받침 ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ(두 키) = 2키 / 나머지 1키
+   *   예: "떡볶이" = 떡(ㄸ2+ㅓ1+ㄱ1) + 볶(ㅂ1+ㅗ1+ㄲ2) + 이(ㅇ1+ㅣ1) = 10타
    * @param {string} text
    * @returns {number} 총 키 입력 수
    */
   getKeystrokeCount(text) {
     if (!text) return 0;
-    const MEDIAL_DOUBLE = new Set([9, 10, 11, 14, 15, 16, 19]);           // ㅘㅙㅚㅝㅞㅟㅢ
-    const FINAL_DOUBLE = new Set([3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18]); // 겹받침
+    const INITIAL_TWO = new Set([1, 4, 8, 10, 13]);                      // 쌍자음 ㄲㄸㅃㅆㅉ (Shift)
+    const MEDIAL_TWO = new Set([3, 7, 9, 10, 11, 14, 15, 16, 19]);       // ㅒㅖ(Shift) + 겹모음 ㅘㅙㅚㅝㅞㅟㅢ
+    const FINAL_TWO = new Set([2, 3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18, 20]); // 쌍받침 ㄲㅆ(Shift) + 겹받침
 
     let keys = 0;
     for (let i = 0; i < text.length; i++) {
       const charCode = text.charCodeAt(i);
       if (charCode >= 0xac00 && charCode <= 0xd7a3) {
         const h = charCode - 0xac00;
+        const initialIndex = Math.floor(h / 588);
         const medialIndex = Math.floor((h % 588) / 28);
         const finalIndex = h % 28;
-        keys += 1;                                   // 초성 1키
-        keys += MEDIAL_DOUBLE.has(medialIndex) ? 2 : 1;
-        keys += finalIndex === 0 ? 0 : (FINAL_DOUBLE.has(finalIndex) ? 2 : 1);
+        keys += INITIAL_TWO.has(initialIndex) ? 2 : 1;
+        keys += MEDIAL_TWO.has(medialIndex) ? 2 : 1;
+        keys += finalIndex === 0 ? 0 : (FINAL_TWO.has(finalIndex) ? 2 : 1);
       } else {
         keys += 1; // 영문/숫자/기호 1키
       }
