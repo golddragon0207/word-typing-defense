@@ -59,7 +59,7 @@ SOOP · 치지직 · 유튜브 라이브 **1인 솔로 스트리머**를 위한 
 정적 호스팅(GitHub Pages)이라 아래 값은 **비워두면 해당 기능만 자동으로 꺼지고 나머지는 정상 동작**합니다.
 
 - **SOOP·치지직 라이브 연동**: Cloudflare Worker 프록시를 한 번 배포해 `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY`(같은 주소)에 입력. 미설정 시 BOT 폴백. 전체 절차: [`docs/SOOP_연동_설정.md`](./docs/SOOP_연동_설정.md).
-- **유튜브 라이브 연동**: `CONFIG.YOUTUBE_API_KEY`에 YouTube Data API v3 키 입력(리퍼러 제한 시 배포 도메인에서만 동작).
+- **유튜브 라이브 연동**: `CONFIG.YOUTUBE_API_KEY`에 YouTube Data API v3 키 입력. ⚠️ 공개 레포라 키가 노출되므로 **구글 클라우드 콘솔에서 HTTP 리퍼러 제한(배포 도메인만 허용)을 반드시 걸어** 도용을 막으세요.
 - **글로벌 명예의 전당 / 애널리틱스 / 건의사항**: `CONFIG.FIREBASE`에 Firebase 웹 앱 설정 입력 + Firestore 보안 규칙 게시(규칙 원문은 [`js/globalLeaderboard.js`](./js/globalLeaderboard.js) 상단 주석 참고).
 
 ---
