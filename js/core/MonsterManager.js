@@ -187,6 +187,8 @@ class MonsterManager {
             requiredHits,
             hitsLanded: 0,
             chargeTime,
+            baseChargeTime: chargeTime, // 성공 공격마다 chargeTime을 늘릴 때의 기준값
+            chargeAttackCount: 0,       // 지금까지 기지에 명중시킨 횟수
             chargeElapsed: 0,
             attackDamage
         };
@@ -302,6 +304,11 @@ class MonsterManager {
                     m.chargeElapsed = 0;
                     m._attackFlashUntil = nowMs + 450; // 렌더러 공격 플래시
                     if (typeof this.onBossAttack === 'function') this.onBossAttack(m.attackDamage || 10);
+                    // ⏳ 공격이 기지에 명중할 때마다 다음 차지 시간을 늘려(공격 간격↑) 연속 피격을 완화.
+                    //    기준값의 +50%씩 누적, 최대 2배까지(예: 12s → 18s → 24s).
+                    m.chargeAttackCount = (m.chargeAttackCount || 0) + 1;
+                    const base = m.baseChargeTime || m.chargeTime;
+                    m.chargeTime = Math.min(base * 2, base * (1 + 0.5 * m.chargeAttackCount));
                     // 공격 발동 후 새 제시어로 교체 (정타 밀어내기와 동일하게)
                     if (typeof wordPacks !== 'undefined') {
                         let next = this._pickBossWord(this.currentStage);
