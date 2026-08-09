@@ -73,10 +73,10 @@
 *  표준(`normal`) 밸런스 기준 아래 값을 적용:
    *  `speedMult`(낙하속도 배율), `maxMonsterCap`(동시 상한, 15 고정), `spawnIntervalBase/Step/Min`(스폰 주기), `killPerStageBase/Step`(스테이지 클리어 처치목표), `maxHp`(기지 체력), `damagePerLeak`(피격 데미지).
 *  **완만한 난이도 곡선**: 스테이지 간 난이도 점프를 최소화하고 **후반에는 요구 타수가 평탄해지도록**(일반 스테이지가 항상 직전~다음 보스보다 낮게 유지 → 보스가 각 스테이지보다 "조금 더" 어렵게) 낙하·스폰·처치수를 튜닝(실제 단어팩 획수 분포 + 현실적 플레이 모델로 시뮬레이션 검증).
-   *  낙하 속도: `speed = (0.30 + (min(stage,14)-1)*0.04) * speedMult` — **stage14(0.82)에서 상한**. 무한 스테이지에서 낙하가 계속 빨라지면 반응 시간이 압축돼 일반 스테이지 요구 타수가 보스를 추월(=보스가 오히려 쉬워짐)하던 역전을 방지.
-   *  스폰 주기: `spawnIntervalBase 9800·Step 320·Min 4000` (스테이지1 약 9.5초 → 단축되다 stage19경 4초에서 하한 → 후반 인플로우 상한 고정).
-   *  처치 수: `killPerStageBase 8·Step 0.5` (스테이지1 8마리 → 2스테이지당 +1, 후반 마라톤 방지 + 곡선 평탄화).
-   *  검증 결과(무리크 최소 타수, normal): S4 ~120 · S9 ~160 · S14 ~220 · S19 ~300 · S24 이후 ~300 평탄. 같은 구간 보스는 각각 +20~80 더 높음(보스가 항상 조금 더 어려움).
+   *  낙하 속도: `speed = (0.30 + (min(stage,12)-1)*0.05) * speedMult` — **stage12(0.85)에서 상한**. 무한 스테이지에서 낙하가 계속 빨라지면 반응 시간이 압축돼 일반 스테이지 요구 타수가 보스를 추월하던 역전을 방지.
+   *  스폰 주기: `spawnIntervalBase 10500·Step 1300·Min 4000` (스테이지1 약 9초 → 빠르게 촘촘해지다 stage6경 4초 하한 → 초반 요구 타수를 세우고 후반은 고정).
+   *  처치 수: `killPerStageBase 8·Step 0.5` (2스테이지당 +1, 후반 마라톤 방지).
+   *  **검증 결과(목표 타수 = 실제 키 입력 기준, normal)**: 일반 S1~50 · S2~55 · S3~65 · S4~80 → S9경 ~130에서 평탄. 보스는 s5≈105 · s10≈140 · s15≈150 · s20≈160 · s25≈170으로, **각 보스가 직전 스테이지보다 +10~35 더 높다**(보스가 항상 조금 더 어려움).
 *  `MonsterManager`/`StateManager`/`game.js`가 `getDifficultyConfig()`로 공용 참조.
 
 ### 7. 💻 PC 전용 UI 및 모달/레이아웃 최적화 (1024x768)
@@ -110,8 +110,8 @@
 *  처치목표(`killPerStageBase + floor((stage-1)*killPerStageStep)`) 달성 시 다음 스테이지로 진행.
 *  **5 Stage마다 보스전**: WARNING 배너 → 보스 소환(확대·다중 피해). 보스 처치 시 즉시 다음 스테이지. **보스 스테이지에는 일반 몬스터(산성비)를 스폰하지 않는다** — `_spawnTick`이 `_isBossStage`면 즉시 return하여 보스 하나만 상대.
 *  **보스 제시어 전용 팩(`wordPacks.bossWords`, 30종)**: 라이브 채팅·단어팩 선택과 무관하게 `MonsterManager._pickBossWord(stage)`가 '시스템 붕괴' 테마 고난도 문구에서 (후반일수록 긴 문구 우선으로) 출제(길고 겹받침 많아 난도↑). 단어 길이만큼 박스 폭이 자동 확장돼(최대 ≈343px, 1024 무대 내) 세로 높이는 불변·잘림 없음.
-*  **⚡ 차지(기 모으기) 보스**(`spawnBoss`): 낙하하지 않고 고정 위치(`y:260`, `speed:0`)에서 차지 게이지를 채운다. **보스 인덱스(`bossIndex = floor(stage/5)−1`) 기준으로 후반일수록 강해지는 매끄러운 난이도 곡선** — ① 체력(정타) `requiredHits = min(5, 2 + floor(stage/20))`(2→5), ② 차지시간 `chargeTime = max(7000, 22000 − bossIndex×2000)`(22s→7s, **후반일수록 차지가 빨라져 요구 타수 상승**), ③ 공격력 `attackDamage = 10 + bossIndex×2`(10→후반 치명성), ④ 제시어 `_pickBossWord(stage)`가 후반일수록 긴 문구 우선. 첫 보스(스5)는 4스테이지(무리크 ~130타) 대비 무피격 ~200타로 완만히 상승하고, 후반 보스는 못 따라가면 실제 사망 가능(예: 스60은 차지 7s·공격 32·정타 5). *튜닝 근거: 실제 상수·단어팩 기반 시뮬로 스테이지별 요구 타수를 역산해 결정.*
-    *  **`update`**: 보스는 낙하 대신 `chargeElapsed += dt`; `>= chargeTime`이면 `onBossAttack(attackDamage)` 콜백 발동 후 게이지만 0으로 리셋(진행도 `hitsLanded` 유지) + `_attackFlashUntil` 설정 + 새 제시어 리롤. **차지 공격에 명중당할 때마다 다음 차지 시간이 늘어난다(=차지가 느려짐)** — `chargeAttackCount++`에 따라 `chargeTime = min(baseChargeTime×2, baseChargeTime×(1+0.5×count))`(예: 스5 base 22s → 33s → 44s 상한). 맞을수록 공격 간격이 벌어져 연속 피격을 완화하는 회복 장치.
+*  **⚡ 차지(기 모으기) 보스**(`spawnBoss`): 낙하하지 않고 고정 위치(`y:260`, `speed:0`)에서 차지 게이지를 채운다. **보스 인덱스(`bossIndex = floor(stage/5)−1`) 기준, 각 보스가 "직전 일반 스테이지보다 조금 더 어렵게"(목표 타수 = 실제 키 입력 기준) 역산 튜닝** — ① 체력(정타) `requiredHits = min(5, 2 + floor(stage/30))`(2→5, 완만), ② 차지시간 `chargeTime = (bossIndex===0 ? 20s : max(9s, 15.5 − (bossIndex−1)×0.9s))` — **첫 보스(s5)는 20s(≈100타, 직전 s4≈80 +20)로 완만 시작 → s10부터 15.5s에서 보스마다 −0.9s 단축**해 요구 타수를 상승, ③ 공격력 `attackDamage = 10 + bossIndex×2`(10→후반 치명성), ④ 제시어 `_pickBossWord(stage)`가 후반일수록 긴 문구 우선. 검증(무피격 최소 타수): s5≈105 · s10≈140 · s15≈150 · s20≈160 · s25≈170으로 항상 직전 스테이지 +10~35. *튜닝 근거: 실제 상수·단어팩 기반 시뮬로 스테이지별 요구 타수를 역산해 결정.*
+    *  **`update`**: 보스는 낙하 대신 `chargeElapsed += dt`; `>= chargeTime`이면 `onBossAttack(attackDamage)` 콜백 발동 후 게이지만 0으로 리셋(진행도 `hitsLanded` 유지) + `_attackFlashUntil` 설정 + 새 제시어 리롤. **차지 공격에 명중당할 때마다 다음 차지 시간이 늘어난다(=차지가 느려짐)** — `chargeAttackCount++`에 따라 `chargeTime = min(baseChargeTime×2, baseChargeTime×(1+0.5×count))`(예: 스5 base 20s → 30s → 40s 상한). 맞을수록 공격 간격이 벌어져 연속 피격을 완화하는 회복 장치.
     *  **`checkHit`**: 보스 정타 시 `hitsLanded++`. 미달이면 게이지 절반 밀어내기(`chargeElapsed -= chargeTime×0.5`)+새 제시어 리롤 후 `{isKilled:false, bossDamaged:true}`; `requiredHits` 도달 시 제거+`{isKilled:true}`.
     *  **`game.js`**: `onBossAttack → handleBossAttack(dmg)`가 `StateManager.damageBaseFlat(dmg)`로 기지 정액 피해(사망 시 게임오버) + 경고 토스트. `bossDamaged`면 `registerHit(word, score, false)`로 점수·콤보·타수만 반영(처치 수 미증가)+`_flashUntil`, 완전 처치 시에만 폭발·`advanceStage`.
     *  **렌더러**: 보스 머리 위에 ① **보스 HP** = `HP ♥♥` — 남은 격파 수를 ♥ 칸(U+2665 텍스트 글리프, 빨강=남음/회색=잃음)으로 그리고 `HP` 태그를 붙여 '체력'임을 명확히, ② **차지 게이지 바** = 막대 위에 `CHARGE` 라벨을 붙여 '공격 예열 게이지'임을 명확히(찰수록 노랑→빨강). 격파 시 분홍(`_flashUntil`)·공격 시 강한 빨강(`_attackFlashUntil`) 플래시.

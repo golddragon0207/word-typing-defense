@@ -71,38 +71,38 @@ const CONFIG = {
   // - killPerStageBase/Step: 스테이지 클리어에 필요한 처치 수 = killPerStageBase + floor((stage-1) * killPerStageStep)
   // - maxHp: 기지 최대 체력 / damagePerLeak: 몬스터 1마리가 기지에 도달했을 때 입는 피해
   DIFFICULTY: {
-    // ⚠️ 낙하 속도·스폰 주기·처치 수는 "각 스테이지 최소 클리어 타수가 완만하게 상승"하도록
-    //   시뮬레이션으로 튜닝됨(스테이지 간 난이도 점프 최소화).
-    //   stage1: 낙하 약 30초·스폰 약 9.5초·처치 8마리 → 스테이지마다 조금씩만 빡세짐.
-    //   후반은 낙하속도(stage14 상한)·스폰주기 하한(4000ms)·처치수 증가율(0.5)로 **요구 타수가 평탄해져**
+    // ⚠️ 낙하·스폰·처치 수는 **목표 타수(실제 키 입력 기준)** 에 맞춰 시뮬레이션으로 튜닝됨:
+    //   s1≈50 · s2≈55 · s3≈65 · s4≈80 타 → 이후 s9경 ≈130타에서 평탄(스폰 하한 4000ms + 낙하 stage12 상한).
+    //   초반은 스폰 주기가 빠르게 촘촘해지며(base10500·step1300) 요구 타수를 올리고, 후반은 평탄해져
     //   일반 스테이지가 항상 직전~다음 보스보다 낮게 유지된다(보스가 각 스테이지보다 조금 더 어렵도록).
+    //   처치 수는 killPerStageBase 8·Step 0.5(2스테이지당 +1) — 후반 마라톤 방지.
     //   (v3.6에서 방어선 하향+상단 스폰으로 낙하 거리 538px 확보 → 초반이 더 관대해짐)
     //   (난이도 선택 UI는 없어 실제로는 normal만 사용되지만, 표는 speedMult를 축으로 일관되게 유지)
     easy: {
       speedMult: 0.75,
       maxMonsterCap: 15,
-      spawnIntervalBase: 9800, spawnIntervalStep: 320, spawnIntervalMin: 4000,
+      spawnIntervalBase: 10500, spawnIntervalStep: 1300, spawnIntervalMin: 4000,
       killPerStageBase: 8, killPerStageStep: 0.5,
       maxHp: 130, damagePerLeak: 8
     },
     normal: {
       speedMult: 1.0,
       maxMonsterCap: 15,
-      spawnIntervalBase: 9800, spawnIntervalStep: 320, spawnIntervalMin: 4000,
+      spawnIntervalBase: 10500, spawnIntervalStep: 1300, spawnIntervalMin: 4000,
       killPerStageBase: 8, killPerStageStep: 0.5,
       maxHp: 100, damagePerLeak: 10
     },
     hard: {
       speedMult: 1.4,
       maxMonsterCap: 15,
-      spawnIntervalBase: 9800, spawnIntervalStep: 320, spawnIntervalMin: 4000,
+      spawnIntervalBase: 10500, spawnIntervalStep: 1300, spawnIntervalMin: 4000,
       killPerStageBase: 8, killPerStageStep: 0.5,
       maxHp: 100, damagePerLeak: 12
     },
     hell: {
       speedMult: 2.0,
       maxMonsterCap: 15, // ⚠️ 계획서상 하드 상한선(Max Monster Cap = 15) — 이 값을 넘기면 안 됨
-      spawnIntervalBase: 9800, spawnIntervalStep: 320, spawnIntervalMin: 4000,
+      spawnIntervalBase: 10500, spawnIntervalStep: 1300, spawnIntervalMin: 4000,
       killPerStageBase: 8, killPerStageStep: 0.5,
       maxHp: 90, damagePerLeak: 15
     }

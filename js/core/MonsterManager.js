@@ -41,12 +41,13 @@ class MonsterManager {
             ? getDifficultyConfig(difficulty)
             : { speedMult: 1.0, maxMonsterCap: 15, spawnIntervalBase: 2400, spawnIntervalStep: 150, spawnIntervalMin: 800 };
 
-        // 낙하 속도: 스테이지마다 +0.04로 완만하게 가속하되 **stage 14에서 상한**(이후 고정).
-        //   후반 무한 스테이지에서 낙하가 계속 빨라져 반응 시간이 압축되면 일반 스테이지 요구 타수가
-        //   보스보다 가팔라지는(=보스가 오히려 쉬워지는) 역전이 생겨, 시뮬레이션으로 stage 14 상한을 도출.
-        //   stage1=0.30(낙하 약 30초, 538px÷18px/s), stage2=0.34 … stage14=0.82에서 고정 (× 난이도 speedMult)
-        const speedStage = Math.min(stage, 14);
-        this.speed = (0.30 + (speedStage - 1) * 0.04) * cfg.speedMult;
+        // 낙하 속도: 스테이지마다 +0.05로 가속하되 **stage 12에서 상한**(이후 고정, 0.85).
+        //   목표 타수(실제 키 입력 기준: s1≈50 … s4≈80)를 만들도록 스폰 주기와 함께 시뮬레이션으로 튜닝.
+        //   후반 무한 스테이지에서 낙하가 계속 빨라지면 반응 시간이 압축돼 일반 스테이지 요구 타수가
+        //   보스를 추월(=보스가 오히려 쉬워짐)하던 역전이 생기므로 stage 12에서 상한을 둔다.
+        //   stage1=0.30(낙하 약 30초, 538px÷18px/s) … stage12=0.85에서 고정 (× 난이도 speedMult)
+        const speedStage = Math.min(stage, 12);
+        this.speed = (0.30 + (speedStage - 1) * 0.05) * cfg.speedMult;
         // 절대 상한(CONFIG.MAX_MONSTER_CAP)을 넘지 않도록 항상 clamp
         const hardCap = (typeof CONFIG !== 'undefined' && CONFIG.MAX_MONSTER_CAP) || 15;
         this.MAX_MONSTER_CAP = Math.min(hardCap, cfg.maxMonsterCap);
@@ -171,15 +172,19 @@ class MonsterManager {
         // 후반 보스일수록 더 긴(어려운) 제시어를 우선 출제
         const bossWord = this._pickBossWord(stage);
 
-        // 🐲 보스 난이도 스케일: 보스 인덱스(5→0, 10→1, 15→2 …) 기준으로 후반일수록 강해진다.
-        //    - 체력(정타 수)      ↑ : 2 → 5     (싸움이 길어짐)
-        //    - 차지 시간          ↓ : 22s → 7s  (공격이 더 자주 = 요구 타수 상승, 첫 보스는 4스테이지 대비 완만한 상승)
-        //    - 공격력            ↑ : 10 → +2/보스 (후반 치명성 — 못 따라가면 실제로 사망 가능)
-        //    - 제시어           ↑ : _pickBossWord가 후반일수록 긴 문구 우선 출제
+        // 🐲 보스 난이도 스케일: 보스 인덱스(5→0, 10→1, 15→2 …) 기준으로 후반일수록 강해지되,
+        //    각 보스가 "직전 일반 스테이지보다 조금 더 어렵도록" 목표 타수(실제 키 입력)로 역산해 튜닝.
+        //    - 차지 시간 : 첫 보스(s5)는 20s(≈100타, 직전 s4≈80 +20)로 완만하게 시작 →
+        //                  이후 15.5s부터 보스마다 -0.9s씩 단축(≈9s 하한)해 요구 타수를 s10≈140 … 로 상승.
+        //    - 체력(정타): 2 → 5, s30/60/90에서 +1씩(완만화 — 잦은 체력 점프로 보스가 급등하는 것 방지).
+        //    - 공격력    : 10 → 매 보스 +2 (후반 치명성 — 못 따라가면 실제 사망 가능).
+        //    - 제시어    : _pickBossWord가 후반일수록 긴 문구 우선 출제.
         //    ※ 차지 공격에 '명중'당하면 update()에서 chargeTime을 다시 늘려(차지 느려짐) 연속 피격을 완화.
         const bossIndex = Math.max(0, Math.floor(stage / 5) - 1);
-        const requiredHits = Math.min(5, 2 + Math.floor(stage / 20));  // 보스 체력: 2 → 5
-        const chargeTime = Math.max(7000, 22000 - bossIndex * 2000);   // 차지 시간: 22s → 7s (후반 빨라짐)
+        const requiredHits = Math.min(5, 2 + Math.floor(stage / 30));  // 보스 체력: 2 → 5 (완만)
+        const chargeTime = 1000 * (bossIndex === 0
+            ? 20                                                       // 첫 보스(s5): 20s ≈ 100타
+            : Math.max(9, 15.5 - (bossIndex - 1) * 0.9));              // s10부터 15.5s → -0.9s/보스 (하한 9s)
         const attackDamage = 10 + bossIndex * 2;                        // 공격력: 10 → 매 보스 +2
 
         const boss = {
