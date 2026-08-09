@@ -187,7 +187,7 @@
 
 13. **`js/game.js`**
     *  메인 루프 오케스트레이터. 전 UI 배선(모달·닉네임 필수·홈 인라인 채팅연동 패널·단어팩·명예의전당·OBS·사운드·**라이브 채팅 토글**), 스테이지 진행, 사운드/피버/보스 배너 연출, 배경 파티클, 토스트, 글로벌 리더보드/애널리틱스 연동.
-    *  **시작 카운트다운**: `startGame()`에서 첫 몬스터 스폰까지의 그레이스 타임(`CONFIG.START_SPAWN_DELAY_MS` 5초)을 화면 중앙 오버레이(`#start-countdown`)에 5→1로 표시(`showStartCountdown`), 매 초 tick 애니메이션. "곧 몬스터가 몰려옵니다 — 준비하세요!" 준비 안내 문구, 0초 도달·`returnToMain` 시 `stopStartCountdown`으로 정리(setInterval 누수 방지).
+    *  **시작 카운트다운**: `startGame()`에서 첫 몬스터 스폰까지의 그레이스 타임(첫 몬스터 등장 전 플레이어 준비 시간, `CONFIG.START_SPAWN_DELAY_MS` 5초)을 화면 중앙 오버레이(`#start-countdown`)에 5→1로 표시(`showStartCountdown`), 매 초 tick 애니메이션. "곧 몬스터가 몰려옵니다 — 준비하세요!" 준비 안내 문구, 0초 도달·`returnToMain` 시 `stopStartCountdown`으로 정리(setInterval 누수 방지).
 
 14. **`proxy/soop-cors-proxy.worker.js`**
     *  SOOP 연동용 무료 Cloudflare Worker CORS 프록시. `player_live_api.php` 요청을 pass-through로 중계하고 CORS 헤더 부여. SOOP/아프리카 도메인만 허용(오픈 프록시 악용 방지). 개발자가 1회 배포 후 주소를 `CONFIG.SOOP_PROXY`에 입력.
