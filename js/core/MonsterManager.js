@@ -169,9 +169,16 @@ class MonsterManager {
         // 후반 보스일수록 더 긴(어려운) 제시어를 우선 출제
         const bossWord = this._pickBossWord(stage);
 
-        const requiredHits = Math.min(5, 2 + Math.floor(stage / 20)); // 낮은 스테이지 2 → 최대 5
-        const chargeTime = requiredHits * 6000;                        // 필요 격파에 비례(후반 게이지 길어짐)
-        const attackDamage = 10 + Math.floor(stage / 15) * 3;          // 게이지 만땅 시 기지 피해(후반 상승)
+        // 🐲 보스 난이도 스케일: 보스 인덱스(5→0, 10→1, 15→2 …) 기준으로 후반일수록 강해진다.
+        //    - 체력(정타 수)      ↑ : 2 → 5     (싸움이 길어짐)
+        //    - 차지 시간          ↓ : 22s → 7s  (공격이 더 자주 = 요구 타수 상승, 첫 보스는 4스테이지 대비 완만한 상승)
+        //    - 공격력            ↑ : 10 → +2/보스 (후반 치명성 — 못 따라가면 실제로 사망 가능)
+        //    - 제시어           ↑ : _pickBossWord가 후반일수록 긴 문구 우선 출제
+        //    ※ 차지 공격에 '명중'당하면 update()에서 chargeTime을 다시 늘려(차지 느려짐) 연속 피격을 완화.
+        const bossIndex = Math.max(0, Math.floor(stage / 5) - 1);
+        const requiredHits = Math.min(5, 2 + Math.floor(stage / 20));  // 보스 체력: 2 → 5
+        const chargeTime = Math.max(7000, 22000 - bossIndex * 2000);   // 차지 시간: 22s → 7s (후반 빨라짐)
+        const attackDamage = 10 + bossIndex * 2;                        // 공격력: 10 → 매 보스 +2
 
         const boss = {
             id: Date.now() + Math.random(),
