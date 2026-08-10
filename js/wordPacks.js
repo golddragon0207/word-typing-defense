@@ -267,9 +267,10 @@ const wordPacks = {
    * - 실시간 채팅 대기열에 시청자가 있으면 우선 소비, 없으면 [BOT] 표식 부여
    * - 💬 라이브 채팅 모드로 등록된 시청자면 실제 채팅 문구를, 아니면 단어팩 단어를 제시어로 사용
    * @param {string|null} customNickname - 강제 지정 닉네임 (선택)
+   * @param {Set<string>|null} excludeWords - 이미 화면에 떠 있는 제시어 집합(랜덤 단어 중복 회피용, 선택)
    * @returns {Object} { nickname, isBot, word, isLiveChat }
    */
-  getNextMonsterData(customNickname = null) {
+  getNextMonsterData(customNickname = null, excludeWords = null) {
     let nickname = customNickname;
     let isBot = false;
     let chatWord = null;
@@ -289,7 +290,16 @@ const wordPacks = {
     }
 
     const activeWords = this.getActiveWords();
-    const randomWord = activeWords[Math.floor(Math.random() * activeWords.length)];
+    // 🎯 "제시어 하나 = 타깃 하나" 유지: 이미 화면에 떠 있는 단어는 랜덤 뽑기에서 제외해
+    //    같은 제시어 몬스터가 동시에 존재하는(복제처럼 보이는) 혼란을 방지한다.
+    //    (라이브 채팅 문구 chatWord는 시청자 실제 메시지이므로 회피 대상이 아니다.
+    //     단어 풀이 화면 상한보다 커서 대부분 회피 가능하나, 다 겹치면 그냥 원본 풀에서 뽑는다.)
+    let pool = activeWords;
+    if (excludeWords && excludeWords.size > 0) {
+      const filtered = activeWords.filter(w => !excludeWords.has(w));
+      if (filtered.length > 0) pool = filtered;
+    }
+    const randomWord = pool[Math.floor(Math.random() * pool.length)];
 
     return {
       nickname: nickname,

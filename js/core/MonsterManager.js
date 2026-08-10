@@ -105,8 +105,10 @@ class MonsterManager {
         //    정지와 무관하게 발화하므로, 여기서 막지 않으면 정지 중에 몬스터가 튀어나온다.)
         if (typeof window !== 'undefined' && window.gameEngine && window.gameEngine.isPaused) return;
 
+        // 🎯 화면에 이미 떠 있는 제시어를 넘겨 중복 단어 회피(같은 단어 몬스터 동시 등장 방지)
+        const onScreenWords = new Set(this.monsters.map(m => m.text));
         const data = (typeof wordPacks !== 'undefined')
-            ? wordPacks.getNextMonsterData()
+            ? wordPacks.getNextMonsterData(null, onScreenWords)
             : { nickname: '[BOT] 시뮬레이터', isBot: true, word: '타자연습', isLiveChat: false };
 
         // CanvasRenderer가 논리(CSS) 좌표계로 그리므로 clientWidth(논리 픽셀) 기준으로 스폰 위치 계산
