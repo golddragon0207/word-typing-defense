@@ -506,6 +506,246 @@ html {
   overflow-y: auto;
 }
 
+/* ==========================================
+   홈 화면: 게임 설명서 (접이식 패널 — 기본 접힘)
+   home-chat-panel과 같은 톤이지만 골드 액센트로 구분
+   ========================================== */
+.home-guide-panel {
+  border: 1px solid #4a3f1f;
+  border-radius: 12px;
+  background: rgba(13, 14, 21, 0.55);
+  overflow: hidden;
+}
+
+.home-guide-summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  font-weight: 800;
+  color: #ffd54a;
+  user-select: none;
+}
+
+.home-guide-summary::-webkit-details-marker {
+  display: none;
+}
+
+.home-guide-summary::after {
+  content: '▾';
+  margin-left: auto;
+  color: #a0a5b5;
+  transition: transform 0.2s ease;
+}
+
+.home-guide-panel[open] .home-guide-summary::after {
+  transform: rotate(180deg);
+}
+
+.home-guide-summary:hover {
+  background: rgba(255, 213, 74, 0.06);
+}
+
+.home-guide-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid #4a3f1f;
+  /* 설명이 길어져도 카드가 화면을 넘지 않도록 본문만 내부 스크롤 */
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+}
+
+.home-guide-body b {
+  color: #ffffff;
+}
+
+/* 한 줄 요약 히어로 */
+.guide-hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(255, 213, 74, 0.12), rgba(0, 243, 255, 0.08));
+  border: 1px solid rgba(255, 213, 74, 0.35);
+}
+
+.guide-hero-ic {
+  font-size: 1.9rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.guide-hero-tx {
+  color: #d7dbe6;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* 두 역할 카드 (스트리머 / 시청자) */
+.guide-roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.guide-card {
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: rgba(13, 14, 21, 0.6);
+  border: 1px solid #2a3550;
+  border-left-width: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.guide-card.streamer {
+  border-left-color: #00f3ff;
+}
+
+.guide-card.viewer {
+  border-left-color: #ff5ea8;
+}
+
+.guide-card-head {
+  font-weight: 800;
+  color: #ffffff;
+  font-size: 0.98rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #0d0e15;
+  background: #8a8f9d;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.guide-card.streamer .role-tag {
+  background: #00f3ff;
+}
+
+.guide-card.viewer .role-tag {
+  background: #ff5ea8;
+}
+
+/* 번호 배지가 붙은 단계 목록 */
+.guide-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guide-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #c7ccda;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.step-n {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #00f3ff;
+  color: #0d0e15;
+  font-weight: 900;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.req {
+  color: #ff5ea8;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+/* 시청자 카드의 일반 목록 */
+.guide-plain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guide-plain li {
+  position: relative;
+  padding-left: 16px;
+  color: #c7ccda;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.guide-plain li::before {
+  content: '›';
+  position: absolute;
+  left: 2px;
+  color: #ff5ea8;
+  font-weight: 900;
+}
+
+/* 채팅 명령어 칩 */
+.cmd {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  color: #ffd54a;
+  background: rgba(255, 213, 74, 0.14);
+  border: 1px solid rgba(255, 213, 74, 0.45);
+  border-radius: 6px;
+  padding: 1px 7px;
+  font-size: 0.85rem;
+}
+
+.guide-tip {
+  color: #8a8f9d;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+/* 규칙 요약 칩 묶음 */
+.guide-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rule-chip {
+  background: rgba(0, 243, 255, 0.08);
+  border: 1px solid #2a3550;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 0.82rem;
+  color: #c7ccda;
+}
+
+/* 좁은 화면에선 역할 카드 세로 배치 */
+@media (max-width: 620px) {
+  .guide-roles {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 패널 안으로 옮긴 스트리머 닉네임 입력 (참여자 명단 바로 위) */
 .streamer-name-section {
   display: flex;

@@ -140,6 +140,54 @@
           <h1 class="glow-text">🛡️ WORD TYPING DEFENSE</h1>
           <p class="subtitle">시청자 닉네임 & 채팅으로 몰려오는 몬스터를 타자로 방어하라!</p>
 
+          <!-- 📖 처음 온 사람을 위한 설명서 (기본 접힘 — 클릭해서 펼치기) -->
+          <details id="home-guide-panel" class="home-guide-panel">
+            <summary class="home-guide-summary">
+              <span class="home-guide-title">📖 게임 설명서 — 처음이세요? (클릭해서 펼치기)</span>
+            </summary>
+
+            <div class="home-guide-body">
+              <!-- 한 줄 요약 히어로 -->
+              <div class="guide-hero">
+                <div class="guide-hero-ic">🎮</div>
+                <div class="guide-hero-tx">
+                  <b>실시간 타자 디펜스</b> — 시청자 <b>닉네임·채팅</b>이 몬스터가 되어 위에서 몰려오면,
+                  스트리머가 몬스터에 적힌 <b>제시어를 타이핑</b>해 격파하며 기지를 지킵니다.
+                </div>
+              </div>
+
+              <!-- 두 역할 카드 -->
+              <div class="guide-roles">
+                <div class="guide-card streamer">
+                  <div class="guide-card-head">🎨 스트리머 <span class="role-tag">플레이어</span></div>
+                  <ol class="guide-steps">
+                    <li><span class="step-n">1</span><span>플랫폼(SOOP·치지직·유튜브) 고르고 <b>채널 주소</b> 붙여넣어 연동</span></li>
+                    <li><span class="step-n">2</span><span><b>스트리머 닉네임</b> 입력 <em class="req">*필수</em></span></li>
+                    <li><span class="step-n">3</span><span><b>🔥 게임 시작</b> — 5초 뒤 몬스터 등장!</span></li>
+                  </ol>
+                  <p class="guide-tip">💡 방송 연동을 안 해도 봇 시청자로 바로 플레이 OK</p>
+                </div>
+
+                <div class="guide-card viewer">
+                  <div class="guide-card-head">🙋 시청자 <span class="role-tag">참여자</span></div>
+                  <ul class="guide-plain">
+                    <li>방송 채팅창에 <code class="cmd">!참여</code> 입력 → 내 닉네임이 몬스터로 출전!</li>
+                    <li><b>💬 라이브 모드</b> ON이면, <code class="cmd">!참여</code> 뒤에 친 채팅이 그대로 제시어가 됩니다.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 규칙 요약 칩 -->
+              <div class="guide-rules">
+                <span class="rule-chip">⌨️ 제시어 정확히 → 격파</span>
+                <span class="rule-chip">💔 기지 도달 시 체력 감소</span>
+                <span class="rule-chip">🔥 콤보·피버·보스</span>
+                <span class="rule-chip">📈 갈수록 빨라짐</span>
+                <span class="rule-chip">⏸ ESC 일시정지</span>
+              </div>
+            </div>
+          </details>
+
           <details id="home-chat-panel" class="home-chat-panel" open>
             <summary class="home-chat-summary">
               <span class="home-chat-title">📡 방송 채팅 실시간 연동</span>
