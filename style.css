@@ -1153,6 +1153,110 @@ html {
   100% { opacity: 1; transform: scale(1); }
 }
 
+/* 🔥 피버타임 발동 오버레이 — 화면 전체 불빛 플래시 + 대형 텍스트 연출 */
+.fever-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 158; /* 배너(150)·카운트다운(155) 위, 일시정지(160) 아래 */
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.fever-overlay.hidden {
+  display: none !important;
+}
+
+/* 화면 전체를 뒤덮는 주황/붉은 불빛 플래시 + 가장자리 비네트 */
+.fever-flash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, rgba(255, 220, 0, 0.35) 0%, rgba(255, 120, 0, 0) 55%),
+    radial-gradient(ellipse at center, rgba(255, 60, 0, 0) 35%, rgba(255, 45, 0, 0.5) 100%);
+  animation: feverFlash 1.15s ease-out;
+}
+
+@keyframes feverFlash {
+  0%   { opacity: 0; }
+  12%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 중앙 대형 FEVER 텍스트 (튀어나오며 크게 강조) */
+.fever-text {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 3.6rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  white-space: nowrap;
+  color: #fff3c4;
+  text-shadow: 0 0 18px #ff9500, 0 0 36px #ff3d00, 0 0 60px #ff0055;
+  animation: feverTextPop 1.2s cubic-bezier(0.2, 1.2, 0.3, 1);
+}
+
+@keyframes feverTextPop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+  22%  { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }
+  45%  { opacity: 1; transform: translate(-50%, -50%) scale(0.98); }
+  70%  { opacity: 1; transform: translate(-50%, -50%) scale(1.03); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.06); }
+}
+
+/* 💥 보스 차지 공격 발동 오버레이 — 가장자리 붉은 위험 비네트 + 피해 텍스트.
+   기지가 피격당했음을 순간적으로 알리는 연출(멀미 방지 위해 흔들림 없음). */
+.boss-attack-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 157; /* 피버(158) 바로 아래, 배너·카운트다운 위 */
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.boss-attack-overlay.hidden {
+  display: none !important;
+}
+
+/* 화면 가장자리에서 안쪽으로 번지는 붉은 위험 비네트(피격감) */
+.boss-attack-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(255, 0, 40, 0) 42%, rgba(255, 0, 40, 0.55) 100%);
+  animation: bossAttackFlash 0.7s ease-out;
+}
+
+@keyframes bossAttackFlash {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 중앙 피해 텍스트 (💥 기지 -N) */
+.boss-attack-text {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  color: #ffe0e0;
+  text-shadow: 0 0 14px #ff0033, 0 0 28px #ff0033;
+  animation: bossAttackTextPop 0.9s ease-out;
+}
+
+@keyframes bossAttackTextPop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
+  60%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
 .start-countdown-hint {
   margin-top: 4px;
   font-size: 0.95rem;

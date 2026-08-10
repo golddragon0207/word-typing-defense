@@ -111,6 +111,7 @@
 * **방어 속도(WPM)**: IME 조합 완료 후 자소 단위 타수(`getKeystrokeCount`, 한컴 타자연습 2024.4 방식)를 전체 경과시간(분)으로 나눠 실시간 산출.
 * **점수 연산**: 한글 자모 획수 기반(`getHangulStrokeCount`). **스테이지 배수는 반선형 `1 + (stage-1) × 0.5`** — 기존 선형(`× stage`) 대비 후반 점수 복리 폭주를 절반으로 완화. 일반 몬스터 점수는 `round(max(30, round(자모획수 × 6)) × (1 + (stage-1)×0.5))`, 보스 점수는 `round(500 × (1 + (stage-1)×0.5))`. (계수 0.5는 조정 가능.)
 * **🔥 피버 버스트**: 콤보 누적으로 게이지(100) 도달 시 발동 — 화면의 일반 몬스터를 모두 클리어(`clearNonBoss`), 정리분 점수 합 + 500 보너스 점수(`addFeverBonus`), 기지 체력 10% 회복(`healBase`).
+  * **발동 연출(`playFeverOverlay`)**: 코너 토스트만으로는 눈에 안 띄어, 게임 화면 한복판에서 크게 터지는 오버레이(`#fever-overlay`)를 띄운다 — 주황~붉은 방사형 **불빛 플래시**(`feverFlash`) + 대형 **"🔥 FEVER TIME 🔥" 텍스트**(`feverTextPop`, 제자리 scale 팝). **멀미 방지를 위해 화면 흔들림은 없음.**
   * **보스 스테이지 게이지 동결**: 5의 배수 스테이지에서는 게이지 충전/감소가 스킵되고 `fever-locked` 클래스(회색+🔒) 적용.
 * **⏸ 일시정지 (`GameEngine.togglePause`)**: **ESC 키** 또는 **마우스(HUD `#btn-pause` / 오버레이 `#btn-pause-resume`)** 로 정지/재개. 정지 중 몬스터 이동·스폰·입력 멈춤. **재개 시 곧바로 시작하지 않고 `RESUME_GRACE_MS`(5초) 그레이스 카운트다운(`#start-countdown`)을 띄운 뒤** 실제 재개(`MonsterManager.resumeSpawns()` 호출)한다. 그레이스 동안에도 게임은 정지 상태(`isPaused=true`)를 유지하며, 카운트다운 도중 다시 정지하면 카운트다운을 취소하고 정지 오버레이로 복귀한다. 정지+그레이스로 흐른 시간은 `startTime`에 합산해 WPM 계산에서 제외.
 
@@ -123,6 +124,7 @@
   * 공격력: `attackDamage = 10 + bossIndex * 2`(무한↑ — 후반 치명성).
   * 정타 시: 게이지 절반 밀어내기(`chargeElapsed -= chargeTime * 0.5`) + 제시어 리롤.
   * 명중 공격 발동 시: 정액 피해 + 다음 차지시간 1.5배~2배 연장 (`chargeAttackCount`).
+  * **공격 발동 연출(`playBossAttackOverlay`)**: 게이지가 다 차 기지가 피격당하면 화면 전체 오버레이(`#boss-attack-overlay`)로 확실히 알린다 — 가장자리에서 안쪽으로 번지는 **붉은 위험 비네트**(`bossAttackFlash`) + 중앙 **피해량 텍스트**(`💥 기지 -N`, `bossAttackTextPop`). 피버(주황·중앙→바깥)와 색·방향을 반대로 잡아 **보상 vs 피격**을 즉시 구분. 흔들림 없음. (기존 코너 토스트는 제거.)
   * 처치 보상: 보스 완전 처치 시 기지 체력 25% 회복(`healBase(maxHp * 0.25)`).
   * 렌더링: 보스 머리 위에 **HP 하트(`HP ♥♥`)** 및 **차지 바(`CHARGE`)** 표시.
 
@@ -146,6 +148,7 @@
 
 ### 16. ✨ UX 연출 & 스타필드 배경
 * **토스트 알림 (`window.showToast`)**: 연동 상태, 신기록, 팩 적용 등 알림.
+* **피버/보스 공격 화면 오버레이 (`js/ui/fx.js`)**: `playFeverOverlay`(주황 불빛 플래시 + "🔥 FEVER TIME" 대형 텍스트) / `playBossAttackOverlay(damage)`(가장자리 붉은 위험 비네트 + "💥 기지 -N" 피해 텍스트). 둘 다 화면 한복판 연출이지만 **멀미 방지를 위해 흔들림은 넣지 않음**. `#fever-overlay`(z:158) / `#boss-attack-overlay`(z:157).
 * **배경 파티클 스타필드 (`#bg-canvas`)**: 90개 영롱한 드리프트 파티클 렌더링.
 
 ---

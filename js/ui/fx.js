@@ -43,6 +43,48 @@
   };
 
   /* ==========================================================
+   * 🔥 피버타임 발동 연출 — 화면 전체 불빛 플래시 + 대형 텍스트 + 무대 흔들림
+   *   토스트만으로는 눈에 잘 안 띄어, 게임 화면 한복판에서 크게 터뜨린다.
+   * ========================================================== */
+  P.playFeverOverlay = function () {
+    const overlay = document.getElementById('fever-overlay');
+    if (overlay) {
+      overlay.classList.remove('hidden');
+      // 이전 발동의 애니메이션을 확실히 리셋하기 위해 자식 요소의 animation을 재시작
+      overlay.querySelectorAll('.fever-flash, .fever-text').forEach(el => {
+        el.style.animation = 'none';
+        void el.offsetWidth; // 리플로우 강제
+        el.style.animation = '';
+      });
+      clearTimeout(this._feverOverlayTimeout);
+      this._feverOverlayTimeout = setTimeout(() => overlay.classList.add('hidden'), 1300);
+    }
+  };
+
+  /* ==========================================================
+   * 💥 보스 차지 공격 발동 연출 — 가장자리 붉은 위험 비네트 + 피해 텍스트
+   *   기지가 피격당한 순간을 화면 전체로 확실히 알린다(흔들림 없음).
+   * @param {number} damage - 기지가 받은 피해량(텍스트에 표기)
+   * ========================================================== */
+  P.playBossAttackOverlay = function (damage = 0) {
+    const overlay = document.getElementById('boss-attack-overlay');
+    if (!overlay) return;
+
+    const textEl = document.getElementById('boss-attack-text');
+    if (textEl) textEl.textContent = damage > 0 ? `💥 기지 -${damage}` : '💥 기지 피격!';
+
+    overlay.classList.remove('hidden');
+    // 연속 피격 시에도 애니메이션을 매번 처음부터 재생하도록 리셋
+    overlay.querySelectorAll('.boss-attack-flash, .boss-attack-text').forEach(el => {
+      el.style.animation = 'none';
+      void el.offsetWidth; // 리플로우 강제
+      el.style.animation = '';
+    });
+    clearTimeout(this._bossAttackOverlayTimeout);
+    this._bossAttackOverlayTimeout = setTimeout(() => overlay.classList.add('hidden'), 950);
+  };
+
+  /* ==========================================================
    * 🌌 배경 파티클(스타필드) 연출 — #bg-canvas
    * ========================================================== */
   P.startBackgroundStarfield = function () {

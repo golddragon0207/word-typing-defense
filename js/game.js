@@ -509,6 +509,9 @@ class GameEngine {
   triggerFeverBurst() {
     if (!this.monsterManager || !this.stateManager) return;
 
+    // 🔥 화면 한복판에서 크게 터지는 피버 연출(플래시 + 대형 텍스트 + 흔들림)
+    this.playFeverOverlay();
+
     const cleared = this.monsterManager.clearNonBoss();
 
     // 정리된 몬스터마다 폭발 이펙트 + 점수 합산 (+ 기본 보너스)
@@ -543,7 +546,8 @@ class GameEngine {
     if (!this.stateManager || this.stateManager.currentState !== 'PLAYING') return;
     const isDead = this.stateManager.damageBaseFlat(damage);
     if (window.audioManager) window.audioManager.playExplosion();
-    this.showToastInternal(`💥 보스 공격! 기지 -${damage}`, 'warn');
+    // 💥 화면 전체에 붉은 위험 비네트 + 피해 텍스트로 피격을 확실히 알린다
+    this.playBossAttackOverlay(damage);
     if (isDead) {
       this.stateManager.changeState('GAME_OVER');
       this.showGameOverScreen();
