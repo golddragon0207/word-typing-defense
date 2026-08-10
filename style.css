@@ -1393,7 +1393,36 @@ html {
   font-size: 0.8rem;
 }
 
-/* 🙋 내(현재 스트리머) 기록 강조 — 전체 순위에서 자기 등수를 한눈에 찾도록 */
+/* 🔎 닉네임 검색 입력 (전체 순위에서 특정 스트리머 찾기) */
+.leaderboard-search {
+  width: 100%;
+  padding: 9px 12px;
+  background: #0d0e15;
+  border: 1px solid #2a2e3d;
+  border-radius: 8px;
+  color: #eaf6ff;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.leaderboard-search:focus {
+  border-color: #00f3ff;
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.25);
+}
+
+.leaderboard-search::placeholder {
+  color: #6c7280;
+}
+
+/* 🙋 '내 순위' 뷰의 보조 안내 문구 */
+.leaderboard-note {
+  margin-top: 4px;
+  font-size: 0.74rem;
+  color: #9fe9ff;
+  line-height: 1.4;
+}
+
+/* 🙋 내(현재 스트리머) 기록 강조 — 전체 순위/내 순위에서 한눈에 찾도록 */
 .leaderboard-row.is-me {
   background: rgba(0, 243, 255, 0.12);
   border-color: #00f3ff;

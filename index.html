@@ -319,10 +319,13 @@
         </div>
         <div class="modal-body">
           <p id="leaderboard-source" class="modal-desc">최고 도달 스테이지 기준 TOP 5입니다.</p>
+          <input id="leaderboard-search" class="leaderboard-search" type="text"
+            placeholder="🔎 닉네임 검색 (전체 순위에서 찾기)" autocomplete="off" maxlength="20" />
           <div id="leaderboard-list" class="leaderboard-grid"></div>
         </div>
 
         <div class="modal-actions modal-actions-pad">
+          <button id="btn-leaderboard-me" class="btn btn-neon cyan">🙋 내 순위 보기</button>
           <button id="btn-leaderboard-all" class="btn btn-neon cyan">📜 전체 순위 보기</button>
           <button class="btn btn-primary" data-close="modal-leaderboard">닫기</button>
         </div>

@@ -191,7 +191,7 @@ const GlobalLeaderboard = {
    *   내 기록은 아직 서버에 반영되지 않았을 수 있으므로 "가상으로 1건 추가"해 계산한다
    *   (above+1)/(total+1) — 표본이 충분(≥MIN_SAMPLE)하면 ±1의 영향은 무시할 수준.
    * @param {number} score - 내 최종 점수
-   * @returns {Promise<{available:boolean, enough?:boolean, total?:number, topPercent?:number}>}
+   * @returns {Promise<{available:boolean, enough?:boolean, total?:number, topPercent?:number, rank?:number}>}
    */
   async fetchPercentile(score) {
     if (!this.enabled || !this.db) return { available: false };
@@ -222,7 +222,8 @@ const GlobalLeaderboard = {
 
       let topPercent = ((above + 1) / (total + 1)) * 100;
       topPercent = Math.max(0.1, Math.min(100, topPercent));
-      return { available: true, enough: true, total, topPercent };
+      // rank = 나보다 높은 점수 수 + 1 (점수 기준 정확 등수). SCAN_CAP 밖이면 그 안에서 saturate.
+      return { available: true, enough: true, total, topPercent, rank: above + 1 };
     } catch (e) {
       console.warn('⚠️ [GlobalLeaderboard] 백분위 조회 실패:', e.message);
       return { available: false };

@@ -119,84 +119,185 @@
    * ========================================================== */
 
   /**
-   * 🏆 명예의 전당 데이터 로드: 글로벌(Firestore)이 설정돼 있으면 스테이지 기준으로 조회해 캐시하고,
-   * 미설정이거나 네트워크 실패 시 로컬(localStorage) 스테이지 기준 TOP5로 자동 폴백한다.
+   * 🏆 명예의 전당 데이터 로드(모달 진입 시 1회): 글로벌(Firestore) 설정 시 상위 200을 스테이지 기준으로 조회해
+   *    캐시하고, 미설정/실패 시 로컬(localStorage) 상위 200으로 폴백한다.
+   *    이후 TOP5·전체·검색은 이 캐시에서 클라이언트 측으로 처리해 추가 조회를 하지 않는다.
+   *    ('내 순위'만 점수 기준 별도 조회 — fetchPercentile.)
    */
-  P.renderLeaderboard = async function (showAll = false) {
-    const listEl = document.getElementById('leaderboard-list');
+  P.loadLeaderboard = async function () {
     const sourceEl = document.getElementById('leaderboard-source');
-    if (!listEl || !this.stateManager) return;
-
-    this.leaderboardShowAll = showAll;
-    const limit = showAll ? 200 : 5; // 전체 보기: 글로벌 최대 200 / 로컬 보관분 전체
-
-    // 📜 전체 ↔ TOP5 토글 버튼 라벨 갱신
-    const allBtn = document.getElementById('btn-leaderboard-all');
-    if (allBtn) allBtn.textContent = showAll ? '🏅 TOP 5만 보기' : '📜 전체 순위 보기';
+    if (!this.stateManager) return;
 
     let scores = null;
     let source = 'local';
-
     if (window.GlobalLeaderboard && window.GlobalLeaderboard.enabled) {
       if (sourceEl) sourceEl.textContent = '🌐 글로벌 기록 불러오는 중...';
-      scores = await window.GlobalLeaderboard.fetchTop(limit);
+      scores = await window.GlobalLeaderboard.fetchTop(200);
       if (scores) source = 'global';
     }
-
     if (!scores) {
       source = 'local';
-      scores = this.stateManager.getTopScores(limit);
+      scores = this.stateManager.getTopScores(200);
     }
-
     this.leaderboardCache = { source, scores };
+    this.renderLeaderboard(this.leaderboardView || 'top5');
+  };
 
-    if (sourceEl) {
-      const scopeTxt = showAll ? `전체 순위 (${scores.length}명)` : 'TOP 5';
-      sourceEl.textContent = source === 'global'
-        ? `🌐 모든 스트리머가 함께 보는 글로벌 ${scopeTxt} (최고 도달 스테이지 기준)입니다.`
-        : `💾 이 브라우저에만 저장된 로컬 ${scopeTxt} (최고 도달 스테이지 기준)입니다. (글로벌 미설정 또는 연결 실패)`;
-    }
+  /**
+   * 🏆 뷰 전환(추가 네트워크 조회 없음). view: 'top5' | 'all' | 'me'
+   *   - top5/all: 캐시 목록에서 슬라이스·필터해 렌더
+   *   - me: 내 기록 + 글로벌 점수 기준 정확 등수(별도 조회)를 렌더
+   */
+  P.renderLeaderboard = function (view = 'top5') {
+    const listEl = document.getElementById('leaderboard-list');
+    if (!listEl || !this.leaderboardCache) return;
+    this.leaderboardView = view;
 
+    // 버튼 라벨: 현재 뷰의 버튼은 'TOP 5로' 되돌리기로 표기
+    const allBtn = document.getElementById('btn-leaderboard-all');
+    if (allBtn) allBtn.textContent = view === 'all' ? '🏅 TOP 5만 보기' : '📜 전체 순위 보기';
+    const meBtn = document.getElementById('btn-leaderboard-me');
+    if (meBtn) meBtn.textContent = view === 'me' ? '🏅 TOP 5만 보기' : '🙋 내 순위 보기';
+
+    // 검색창은 목록형(top5/all)에서만 노출
+    const searchEl = document.getElementById('leaderboard-search');
+    if (searchEl) searchEl.classList.toggle('hidden', view === 'me');
+
+    if (view === 'me') { this.renderMyRankView(); return; }
     this.renderLeaderboardList();
   };
 
   /**
-   * 캐시된 단일 TOP 리스트를 그린다 (네트워크 재조회 없음).
+   * 🔎 검색 입력 처리 — 닉네임 부분일치. 검색어가 있으면 전체(200) 대상에서 찾도록 자동 확장한다.
+   * @param {string} q
+   */
+  P.onLeaderboardSearch = function (q) {
+    this.leaderboardQuery = (q || '').trim().toLowerCase();
+    if (this.leaderboardView === 'me') return; // 내 순위 뷰에선 검색 무시
+    // 검색어가 있으면 상위 5개에 갇히지 않도록 전체 뷰로 전환(캐시라 재조회 없음)
+    if (this.leaderboardQuery && this.leaderboardView !== 'all') {
+      this.renderLeaderboard('all');
+      return;
+    }
+    this.renderLeaderboardList();
+  };
+
+  /**
+   * 캐시된 목록을 현재 뷰(top5/all)와 검색어에 맞춰 그린다 (네트워크 재조회 없음).
+   * 순위 번호는 필터와 무관하게 '전체 정렬상의 실제 등수'를 유지한다.
    * 랭킹 기준이 '최고 도달 스테이지'이므로 스테이지를 주지표로 강조한다.
    */
   P.renderLeaderboardList = function () {
     const listEl = document.getElementById('leaderboard-list');
+    const sourceEl = document.getElementById('leaderboard-source');
     if (!listEl || !this.leaderboardCache) return;
 
+    const source = this.leaderboardCache.source;
     const scores = this.leaderboardCache.scores || [];
+    const q = this.leaderboardQuery || '';
+    const view = this.leaderboardView || 'top5';
+    const myName = this.getMyNickname();
+
+    // 실제 등수(전체 정렬 인덱스)를 유지한 채 필터/슬라이스
+    let indexed = scores.map((entry, idx) => ({ entry, rank: idx + 1 }));
+    if (q) indexed = indexed.filter(x => (x.entry.nickname || '').toLowerCase().includes(q));
+    else if (view === 'top5') indexed = indexed.slice(0, 5);
+
+    // 안내 문구
+    if (sourceEl) {
+      const scope = q ? `검색 결과 (${indexed.length}명)` : (view === 'all' ? `전체 순위 (${scores.length}명)` : 'TOP 5');
+      sourceEl.textContent = source === 'global'
+        ? `🌐 모든 스트리머가 함께 보는 글로벌 ${scope} (최고 도달 스테이지 기준)입니다.`
+        : `💾 이 브라우저에만 저장된 로컬 ${scope} (최고 도달 스테이지 기준)입니다. (글로벌 미설정 또는 연결 실패)`;
+    }
 
     if (scores.length === 0) {
       listEl.innerHTML = '<p class="leaderboard-empty">아직 저장된 전적이 없습니다. 첫 기록에 도전해보세요!</p>';
       return;
     }
+    if (indexed.length === 0) {
+      listEl.innerHTML = `<p class="leaderboard-empty">'${this.escapeHtml(q)}' 검색 결과가 없습니다.</p>`;
+      return;
+    }
 
     const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-    const myName = this.getMyNickname();
-    listEl.innerHTML = scores.map((entry, idx) => {
+    listEl.innerHTML = indexed.map(({ entry, rank }) => {
       const isMe = !!myName && entry.nickname === myName;
       return `
       <div class="leaderboard-row${isMe ? ' is-me' : ''}">
-        <span class="lb-rank">${medals[idx] || (idx + 1)}</span>
+        <span class="lb-rank">${medals[rank - 1] || rank}</span>
         <span class="lb-nickname">${this.escapeHtml(entry.nickname)}${isMe ? '<span class="lb-me-tag">나</span>' : ''}</span>
         <span class="lb-stage">STAGE ${entry.stage || 1}</span>
-        <span class="lb-grade rank-${(entry.grade || 'D').toLowerCase()}">${entry.grade}</span>
+        <span class="lb-grade rank-${(entry.grade || 'D').toLowerCase()}">${entry.grade || 'D'}</span>
         <span class="lb-meta">${(entry.score || 0).toLocaleString()}점 · 방어속도 ${entry.wpm || 0}</span>
         <span class="lb-date">${entry.date || ''}</span>
       </div>`;
     }).join('');
+  };
 
-    // 🙋 전체 보기에서 내 기록이 목록 아래쪽에 묻혀 있어도 바로 보이도록 리스트 내부에서만 스크롤
-    const meRow = listEl.querySelector('.leaderboard-row.is-me');
-    if (meRow && this.leaderboardShowAll) {
-      const cRect = listEl.getBoundingClientRect();
-      const rRect = meRow.getBoundingClientRect();
-      listEl.scrollTop += (rRect.top - cRect.top) - (listEl.clientHeight / 2 - rRect.height / 2);
+  /**
+   * 🙋 '내 순위' 뷰 — 전체 랭킹과 분리해 내 등수만 따로 보여준다.
+   *   로컬 최고 기록(내 닉네임 우선)을 기준으로, 글로벌 연동 시 점수 기준 정확 등수(#N/총 M명·상위 X%)를 붙인다.
+   *   같은 점수는 세션 캐시(_myRankCache)로 재조회를 막고, 늦게 온 응답은 토큰으로 무시한다.
+   */
+  P.renderMyRankView = async function () {
+    const listEl = document.getElementById('leaderboard-list');
+    const sourceEl = document.getElementById('leaderboard-source');
+    if (!listEl) return;
+
+    const myBest = this.getMyBestRecord();
+    if (!myBest) {
+      if (sourceEl) sourceEl.textContent = '🙋 내 순위';
+      listEl.innerHTML = '<p class="leaderboard-empty">아직 내 기록이 없습니다. 한 판 플레이해보세요!</p>';
+      return;
     }
+
+    const renderCard = (rankLabel, note) => {
+      listEl.innerHTML = `
+      <div class="leaderboard-row is-me">
+        <span class="lb-rank">${rankLabel}</span>
+        <span class="lb-nickname">${this.escapeHtml(myBest.nickname)}<span class="lb-me-tag">나</span></span>
+        <span class="lb-stage">STAGE ${myBest.stage || 1}</span>
+        <span class="lb-grade rank-${(myBest.grade || 'D').toLowerCase()}">${myBest.grade || 'D'}</span>
+        <span class="lb-meta">${(myBest.score || 0).toLocaleString()}점 · 방어속도 ${myBest.wpm || 0}</span>
+        <span class="lb-date">${myBest.date || ''}</span>
+      </div>
+      ${note ? `<p class="leaderboard-note">${note}</p>` : ''}`;
+    };
+
+    const globalOn = !!(window.GlobalLeaderboard && window.GlobalLeaderboard.enabled);
+    if (!globalOn) {
+      if (sourceEl) sourceEl.textContent = '🙋 내 기록 (이 브라우저 개인 최고)';
+      renderCard('★', '글로벌 순위는 Firebase 연동 시 표시됩니다.');
+      return;
+    }
+
+    if (sourceEl) sourceEl.textContent = '🙋 내 글로벌 순위 조회 중…';
+    renderCard('…', '글로벌 순위 집계 중…');
+
+    const token = (this._myRankToken = (this._myRankToken || 0) + 1);
+    let res = (this._myRankCache && this._myRankCache.score === myBest.score) ? this._myRankCache.res : null;
+    if (!res) {
+      res = await window.GlobalLeaderboard.fetchPercentile(myBest.score);
+      if (token !== this._myRankToken) return;        // 그새 다른 조회로 교체됨
+      if (res && res.available && res.enough) this._myRankCache = { score: myBest.score, res };
+    }
+    if (this.leaderboardView !== 'me') return;         // 그새 뷰가 바뀜
+
+    if (!res || !res.available) {
+      if (sourceEl) sourceEl.textContent = '🙋 내 기록';
+      renderCard('★', '(글로벌 순위 조회 불가 — 로컬 최고 기록만 표시)');
+      return;
+    }
+    if (!res.enough) {
+      if (sourceEl) sourceEl.textContent = '🙋 내 기록';
+      renderCard('★', `글로벌 순위 집계 중… (표본 ${(res.total || 0).toLocaleString()}명, 조금 더 쌓이면 표시)`);
+      return;
+    }
+    const p = res.topPercent;
+    const pStr = p < 1 ? p.toFixed(1) : Math.round(p);
+    if (sourceEl) sourceEl.textContent = `🙋 내 글로벌 순위 — #${res.rank}위 / ${res.total.toLocaleString()}명 · 상위 ${pStr}%`;
+    renderCard(`#${res.rank}`, `상위 ${pStr}% · 총 ${res.total.toLocaleString()}명 중 (점수 기준 순위 — 전체 목록은 스테이지 기준이라 순서가 다를 수 있어요)`);
   };
 
   /**
@@ -211,6 +312,22 @@
     if (typed) return typed;
     const pn = this.config && this.config.playerNames && this.config.playerNames[0];
     return (pn && pn !== '스트리머') ? pn : '';
+  };
+
+  /**
+   * 🙋 로컬에 저장된 '내 최고 기록' — 내 닉네임과 일치하는 기록 중 최상위(스테이지→점수),
+   *    닉네임을 알 수 없으면 로컬 전체 최고로 폴백한다. 기록이 없으면 null.
+   * @returns {Object|null}
+   */
+  P.getMyBestRecord = function () {
+    if (!this.stateManager) return null;
+    const all = this.stateManager.getAllScores();
+    if (!all.length) return null;
+    const myName = this.getMyNickname();
+    const pool = myName ? all.filter(e => e.nickname === myName) : [];
+    const list = (pool.length ? pool : all).slice()
+      .sort((a, b) => (b.stage || 1) - (a.stage || 1) || (b.score || 0) - (a.score || 0));
+    return list[0] || null;
   };
 
   P.escapeHtml = function (str) {

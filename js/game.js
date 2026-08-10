@@ -145,8 +145,14 @@ class GameEngine {
           // ⚡ 1. 클릭하는 순간 모달창부터 0ms 만에 즉시 띄움
           modal.classList.remove('hidden');
 
-          // 모달별 진입 시 최신 데이터 렌더링 (명예의 전당은 항상 TOP5로 초기화)
-          if (modalId === 'modal-leaderboard') this.renderLeaderboard(false);
+          // 모달별 진입 시 최신 데이터 렌더링 (명예의 전당은 항상 TOP5·검색 초기화 후 1회 로드)
+          if (modalId === 'modal-leaderboard') {
+            this.leaderboardView = 'top5';
+            this.leaderboardQuery = '';
+            const lbSearch = document.getElementById('leaderboard-search');
+            if (lbSearch) { lbSearch.value = ''; lbSearch.classList.remove('hidden'); }
+            this.loadLeaderboard();
+          }
           if (modalId === 'modal-words') this.renderWordPackPreview();
 
           // ⚡ 2. 광고 호출 함수는 그대로 유지하되, 모달이 다 뜨고 난 150ms 뒤 비동기로 실행
@@ -159,10 +165,20 @@ class GameEngine {
       }
     });
 
-    // 🏆 명예의 전당 전체 ↔ TOP5 토글
+    // 🏆 명예의 전당 뷰 전환: 전체 ↔ TOP5, 내 순위 ↔ TOP5, 닉네임 검색
+    //    (뷰 버튼을 누르면 남아있던 검색어는 초기화해 예측 가능하게 동작시킴)
+    const lbSearch = document.getElementById('leaderboard-search');
+    const clearLbSearch = () => { this.leaderboardQuery = ''; if (lbSearch) lbSearch.value = ''; };
     const lbAllBtn = document.getElementById('btn-leaderboard-all');
     if (lbAllBtn) {
-      lbAllBtn.addEventListener('click', () => this.renderLeaderboard(!this.leaderboardShowAll));
+      lbAllBtn.addEventListener('click', () => { clearLbSearch(); this.renderLeaderboard(this.leaderboardView === 'all' ? 'top5' : 'all'); });
+    }
+    const lbMeBtn = document.getElementById('btn-leaderboard-me');
+    if (lbMeBtn) {
+      lbMeBtn.addEventListener('click', () => { clearLbSearch(); this.renderLeaderboard(this.leaderboardView === 'me' ? 'top5' : 'me'); });
+    }
+    if (lbSearch) {
+      lbSearch.addEventListener('input', () => this.onLeaderboardSearch(lbSearch.value));
     }
 
     // ⏸ 일시정지/재개: ESC 키 또는 마우스(일시정지/계속하기 버튼).
