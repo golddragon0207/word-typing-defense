@@ -176,16 +176,41 @@
     }
 
     const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-    listEl.innerHTML = scores.map((entry, idx) => `
-      <div class="leaderboard-row">
+    const myName = this.getMyNickname();
+    listEl.innerHTML = scores.map((entry, idx) => {
+      const isMe = !!myName && entry.nickname === myName;
+      return `
+      <div class="leaderboard-row${isMe ? ' is-me' : ''}">
         <span class="lb-rank">${medals[idx] || (idx + 1)}</span>
-        <span class="lb-nickname">${this.escapeHtml(entry.nickname)}</span>
+        <span class="lb-nickname">${this.escapeHtml(entry.nickname)}${isMe ? '<span class="lb-me-tag">나</span>' : ''}</span>
         <span class="lb-stage">STAGE ${entry.stage || 1}</span>
         <span class="lb-grade rank-${(entry.grade || 'D').toLowerCase()}">${entry.grade}</span>
         <span class="lb-meta">${(entry.score || 0).toLocaleString()}점 · 방어속도 ${entry.wpm || 0}</span>
         <span class="lb-date">${entry.date || ''}</span>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
+
+    // 🙋 전체 보기에서 내 기록이 목록 아래쪽에 묻혀 있어도 바로 보이도록 리스트 내부에서만 스크롤
+    const meRow = listEl.querySelector('.leaderboard-row.is-me');
+    if (meRow && this.leaderboardShowAll) {
+      const cRect = listEl.getBoundingClientRect();
+      const rRect = meRow.getBoundingClientRect();
+      listEl.scrollTop += (rRect.top - cRect.top) - (listEl.clientHeight / 2 - rRect.height / 2);
+    }
+  };
+
+  /**
+   * 🙋 현재 플레이어(스트리머 본인)의 닉네임을 구한다.
+   *    홈 화면 입력값을 우선하고, 없으면 이번 판 설정값(config.playerNames[0])을 쓴다.
+   *    아직 아무것도 설정하지 않은 기본값('스트리머')은 오탐 방지를 위해 미설정으로 간주한다.
+   * @returns {string} 식별 가능한 닉네임, 없으면 ''
+   */
+  P.getMyNickname = function () {
+    const input = document.getElementById('input-player-nickname');
+    const typed = input ? input.value.trim() : '';
+    if (typed) return typed;
+    const pn = this.config && this.config.playerNames && this.config.playerNames[0];
+    return (pn && pn !== '스트리머') ? pn : '';
   };
 
   P.escapeHtml = function (str) {

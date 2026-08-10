@@ -1393,6 +1393,25 @@ html {
   font-size: 0.8rem;
 }
 
+/* 🙋 내(현재 스트리머) 기록 강조 — 전체 순위에서 자기 등수를 한눈에 찾도록 */
+.leaderboard-row.is-me {
+  background: rgba(0, 243, 255, 0.12);
+  border-color: #00f3ff;
+  box-shadow: 0 0 12px rgba(0, 243, 255, 0.35);
+}
+
+.lb-me-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #04121a;
+  background: #00f3ff;
+  border-radius: 6px;
+  vertical-align: middle;
+}
+
 .lb-rank {
   font-size: 1rem;
   text-align: center;
