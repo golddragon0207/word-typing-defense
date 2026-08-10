@@ -71,18 +71,12 @@ class MonsterManager {
         const requiredKpm = this._requiredKpm(stage);   // 요구 타자속도(스폰 주기·보스 차지 시간 공용 기준)
         const spawnInterval = Math.max(400, Math.round(60000 * sc.avgWordKeystrokes / requiredKpm));
 
-        // 실제 몬스터 등장 시작 로직 (게임 시작 시 startDelayMs 만큼 그레이스 타임 후 실행)
+        // 실제 몬스터/보스 등장 시작 로직 (startDelayMs 만큼 그레이스 타임 후 실행)
         const beginSpawning = () => {
             this.startTimeout = null;
+            this.bossTimeout = null;
             if (isBossStage) {
-                // 🛡️ 5 Stage 단위 보스전: WARNING 배너 콜백 후 보스 소환.
-                //   ⚠️ 배너는 화면 중앙(top:42%)에 3000ms 동안 떠 있다가 display:none으로 '즉시' 사라진다.
-                //      보스 제시어도 중앙 부근에 뜨므로, 배너보다 먼저 소환하면 제시어가 warning에 가려진다.
-                //      → 배너가 사라진 뒤(3000ms) 소환하도록 3200ms로 텀을 잡아 겹침을 없앤다.
-                if (typeof this.onBossWarning === 'function') {
-                    this.onBossWarning(stage);
-                }
-                this.bossTimeout = setTimeout(() => { this.bossTimeout = null; this.spawnBoss(); }, 3200);
+                this.spawnBoss();
             } else {
                 this.spawnMonster();
             }
@@ -91,8 +85,18 @@ class MonsterManager {
             this.spawnInterval = setInterval(() => this._spawnTick(), spawnInterval);
         };
 
-        if (startDelayMs > 0) {
-            this.startTimeout = setTimeout(beginSpawning, startDelayMs);
+        // 🛡️ 5 Stage 단위 보스전: WARNING 배너를 '그레이스 시작과 동시에' 띄워 빈 화면 구간을 없앤다.
+        //   (예전엔 그레이스가 끝난 뒤에야 배너가 떠, 그 사이 몇 초 동안 화면이 텅 비어 멈춘 것처럼 보였다)
+        //   ⚠️ 배너는 화면 중앙(top:42%)에 뜨고 보스 제시어도 중앙 부근(y=260)에 뜨므로 둘이 겹치면 안 된다.
+        //      → 보스 소환까지의 텀(bossLeadMs)을 잡고, 배너는 그 '직전'(−400ms)에 사라지게 해 겹침을 막으면서
+        //         끝의 빈 구간을 최소화한다. 그레이스가 없는(예외) 경로에서도 최소 2200ms를 확보해 WARNING을 보여준다.
+        const beginDelay = isBossStage ? Math.max(startDelayMs, 2200) : startDelayMs;
+        if (isBossStage && typeof this.onBossWarning === 'function') {
+            this.onBossWarning(stage, Math.max(1200, beginDelay - 400));
+        }
+
+        if (beginDelay > 0) {
+            this.startTimeout = setTimeout(beginSpawning, beginDelay);
         } else {
             beginSpawning();
         }

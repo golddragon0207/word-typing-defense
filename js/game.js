@@ -72,8 +72,8 @@ class GameEngine {
 
     // 4. 보스 WARNING 배너 콜백 연결
     if (this.monsterManager) {
-      this.monsterManager.onBossWarning = (stage) => {
-        this.showBanner(`⚠️ STAGE ${stage} BOSS WARNING ⚠️`, '보스가 기를 모읍니다! 게이지가 차기 전에 제시어를 격파하세요!', true);
+      this.monsterManager.onBossWarning = (stage, durationMs = 3000) => {
+        this.showBanner(`⚠️ STAGE ${stage} BOSS WARNING ⚠️`, '보스가 기를 모읍니다! 게이지가 차기 전에 제시어를 격파하세요!', true, durationMs);
         if (window.audioManager) window.audioManager.playFever();
       };
       // 🐲 보스 차지 게이지가 다 차면(공격 발동) 기지에 정액 피해
@@ -557,7 +557,7 @@ class GameEngine {
   /**
    * 🚩 화면 중앙 배너 표시 (스테이지 시작 / 보스 WARNING 공용)
    */
-  showBanner(title, desc, isWarning = false) {
+  showBanner(title, desc, isWarning = false, durationMs = 3000) {
     const banner = document.getElementById('stage-banner');
     const titleEl = document.getElementById('stage-banner-title');
     const descEl = document.getElementById('stage-banner-desc');
@@ -569,7 +569,7 @@ class GameEngine {
     banner.classList.remove('hidden');
 
     clearTimeout(this._bannerTimeout);
-    this._bannerTimeout = setTimeout(() => banner.classList.add('hidden'), 3000);
+    this._bannerTimeout = setTimeout(() => banner.classList.add('hidden'), durationMs > 0 ? durationMs : 3000);
   }
 
   /**
