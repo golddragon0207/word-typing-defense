@@ -72,8 +72,9 @@
 * **동적 박스 폭**: `measureText`로 제시어/닉네임 실제 너비를 재서 박스 폭을 자동 확장(최소 110px 보장). 긴 단어(프리셋 hardcore 팩·라이브 채팅 문구 포함)가 박스를 넘치거나 옆 몬스터와 겹치지 않음.
 
 ### 5. 📝 단어팩 & 라이브 제시어 길이 처리
-* **기본 제시어 풀(`wordPacks.words`)**: 방송/게임/개발/음식·일상/밈/자연 등 6개 카테고리 약 95개 단어로 구성. 별도 JSON/`fetch` 없이 배열 정적 관리.
+* **기본 제시어 풀(`wordPacks.words`)**: 방송/게임/개발/음식·일상/밈/자연 등 6개 카테고리 약 95개 단어로 구성. **전부 4글자 이하 한글(띄어쓰기·특수문자·숫자 제외)** 로 통일해 몬스터 밸런스를 균일화. 별도 JSON/`fetch` 없이 배열 정적 관리.
 * 프리셋 팩 선택: `mixed`(기본 믹스), `memes`(방송 밈 21종), `hardcore`(억까 오타유발 10종), `spelling`(맞춤법 퀴즈 10종), `english`(영문 & IT 10종) + 모달 내 실시간 칩 미리보기(`renderWordPackPreview`).
+* **팩 난도 티어(`wordPacks.packDifficulty`)**: `mixed`·`memes`·`spelling`은 `normal`(제시어 ≤4자), `hardcore`·`english`는 `hard`(제시어 ≤8자, 잰말놀이/영타 컨셉 유지). `spelling`만 맞춤법 O/X 표기 컨셉이라 글자수 규칙 예외. `hard` 팩은 보스도 긴 세트(`bossWordsHard`)를 쓴다(아래 §12).
 * 라이브 채팅 제시어: 시청자가 길게 치면 최대 글자수(모달 설정 6/8/10/14, 기본 10)로 **잘라서(truncate)** 사용.
 
 ### 6. 🛡️ 대형 방송 마비 방지 (Max Monster Cap)
@@ -117,7 +118,7 @@
 
 ### 12. ♾️ 무한 Stage & 5 Stage 단위 보스전
 * **5 Stage마다 보스전**: 스테이지 전환 그레이스(3초) 시작과 동시에 WARNING 배너를 띄워 빈 화면 구간을 없애고, 배너가 사라진 직후 보스를 소환한다(`onBossWarning(stage, durationMs)` → `showBanner(..., durationMs)`). 보스전 중에는 일반 몬스터를 스폰하지 않는다.
-* **보스 제시어 팩(`bossWords`, 30종)**: `_pickBossWord(stage)`가 고난도 시스템 붕괴 테마 문구 선택.
+* **보스 제시어 팩(2티어)**: 일반 팩은 `bossWords`(6글자 통일 28종), `hard` 팩(hardcore·english)은 `bossWordsHard`(9글자 통일 20종). `_pickBossWord(stage)`가 `wordPacks.getActiveBossWords()`로 활성 팩 난도에 맞는 세트를 골라 시스템 붕괴 테마 문구를 출제. 보스 차지 시간(`_bossChargeMs`)은 단어 타수에서 자동 역산되어 긴 보스 세트일수록 난도가 함께 오른다.
 * **⚡ 차지 보스**: 고정 위치(`y:260`, `speed:0`)에서 차지 게이지를 채움.
   * 체력: `requiredHits = min(5, 2 + floor(stage/30))`
   * 차지시간(`_bossChargeMs`, `CONFIG.BOSS`): `60 * 보스문구평균타수 ÷ (kpmMult1.15 * requiredKpm(stage-1))`, 하한 `minChargeSec 1.5s`. → **직전 일반 스테이지(stage-1) 요구 타수의 1.15배 속도**를 내야 게이지를 다 밀어냄(=직전 스테이지보다 조금 더 어려운 스파이크). 요구 타수 곡선에 자동 연동돼 후반에도 안 뒤처짐. **기준을 stage-1로 두는 이유**: 보스 스테이지엔 일반 몹 구간이 없어 플레이어가 실제 겪은 마지막 속도가 직전 스테이지이기 때문(첫 보스 진입 갭 완화). 보스5 ≈ 1.15×131.5 ≈ **151타 = 스테이지4 대비 +15%(≈스테이지6 수준)**.
