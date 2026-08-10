@@ -13,7 +13,7 @@ class GameEngine {
     // 1인 전용 고정 설정
     this.config = {
       playerCount: 1,
-      difficulty: 'normal', // 'easy' | 'normal' | 'hard' | 'hell'
+      difficulty: 'normal', // 밸런스 세트 키 (현재 normal 단일)
       playerNames: ['스트리머']
     };
 
@@ -421,7 +421,7 @@ class GameEngine {
     // 🎯 포탑 조준/사격
     let firedTurret = null;
     if (this.turretManager) {
-      firedTurret = this.turretManager.aimAndFire(monster, 0);
+      firedTurret = this.turretManager.aimAndFire(monster);
     }
     if (window.audioManager) window.audioManager.playLaser();
 
@@ -458,7 +458,7 @@ class GameEngine {
         this.stageKillCount += 1;
         const diffCfg = (typeof getDifficultyConfig === 'function')
           ? getDifficultyConfig(this.config.difficulty)
-          : { killPerStageBase: 30, killPerStageStep: 0.5 };
+          : { killPerStageBase: 8, killPerStageStep: 0.5 };
         const killTarget = diffCfg.killPerStageBase + Math.floor((this.stateManager.currentStage - 1) * diffCfg.killPerStageStep);
         const isBossStageWaiting = this.monsterManager && this.stateManager.currentStage % 5 === 0;
         if (!isBossStageWaiting && this.stageKillCount >= killTarget) {
@@ -650,7 +650,7 @@ class GameEngine {
     if (this.isPaused) return;
 
     if (this.stateManager && this.stateManager.currentState === 'PLAYING' && this.monsterManager) {
-      const reachedMonsters = this.monsterManager.update(deltaTime, this.stateManager.currentStage);
+      const reachedMonsters = this.monsterManager.update(deltaTime);
       if (reachedMonsters > 0) {
         const isDead = this.stateManager.damageBase(reachedMonsters);
         if (isDead) {

@@ -77,12 +77,11 @@ class TurretManager {
     }
 
     /**
-     * 타깃 몬스터 조준 및 사격 처리
+     * 타깃 몬스터 조준 및 사격 처리 (1인 솔로 — 중앙 포탑 단일)
      * @param {Object} targetMonster - { x, y }
-     * @param {number|null} preferredPlayerIdx - 지정 플레이어 인덱스 (0번 고정)
      * @returns {Object} 조준/사격에 사용된 포탑 객체
      */
-    aimAndFire(targetMonster, preferredPlayerIdx = null) {
+    aimAndFire(targetMonster) {
         if (this.turrets.length === 0 || !targetMonster) return null;
 
         const selectedTurret = this.turrets[0];

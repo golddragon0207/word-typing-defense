@@ -63,50 +63,35 @@ const CONFIG = {
     HEIGHT: "90"
   },
 
-  // 🎮 난이도별 밸런스 테이블 (MonsterManager / StateManager / game.js 공용 참조)
-  // - maxMonsterCap: 화면에 동시 출전 가능한 최대 몬스터 수. 방송 마비 방지를 위해
-  //   난이도 상관없이 항상 15로 고정 (계획서상 하드 상한선, 절대 넘기지 않음)
+  // 🎮 밸런스 테이블 (MonsterManager / StateManager / game.js 공용 참조)
+  //   난이도 선택 UI가 없어 표준(normal) 한 세트만 사용한다. getDifficultyConfig()가 이 값을 반환.
+  // - maxMonsterCap: 화면에 동시 출전 가능한 최대 몬스터 수(항상 15 고정, 계획서상 하드 상한선).
   // - speedMult: 몬스터 낙하 속도 배율
-  // - 스폰 주기(ms): 난이도 테이블이 아니라 아래 CONFIG.SPAWN_CURVE에서 "목표 타자속도 곡선"으로 역산(전 난이도 공용).
+  // - 스폰 주기(ms): 이 테이블이 아니라 아래 CONFIG.SPAWN_CURVE에서 "목표 타자속도 곡선"으로 역산.
   // - killPerStageBase/Step: 스테이지 클리어에 필요한 처치 수 = killPerStageBase + floor((stage-1) * killPerStageStep)
   // - maxHp: 기지 최대 체력 / damagePerLeak: 몬스터 1마리가 기지에 도달했을 때 입는 피해
+  //
+  // ⚙️ 난이도 곡선: "스테이지가 오를수록 요구 타자속도(한컴 자소 기준)가 선형 상승 → 800타에서 소프트 캡,
+  //   이후는 집중력·지구력 싸움"이 되도록 튜닝. (스폰 주기는 CONFIG.SPAWN_CURVE에서 역산)
+  //   ▶ 핵심 원리: 스테이지를 깨려면 결국 "몬스터가 쏟아지는 속도만큼" 쳐내야 하므로,
+  //      요구 타자속도 ≈ (60000 ÷ 스폰주기ms) × 단어당타수(~9). → 목표 타자속도에서 스폰주기를 역산한다.
+  //   ① 요구 타자속도 곡선(SPAWN_CURVE: start100·step10.5·max800·afterMax3): s1=100타(초보 클리어) →
+  //      스테이지당 +10.5타로 선형 상승 → s20≈300타 → s40≈510타 → s60≈720타 →
+  //      s68에서 소프트 캡 800타 도달 → 이후는 +3타/s로만 완만히 상승(평평해지지 않음 = 불멸 제거).
+  //      스폰 주기로 환산하면 s1≈5400ms → s68≈675ms → 이후 서서히 더 짧아짐(하한 400ms).
+  //      "초보(100타)~월드클래스(800타+)"까지 실력이 곧 도달 스테이지가 되도록 하는 **주 난이도 축**.
+  //   ② 낙하 속도(MonsterManager: 0.30 + (min(stage,60)-1)*0.05): s60에서 상한(반응 ≈2.8s).
+  //      요구 타자속도는 ①이 정하고, 낙하는 "실수·머뭇거림을 봐주는 버퍼"를 스테이지마다 줄여
+  //      같은 요구 타수라도 후반일수록 무오타를 강요하는 **반응 압박(연출) 축**. (반응 하한 ≈2.8s, s60서 고정)
+  //   ③ 처치 수(killPerStageBase 8·Step 0.5, 2스테이지당 +1): s68에서 요구 타자속도가 소프트 캡(800타)에
+  //      닿은 뒤에는 처치 수(지구력)+보스 치명성(공격력 무한↑)+스폰 완만 조임이 겹쳐 난이도를 이어받는다
+  //      (=속도 목표는 사실상 멈추고, 무오타 지구력으로 갈리는 집중력 싸움).
+  //   ※ 화면 동시 몬스터는 항상 15 상한(MAX_MONSTER_CAP, 방송 보호).
   DIFFICULTY: {
-    // ⚙️ 난이도 곡선: "스테이지가 오를수록 요구 타자속도(한컴 자소 기준)가 선형 상승 → 800타에서 소프트 캡,
-    //   이후는 집중력·지구력 싸움"이 되도록 튜닝. (스폰 주기는 CONFIG.SPAWN_CURVE에서 역산 — 전 난이도 공용)
-    //   ▶ 핵심 원리: 스테이지를 깨려면 결국 "몬스터가 쏟아지는 속도만큼" 쳐내야 하므로,
-    //      요구 타자속도 ≈ (60000 ÷ 스폰주기ms) × 단어당타수(~9). → 목표 타자속도에서 스폰주기를 역산한다.
-    //   ① 요구 타자속도 곡선(SPAWN_CURVE: start100·step10.5·max800·afterMax3): s1=100타(초보 클리어) →
-    //      스테이지당 +10.5타로 선형 상승 → s20≈300타 → s40≈510타 → s60≈720타 →
-    //      s68에서 소프트 캡 800타 도달 → 이후는 +3타/s로만 완만히 상승(평평해지지 않음 = 불멸 제거).
-    //      스폰 주기로 환산하면 s1≈5400ms → s68≈675ms → 이후 서서히 더 짧아짐(하한 400ms).
-    //      "초보(100타)~월드클래스(800타+)"까지 실력이 곧 도달 스테이지가 되도록 하는 **주 난이도 축**.
-    //   ② 낙하 속도(MonsterManager: 0.30 + (min(stage,60)-1)*0.05): s60에서 상한(반응 ≈2.8s).
-    //      요구 타자속도는 ①이 정하고, 낙하는 "실수·머뭇거림을 봐주는 버퍼"를 스테이지마다 줄여
-    //      같은 요구 타수라도 후반일수록 무오타를 강요하는 **반응 압박(연출) 축**. (반응 하한 ≈2.8s, s60서 고정)
-    //   ③ 처치 수(killPerStageBase 8·Step 0.5, 2스테이지당 +1): s68에서 요구 타자속도가 소프트 캡(800타)에
-    //      닿은 뒤에는 처치 수(지구력)+보스 치명성(공격력 무한↑)+스폰 완만 조임이 겹쳐 난이도를 이어받는다
-    //      (=속도 목표는 사실상 멈추고, 무오타 지구력으로 갈리는 집중력 싸움).
-    //   ※ 화면 동시 몬스터는 항상 15 상한(MAX_MONSTER_CAP, 방송 보호).
-    //   (난이도 선택 UI는 없어 실제로는 normal만 사용되지만, 표는 speedMult를 축으로 일관되게 유지)
-    easy: {
-      speedMult: 0.75,
-      maxMonsterCap: 15,      killPerStageBase: 8, killPerStageStep: 0.5,
-      maxHp: 130, damagePerLeak: 8
-    },
     normal: {
       speedMult: 1.0,
-      maxMonsterCap: 15,      killPerStageBase: 8, killPerStageStep: 0.5,
+      maxMonsterCap: 15, killPerStageBase: 8, killPerStageStep: 0.5,
       maxHp: 100, damagePerLeak: 10
-    },
-    hard: {
-      speedMult: 1.4,
-      maxMonsterCap: 15,      killPerStageBase: 8, killPerStageStep: 0.5,
-      maxHp: 100, damagePerLeak: 12
-    },
-    hell: {
-      speedMult: 2.0,
-      maxMonsterCap: 15, // ⚠️ 계획서상 하드 상한선(Max Monster Cap = 15) — 이 값을 넘기면 안 됨      killPerStageBase: 8, killPerStageStep: 0.5,
-      maxHp: 90, damagePerLeak: 15
     }
   },
 

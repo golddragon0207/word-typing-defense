@@ -542,6 +542,4 @@ class ChatIntegrationEngine {
 
 // 전역 인스턴스 생성 및 window 바인딩 (다른 스크립트에서 window.chatEngine으로 접근)
 const chatEngine = new ChatIntegrationEngine();
-const chatIntegration = chatEngine;
 window.chatEngine = chatEngine;
-window.chatIntegration = chatIntegration;

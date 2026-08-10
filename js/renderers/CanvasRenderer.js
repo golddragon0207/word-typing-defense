@@ -161,7 +161,7 @@ class CanvasRenderer {
             const ctx = this.ctx;
             ctx.save();
 
-            const nickname = m.username || m.viewerName || '[BOT] 시뮬레이터';
+            const nickname = m.username || '[BOT] 시뮬레이터';
             const text = m.text || '단어';
             const isBoss = !!m.isBoss;
 
@@ -173,14 +173,22 @@ class CanvasRenderer {
             const boxHeight = 40 * scale;
 
             // 📏 글자 길이에 맞춰 박스 폭 동적 계산 (긴 단어가 박스를 넘치지 않도록)
-            //    닉네임/제시어 중 더 넓은 쪽 기준 + 좌우 여백, 최소폭 110px는 보장
+            //    닉네임/제시어 중 더 넓은 쪽 기준 + 좌우 여백, 최소폭 110px는 보장.
+            //    measureText는 매 프레임 몬스터 수만큼 도는 핫패스라, 텍스트/닉네임/배율이
+            //    바뀔 때만(예: 보스 제시어 리롤) 다시 재고 그 외에는 몬스터에 캐시한 값을 재사용한다.
             const wordFont = `500 ${Math.round(20 * scale)}px "Noto Sans KR", sans-serif`;
             const nickFont = `700 ${Math.round(14 * scale)}px "Noto Sans KR", sans-serif`;
-            ctx.font = wordFont;
-            const wordW = ctx.measureText(text).width;
-            ctx.font = nickFont;
-            const nickW = ctx.measureText(nickname).width;
-            const boxWidth = Math.max(110 * scale, Math.max(wordW, nickW) + 26 * scale);
+            let boxWidth;
+            if (m._bwText === text && m._bwNick === nickname && m._bwScale === scale) {
+                boxWidth = m._bwValue;
+            } else {
+                ctx.font = wordFont;
+                const wordW = ctx.measureText(text).width;
+                ctx.font = nickFont;
+                const nickW = ctx.measureText(nickname).width;
+                boxWidth = Math.max(110 * scale, Math.max(wordW, nickW) + 26 * scale);
+                m._bwText = text; m._bwNick = nickname; m._bwScale = scale; m._bwValue = boxWidth;
+            }
 
             // 👑 보스 전용 후광 링 이펙트
             if (isBoss) {

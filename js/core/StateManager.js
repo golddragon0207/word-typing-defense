@@ -30,7 +30,6 @@ class StateManager {
         this.feverActive = false;
         this.feverTimer = null;
         this.onFeverStart = null;  // game.js가 주입하는 콜백 () => void (사운드/토스트 연출용)
-        this.onFeverEnd = null;
 
         this.onStateChange = null; // game.js가 주입하는 콜백 (newState) => void (상단바 버튼 잠금 등)
     }
@@ -145,7 +144,6 @@ class StateManager {
         this.feverTimer = setTimeout(() => {
             this.feverActive = false;
             this.feverTimer = null;
-            if (typeof this.onFeverEnd === 'function') this.onFeverEnd();
             this.updateHUDUI();
         }, 900);
 
@@ -361,17 +359,6 @@ class StateManager {
         }
 
         return { isNewRecord, list: this.getTopScores(DISPLAY_TOP) };
-    }
-
-    /**
-     * 🗑️ 명예의 전당 전적 초기화
-     */
-    clearScores() {
-        try {
-            localStorage.removeItem(WTD_LEADERBOARD_STORAGE_KEY);
-        } catch (e) {
-            console.warn('[StateManager] 명예의 전당 초기화 실패:', e);
-        }
     }
 }
 

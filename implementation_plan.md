@@ -80,8 +80,8 @@
 * 화면 동시 출전 몬스터를 **`CONFIG.MAX_MONSTER_CAP`(기본 15)로 고정 제한**(하드 상한). MonsterManager가 밸런스 테이블의 `maxMonsterCap`과 `Math.min`으로 clamp.
 
 ### 7. 🎚️ 밸런스 테이블 (`CONFIG.DIFFICULTY`)
-* 표준(`normal`) 밸런스 기준 값을 적용:
-  * `speedMult`(낙하속도 배율), `maxMonsterCap`(동시 상한, 15 고정), `killPerStageBase/Step`(스테이지 클리어 처치목표), `maxHp`(기지 체력), `damagePerLeak`(피격 데미지). **스폰 주기는 난이도 테이블이 아니라 `CONFIG.SPAWN_CURVE`(전 난이도 공용)에서 목표 요구 타자속도로 역산**.
+* 난이도 선택 UI가 없어 표준(`normal`) 밸런스 한 세트만 사용한다(`getDifficultyConfig()`가 반환):
+  * `speedMult`(낙하속도 배율), `maxMonsterCap`(동시 상한, 15 고정), `killPerStageBase/Step`(스테이지 클리어 처치목표), `maxHp`(기지 체력), `damagePerLeak`(피격 데미지). **스폰 주기는 이 테이블이 아니라 `CONFIG.SPAWN_CURVE`에서 목표 요구 타자속도로 역산**.
 * **요구 타자속도 곡선(실력 = 도달 스테이지)**: "몇 타를 쳐야 스테이지를 깨는가"는 스폰 주기가 결정하므로(`요구타수 ≈ 60000÷스폰주기 × 단어당타수`), **목표 타자속도(한컴 자소 기준)에서 스폰 주기를 역산**한다. 단어팩 획수 분포 + 현실적 플레이 모델(이산사건 시뮬)로 검증.
   * 스폰(`CONFIG.SPAWN_CURVE`): `requiredKpm = start100 + (stage-1)*step10.5`, `max800`(소프트 캡, ≈s68) 도달 후 `+afterMax3타/스테이지`로만 완만 상승(절대 평평해지지 않음 = 무오타 초고속 불멸 제거). 스폰 주기(ms) = `max(400, 60000*9 ÷ requiredKpm)`. → **s1=100타(초보 클리어) · s20≈300 · s40≈510 · s60≈720 · s68≈800타**.
   * 낙하 속도(반응 압박 보조축): `speed = (0.30 + (min(stage,60)-1)*0.05) * speedMult` — **stage60(반응 ≈2.8초)에서 상한**. 요구 타수는 안 바꾸고 "실수 봐주는 버퍼"만 후반까지 좁힘.

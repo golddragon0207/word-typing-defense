@@ -29,7 +29,7 @@ class MonsterManager {
     /**
      * 스테이지 시작 메서드
      * @param {number} stage - 스테이지 번호
-     * @param {string} difficulty - 난이도 ('easy' | 'normal' | 'hard' | 'hell')
+     * @param {string} difficulty - 밸런스 세트 키 (현재 'normal' 단일)
      */
     startStage(stage = 1, difficulty = 'normal', startDelayMs = 0) {
         this.clear();
@@ -243,12 +243,26 @@ class MonsterManager {
     }
 
     /**
+     * 🐲 bossWords를 획수 오름차순으로 정렬한 결과를 캐시해 반환.
+     *    _bossPool이 보스 스폰·리롤(=정타)마다 호출되므로, 원본 배열이 바뀔 때만 다시 정렬한다.
+     */
+    _getSortedBossWords() {
+        const src = wordPacks.bossWords;
+        if (this._sortedBossWords && this._sortedBossWordsSrc === src) {
+            return this._sortedBossWords;
+        }
+        this._sortedBossWordsSrc = src;
+        this._sortedBossWords = src.slice().sort((a, b) =>
+            wordPacks.getHangulStrokeCount(a) - wordPacks.getHangulStrokeCount(b));
+        return this._sortedBossWords;
+    }
+
+    /**
      * 🐲 해당 스테이지의 보스 제시어 후보 풀(획수 오름차순 정렬 후 후반일수록 긴 문구로 좁힘).
      *    _pickBossWord(랜덤 출제)와 _bossChargeMs(평균 타수로 차지 역산)가 공용 사용.
      */
     _bossPool(stage) {
-        const sorted = wordPacks.bossWords.slice().sort((a, b) =>
-            wordPacks.getHangulStrokeCount(a) - wordPacks.getHangulStrokeCount(b));
+        const sorted = this._getSortedBossWords();
         if (stage >= 30) return sorted.slice(Math.floor(sorted.length / 2)); // 상위 50%(긴 문구)
         if (stage >= 15) return sorted.slice(Math.floor(sorted.length / 4)); // 하위 25% 제외
         return sorted;
@@ -350,7 +364,7 @@ class MonsterManager {
         return { success: false };
     }
 
-    update(deltaTime = 0.016, stage = 1) {
+    update(deltaTime = 0.016) {
         let reachedCount = 0;
         const canvasHeight = this.canvas ? (this.canvas.clientHeight || 708) : 708;
         const bottomY = canvasHeight - 130; // CanvasRenderer의 방어선(groundY)과 정렬

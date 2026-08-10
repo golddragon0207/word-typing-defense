@@ -9,6 +9,18 @@
 
 // ⚙️ 시청자 참여/대기열 튜닝 값은 config.js의 CONFIG.QUEUE 한 곳에서 관리한다 (아래 메서드들이 참조).
 
+// 🔢 한글 자모 획수/타수 계산용 상수 (호출마다 재생성하지 않도록 모듈 스코프로 승격).
+//    getHangulStrokeCount(스폰마다) · getKeystrokeCount(명중마다·보스 차지 역산) 핫패스에서 참조.
+// 초성 19개 획수 (ㄱ ㄲ ㄴ ㄷ ㄸ ㄹ ㅁ ㅂ ㅃ ㅅ ㅆ ㅇ ㅈ ㅉ ㅊ ㅋ ㅌ ㅍ ㅎ)
+const HANGUL_INITIAL_STROKES = [1, 2, 1, 2, 4, 3, 3, 4, 8, 2, 4, 1, 2, 4, 3, 2, 3, 4, 3];
+// 중성 21개 획수 (ㅏ ㅐ ㅑ ㅒ ㅓ ㅔ ㅕ ㅖ ㅗ ㅘ ㅙ ㅚ ㅛ ㅜ ㅝ ㅞ ㅟ ㅠ ㅡ ㅢ ㅣ)
+const HANGUL_MEDIAL_STROKES = [2, 3, 3, 4, 2, 3, 3, 4, 2, 4, 5, 3, 3, 2, 4, 5, 3, 3, 1, 2, 1];
+// 종성 28개 획수 (없음, ㄱ, ㄲ, ㄳ, ㄴ, ㄵ, ㄶ, ㄷ, ㄹ, ㄺ, ㄻ, ㄼ, ㄽ, ㄾ, ㄿ, ㅀ, ㅁ, ㅂ, ㅄ, ㅅ, ㅆ, ㅇ, ㅈ, ㅊ, ㅋ, ㅌ, ㅍ, ㅎ)
+const HANGUL_FINAL_STROKES = [0, 1, 2, 3, 1, 3, 4, 2, 3, 4, 6, 7, 5, 5, 7, 6, 3, 4, 6, 2, 4, 1, 2, 3, 2, 3, 4, 3];
+// 타수(자소 단위) 계산: 두 자모 조합이라 2타로 세는 겹모음/겹받침 인덱스 집합
+const HANGUL_MEDIAL_DOUBLE = new Set([9, 10, 11, 14, 15, 16, 19]);              // ㅘㅙㅚㅝㅞㅟㅢ
+const HANGUL_FINAL_DOUBLE = new Set([3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18]); // 겹받침
+
 const wordPacks = {
   // 1. 기본 게임 타깃 제시어 데이터베이스 (밈, 게임/방송 용어, 일상어 등 다양하게 혼합)
   //    ⚠️ 다양성이 핵심 — 짧은 말(2~3자)부터 중간 길이까지 여러 주제를 섞어 반복 체감을 줄인다.
@@ -104,9 +116,6 @@ const wordPacks = {
   // Set에는 플랫폼 접두사가 포함된 닉네임을 저장해 플랫폼 간 동명이인도 구분합니다.
   joinedViewers: new Set(),
 
-  // '!참여' 실시간 참가자 누적 카운트 (통계용)
-  realParticipantCount: 0,
-
   // 💬 라이브 채팅 모드 (하이브리드): 켜면 시청자가 실제로 채팅에 친 문구가
   // (안전하게 정제된 뒤) 타이핑 타깃 단어로 쓰인다. 끄면 항상 단어팩에서만 뽑힘.
   // 상단 컨트롤바의 "💬 라이브 채팅 모드" 버튼으로 게임 중에도 즉시 켜고 끌 수 있다.
@@ -161,7 +170,6 @@ const wordPacks = {
       }
       this.joinedViewers.add(safeNickname);
       this.enqueueViewer(safeNickname);
-      if (!wasJoined) this.realParticipantCount += 1;
       return true;
     }
 
@@ -181,12 +189,11 @@ const wordPacks = {
 
   /**
    * 🔄 참여자 명단/대기열 초기화. 새 판 시작 시, 그리고 채팅 모달의 "참여자 초기화" 버튼에서 호출.
-   *    joinedViewers(명단)·viewerQueue(대기열)·realParticipantCount(카운트)를 모두 비운다.
+   *    joinedViewers(명단)·viewerQueue(대기열)를 모두 비운다.
    */
   resetParticipants() {
     this.joinedViewers.clear();
     this.viewerQueue = [];
-    this.realParticipantCount = 0;
   },
 
   /**
@@ -300,15 +307,6 @@ const wordPacks = {
   getHangulStrokeCount(text) {
     if (!text) return 0;
 
-    // 초성 19개 획수 (ㄱ ㄲ ㄴ ㄷ ㄸ ㄹ ㅁ ㅂ ㅃ ㅅ ㅆ ㅇ ㅈ ㅉ ㅊ ㅋ ㅌ ㅍ ㅎ)
-    const initialStrokes = [1, 2, 1, 2, 4, 3, 3, 4, 8, 2, 4, 1, 2, 4, 3, 2, 3, 4, 3];
-
-    // 중성 21개 획수 (ㅏ ㅐ ㅑ ㅒ ㅓ ㅔ ㅕ ㅖ ㅗ ㅘ ㅙ ㅚ ㅛ ㅜ ㅝ ㅞ ㅟ ㅠ ㅡ ㅢ ㅣ)
-    const medialStrokes = [2, 3, 3, 4, 2, 3, 3, 4, 2, 4, 5, 3, 3, 2, 4, 5, 3, 3, 1, 2, 1];
-
-    // 종성 28개 획수 (없음, ㄱ, ㄲ, ㄳ, ㄴ, ㄵ, ㄶ, ㄷ, ㄹ, ㄺ, ㄻ, ㄼ, ㄽ, ㄾ, ㄿ, ㅀ, ㅁ, ㅂ, ㅄ, ㅅ, ㅆ, ㅇ, ㅈ, ㅊ, ㅋ, ㅌ, ㅍ, ㅎ)
-    const finalStrokes = [0, 1, 2, 3, 1, 3, 4, 2, 3, 4, 6, 7, 5, 5, 7, 6, 3, 4, 6, 2, 4, 1, 2, 3, 2, 3, 4, 3];
-
     let totalStrokes = 0;
 
     for (let i = 0; i < text.length; i++) {
@@ -322,9 +320,9 @@ const wordPacks = {
         const medialIndex = Math.floor((hangulIndex % 588) / 28);
         const finalIndex = hangulIndex % 28;
 
-        totalStrokes += initialStrokes[initialIndex] || 1;
-        totalStrokes += medialStrokes[medialIndex] || 1;
-        totalStrokes += finalStrokes[finalIndex] || 0;
+        totalStrokes += HANGUL_INITIAL_STROKES[initialIndex] || 1;
+        totalStrokes += HANGUL_MEDIAL_STROKES[medialIndex] || 1;
+        totalStrokes += HANGUL_FINAL_STROKES[finalIndex] || 0;
       }
       // 알파벳, 숫자, 특수문자 기본 처리
       else if ((charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122)) {
@@ -350,8 +348,6 @@ const wordPacks = {
    */
   getKeystrokeCount(text) {
     if (!text) return 0;
-    const MEDIAL_DOUBLE = new Set([9, 10, 11, 14, 15, 16, 19]);           // 겹모음 ㅘㅙㅚㅝㅞㅟㅢ
-    const FINAL_DOUBLE = new Set([3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18]); // 겹받침
 
     let keys = 0;
     for (let i = 0; i < text.length; i++) {
@@ -361,8 +357,8 @@ const wordPacks = {
         const medialIndex = Math.floor((h % 588) / 28);
         const finalIndex = h % 28;
         keys += 1;                                   // 초성(쌍자음 포함) 1타
-        keys += MEDIAL_DOUBLE.has(medialIndex) ? 2 : 1;
-        keys += finalIndex === 0 ? 0 : (FINAL_DOUBLE.has(finalIndex) ? 2 : 1);
+        keys += HANGUL_MEDIAL_DOUBLE.has(medialIndex) ? 2 : 1;
+        keys += finalIndex === 0 ? 0 : (HANGUL_FINAL_DOUBLE.has(finalIndex) ? 2 : 1);
       } else {
         keys += 1; // 영문/숫자/기호 1타
       }
