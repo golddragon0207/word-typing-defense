@@ -124,11 +124,14 @@ class MonsterManager {
         const spawnX = (minX < maxX) ? (Math.random() * (maxX - minX) + minX) : (safeWidth / 2);
 
         // 🎯 제시어 난이도(한글 자모 획수)에 비례한 점수: 어려운(길고 획수 많은) 단어일수록 높은 점수.
-        //    '획수 × 6 × 스테이지' — 기본팩 평균(≈16획)이 스테이지1에서 ≈100점이 되도록 보정(배수는 조정 가능).
+        //    기본점 = '획수 × 6' (기본팩 평균 ≈16획이 스테이지1에서 ≈100점이 되도록 보정 — 배수 조정 가능).
+        //    스테이지 배수 = 반선형 '1 + (stage-1) × 0.5' — 기존 '×stage'(선형) 대비 후반 성장을 절반으로 완화해
+        //    스테이지가 오를수록 점수가 복리로 폭주하던 것을 억제(계수 0.5 조정 가능).
         const strokes = (typeof wordPacks !== 'undefined' && typeof wordPacks.getHangulStrokeCount === 'function')
             ? wordPacks.getHangulStrokeCount(data.word)
             : (data.word ? data.word.length : 1);
-        const scoreValue = Math.max(30, Math.round(strokes * 6)) * this.currentStage;
+        const stageMult = 1 + (this.currentStage - 1) * 0.5;
+        const scoreValue = Math.round(Math.max(30, Math.round(strokes * 6)) * stageMult);
 
         const monster = {
             id: Date.now() + Math.random(),
@@ -198,7 +201,9 @@ class MonsterManager {
             x: canvasWidth / 2,
             y: 260,             // 상단 HUD·게이지/pip 장식이 겹치지 않는 고정 위치(낙하하지 않음)
             speed: 0,           // 차지 보스는 이동하지 않음
-            scoreValue: 500 * stage,
+            // 🐲 보스 점수도 일반 몬스터와 동일한 반선형 배수 '1 + (stage-1)×0.5' 적용(기본 500).
+            //    기존 '500 × stage'(선형) 대비 후반 폭주를 억제해 일반 몬스터 점수 곡선과 결을 맞춘다.
+            scoreValue: Math.round(500 * (1 + (stage - 1) * 0.5)),
             isBoss: true,
             // ⚡ 차지 보스 전용 상태
             requiredHits,

@@ -107,7 +107,7 @@
 
 ### 11. ⚡ 방어 속도(타수 지표) & 콤보 & 피버 & 일시정지
 * **방어 속도(WPM)**: IME 조합 완료 후 자소 단위 타수(`getKeystrokeCount`, 한컴 타자연습 2024.4 방식)를 전체 경과시간(분)으로 나눠 실시간 산출.
-* **점수 연산**: 한글 자모 획수 기반(`getHangulStrokeCount`). 일반 몬스터 점수는 `max(30, round(자모획수 × 6)) × stage`. 보스 점수는 `500 × stage`.
+* **점수 연산**: 한글 자모 획수 기반(`getHangulStrokeCount`). **스테이지 배수는 반선형 `1 + (stage-1) × 0.5`** — 기존 선형(`× stage`) 대비 후반 점수 복리 폭주를 절반으로 완화. 일반 몬스터 점수는 `round(max(30, round(자모획수 × 6)) × (1 + (stage-1)×0.5))`, 보스 점수는 `round(500 × (1 + (stage-1)×0.5))`. (계수 0.5는 조정 가능.)
 * **🔥 피버 버스트**: 콤보 누적으로 게이지(100) 도달 시 발동 — 화면의 일반 몬스터를 모두 클리어(`clearNonBoss`), 정리분 점수 합 + 500 보너스 점수(`addFeverBonus`), 기지 체력 10% 회복(`healBase`).
   * **보스 스테이지 게이지 동결**: 5의 배수 스테이지에서는 게이지 충전/감소가 스킵되고 `fever-locked` 클래스(회색+🔒) 적용.
 * **⏸ 일시정지 (`GameEngine.togglePause`)**: **ESC 키** 또는 **마우스(HUD `#btn-pause` / 오버레이 `#btn-pause-resume`)** 로 정지/재개. 정지 중 몬스터 이동·스폰·입력 멈춤, 정지 시간을 `startTime`에 합산하여 WPM 계산에서 제외. 재개 시 `MonsterManager.resumeSpawns()` 호출.
