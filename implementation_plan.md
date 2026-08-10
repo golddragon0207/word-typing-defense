@@ -111,7 +111,7 @@
 * **점수 연산**: 한글 자모 획수 기반(`getHangulStrokeCount`). **스테이지 배수는 반선형 `1 + (stage-1) × 0.5`** — 기존 선형(`× stage`) 대비 후반 점수 복리 폭주를 절반으로 완화. 일반 몬스터 점수는 `round(max(30, round(자모획수 × 6)) × (1 + (stage-1)×0.5))`, 보스 점수는 `round(500 × (1 + (stage-1)×0.5))`. (계수 0.5는 조정 가능.)
 * **🔥 피버 버스트**: 콤보 누적으로 게이지(100) 도달 시 발동 — 화면의 일반 몬스터를 모두 클리어(`clearNonBoss`), 정리분 점수 합 + 500 보너스 점수(`addFeverBonus`), 기지 체력 10% 회복(`healBase`).
   * **보스 스테이지 게이지 동결**: 5의 배수 스테이지에서는 게이지 충전/감소가 스킵되고 `fever-locked` 클래스(회색+🔒) 적용.
-* **⏸ 일시정지 (`GameEngine.togglePause`)**: **ESC 키** 또는 **마우스(HUD `#btn-pause` / 오버레이 `#btn-pause-resume`)** 로 정지/재개. 정지 중 몬스터 이동·스폰·입력 멈춤, 정지 시간을 `startTime`에 합산하여 WPM 계산에서 제외. 재개 시 `MonsterManager.resumeSpawns()` 호출.
+* **⏸ 일시정지 (`GameEngine.togglePause`)**: **ESC 키** 또는 **마우스(HUD `#btn-pause` / 오버레이 `#btn-pause-resume`)** 로 정지/재개. 정지 중 몬스터 이동·스폰·입력 멈춤. **재개 시 곧바로 시작하지 않고 `RESUME_GRACE_MS`(5초) 그레이스 카운트다운(`#start-countdown`)을 띄운 뒤** 실제 재개(`MonsterManager.resumeSpawns()` 호출)한다. 그레이스 동안에도 게임은 정지 상태(`isPaused=true`)를 유지하며, 카운트다운 도중 다시 정지하면 카운트다운을 취소하고 정지 오버레이로 복귀한다. 정지+그레이스로 흐른 시간은 `startTime`에 합산해 WPM 계산에서 제외.
 
 ### 12. ♾️ 무한 Stage & 5 Stage 단위 보스전
 * **5 Stage마다 보스전**: WARNING 배너 → 보스 소환. 일반 몬스터 스폰 안 함.
@@ -159,7 +159,7 @@
    * 1024×768 고정 레이아웃, 모달 잘림 방지, `.modal-actions`/`.modal-footer` 분리, `body.obs-overlay` 투명 스타일, 토스트/등급뱃지/단어칩/피버 등 컴포넌트 스타일.
 
 3. **`js/config.js`**
-   * `CONFIG.YOUTUBE_API_KEY`, `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY`/`CONFIG.SOOP_DEBUG`, `CONFIG.FIREBASE`, `CONFIG.KAKAO_ADFIT`(6개), `CONFIG.DIFFICULTY`(밸런스 테이블) + `getDifficultyConfig()`, `CONFIG.MAX_MONSTER_CAP`(15), `CONFIG.START_SPAWN_DELAY_MS`(5000)/`STAGE_UP_SPAWN_DELAY_MS`(3000), `CONFIG.QUEUE` 튜닝값, 광고 리프레시 로직.
+   * `CONFIG.YOUTUBE_API_KEY`, `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY`/`CONFIG.SOOP_DEBUG`, `CONFIG.FIREBASE`, `CONFIG.KAKAO_ADFIT`(6개), `CONFIG.DIFFICULTY`(밸런스 테이블) + `getDifficultyConfig()`, `CONFIG.MAX_MONSTER_CAP`(15), `CONFIG.START_SPAWN_DELAY_MS`(5000)/`STAGE_UP_SPAWN_DELAY_MS`(3000)/`RESUME_GRACE_MS`(5000), `CONFIG.QUEUE` 튜닝값, 광고 리프레시 로직.
 
 4. **`js/wordPacks.js`**
    * 단어팩(기본/프리셋/보스), 시청자 대기열(`{nickname, chatWord}`) 관리, `!참여` 처리·참가자 명단, 봇 자동 보충, 라이브 채팅 정제(`sanitizeLiveChatWord`), 비속어 필터(13종), 한글 자모 획수(`getHangulStrokeCount`) 및 자소 타수(`getKeystrokeCount`) 유틸.

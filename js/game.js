@@ -296,6 +296,7 @@ class GameEngine {
     // ⏸ 새 판 시작 시 일시정지 상태 초기화
     this.isPaused = false;
     this._pauseStart = null;
+    this._cancelResumeGrace(); // 진행 중이던 재개 그레이스 카운트다운 정리
     const pauseOverlay = document.getElementById('pause-overlay');
     if (pauseOverlay) pauseOverlay.classList.add('hidden');
 
@@ -357,6 +358,7 @@ class GameEngine {
     // ⏸ 일시정지 상태/오버레이 해제
     this.isPaused = false;
     this._pauseStart = null;
+    this._cancelResumeGrace(); // 진행 중이던 재개 그레이스 카운트다운 정리
     const pauseOverlay = document.getElementById('pause-overlay');
     if (pauseOverlay) pauseOverlay.classList.add('hidden');
     this.stopStartCountdown(); // ⏱️ 진행 중이던 시작 카운트다운 정리
@@ -610,25 +612,67 @@ class GameEngine {
   togglePause() {
     if (!this.stateManager || this.stateManager.currentState !== 'PLAYING') return;
 
-    this.isPaused = !this.isPaused;
     const overlay = document.getElementById('pause-overlay');
     const input = document.querySelector('.game-typing-input');
 
-    if (this.isPaused) {
+    if (!this.isPaused) {
+      // ── ⏸ 일시정지 진입 ──
+      this.isPaused = true;
       this._pauseStart = performance.now();
+      this._cancelResumeGrace(); // 혹시 진행 중이던 재개 그레이스 취소
       if (overlay) overlay.classList.remove('hidden');
       if (input) { input.blur(); input.disabled = true; } // 일시정지 중 입력 차단
+    } else if (this._resumeGracePending) {
+      // ── 재개 그레이스 카운트다운 도중 다시 정지: 카운트다운을 접고 정지 상태로 복귀 ──
+      //    (isPaused/_pauseStart는 그대로 유지 → 게임은 계속 얼어붙은 상태)
+      this._cancelResumeGrace();
+      if (overlay) overlay.classList.remove('hidden');
     } else {
-      // 일시정지 동안 흐른 시간만큼 startTime을 미뤄 경과시간(=WPM 분모)에서 제외
-      if (this._pauseStart && this.stateManager.startTime) {
-        this.stateManager.startTime += (performance.now() - this._pauseStart);
-      }
-      this._pauseStart = null;
+      // ── ▶ 재개: 즉시 풀지 않고 5초 그레이스 카운트다운을 보여준 뒤 실제 시작 ──
+      //    카운트다운 동안에도 isPaused=true를 유지해 몬스터/스폰을 계속 멈춘다.
       if (overlay) overlay.classList.add('hidden');
-      if (input) { input.disabled = false; setTimeout(() => input.focus(), 30); }
-      // ▶ 정지 동안 타이머가 발화하며 스킵된 '스테이지 첫 등장'을 복구 (재개 후 빈 화면 방지)
-      if (this.monsterManager) this.monsterManager.resumeSpawns();
+      this._startResumeGrace();
     }
+  }
+
+  /** ▶ 재개 그레이스 시작: 5초 카운트다운을 띄우고, 끝나면 실제 재개(_finishResume). */
+  _startResumeGrace() {
+    const graceMs = (typeof CONFIG !== 'undefined' && CONFIG.RESUME_GRACE_MS != null)
+      ? CONFIG.RESUME_GRACE_MS : 5000;
+    this._resumeGracePending = true;
+    this.showStartCountdown(graceMs);
+    clearTimeout(this._resumeGraceTimeout);
+    this._resumeGraceTimeout = setTimeout(() => this._finishResume(), graceMs);
+  }
+
+  /** 재개 그레이스 타이머/카운트다운 정리(취소). isPaused 상태는 건드리지 않는다. */
+  _cancelResumeGrace() {
+    if (this._resumeGraceTimeout) {
+      clearTimeout(this._resumeGraceTimeout);
+      this._resumeGraceTimeout = null;
+    }
+    if (this._resumeGracePending) {
+      this._resumeGracePending = false;
+      this.stopStartCountdown();
+    }
+  }
+
+  /** 재개 그레이스 완료 → 실제 재개 처리(입력 복구·스폰 복구·경과시간 보정). */
+  _finishResume() {
+    this._resumeGraceTimeout = null;
+    this._resumeGracePending = false;
+    this.stopStartCountdown();
+
+    const input = document.querySelector('.game-typing-input');
+    this.isPaused = false;
+    // 일시정지+그레이스 동안 흐른 시간만큼 startTime을 미뤄 경과시간(=WPM 분모)에서 제외
+    if (this._pauseStart && this.stateManager.startTime) {
+      this.stateManager.startTime += (performance.now() - this._pauseStart);
+    }
+    this._pauseStart = null;
+    if (input) { input.disabled = false; setTimeout(() => input.focus(), 30); }
+    // ▶ 정지 동안 타이머가 발화하며 스킵된 '스테이지 첫 등장'을 복구 (재개 후 빈 화면 방지)
+    if (this.monsterManager) this.monsterManager.resumeSpawns();
   }
 
   startMainLoop() {
