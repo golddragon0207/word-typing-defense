@@ -62,12 +62,12 @@ class MonsterManager {
 
         // 주기적 몬스터 생성 주기 — CONFIG.SPAWN_CURVE의 "목표 요구 타자속도(한컴 타/분)"에서 역산.
         //   linear      = kpmStart + (stage-1)*kpmStep          (s1=100타 → 선형 상승)
-        //   requiredKpm = linear<=kpmMax ? linear               (600타 소프트 캡 전)
+        //   requiredKpm = linear<=kpmMax ? linear               (800타 소프트 캡 전)
         //               : kpmMax + (linear-kpmMax)*(kpmStepAfterMax/kpmStep)  (캡 이후 완만 상승 — 불멸 제거)
         //   spawnInterval(ms) = max(400, round(60000 * 단어당평균타수 / requiredKpm))
         //   (구 'base - stage*step' 선형 스폰은 요구 타수가 후반 급가속이라, 선형 타수 상승을 위해 역산 방식으로 대체)
         const sc = (typeof CONFIG !== 'undefined' && CONFIG.SPAWN_CURVE)
-            || { kpmStart: 100, kpmStep: 10.5, kpmMax: 600, kpmStepAfterMax: 3, avgWordKeystrokes: 9 };
+            || { kpmStart: 100, kpmStep: 10.5, kpmMax: 800, kpmStepAfterMax: 3, avgWordKeystrokes: 9 };
         const requiredKpm = this._requiredKpm(stage);   // 요구 타자속도(스폰 주기·보스 차지 시간 공용 기준)
         const spawnInterval = Math.max(400, Math.round(60000 * sc.avgWordKeystrokes / requiredKpm));
 
@@ -235,7 +235,7 @@ class MonsterManager {
      */
     _requiredKpm(stage) {
         const sc = (typeof CONFIG !== 'undefined' && CONFIG.SPAWN_CURVE)
-            || { kpmStart: 100, kpmStep: 10.5, kpmMax: 600, kpmStepAfterMax: 3, avgWordKeystrokes: 9 };
+            || { kpmStart: 100, kpmStep: 10.5, kpmMax: 800, kpmStepAfterMax: 3, avgWordKeystrokes: 9 };
         const linear = sc.kpmStart + (stage - 1) * sc.kpmStep;
         return (linear <= sc.kpmMax)
             ? linear

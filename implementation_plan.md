@@ -125,7 +125,7 @@
   * 렌더링: 보스 머리 위에 **HP 하트(`HP ♥♥`)** 및 **차지 바(`CHARGE`)** 표시.
 
 ### 13. 👑 등급 뱃지(SSS~D) & 명예의 전당 & MVP
-* **도달 스테이지 기준 등급**: `SSS ≥ 70 · SS ≥ 50 · S ≥ 34 · A ≥ 27 · B ≥ 22 · C ≥ 10 · D < 10` (0점/0처치 시 D).
+* **도달 스테이지 기준 등급**: `SSS ≥ 68 · SS ≥ 53 · S ≥ 39 · A ≥ 30 · B ≥ 20 · C ≥ 11 · D < 11` (0점/0처치 시 D). 임계는 SPAWN_CURVE 요구 타자속도를 역산해 200·300·400·500·650·800타 구간에 정렬.
 * **🌐 상위 %(글로벌 백분위)**: `fetchPercentile`로 내 점수의 백분위 산출 (`PERCENTILE_SCAN_CAP` 2000, `MIN_SAMPLE` 50).
 * **명예의 전당**: 최고 도달 스테이지 내림차순(동점 시 점수순). 로컬 `localStorage`(`wtd_leaderboard_top5`) 기본 + Firebase Firestore(`leaderboard`). 전체 순위 보기 버튼(`#btn-leaderboard-all`)으로 TOP 5 ↔ 전체(최대 200위) 토글.
 * **🏅 이번 판 MVP**: 실참여 시청자의 몬스터 스폰 시점 등장 카운트(`trackMvpAppearance`) 누적, 결과 화면 배너 표시.

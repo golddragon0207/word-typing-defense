@@ -266,7 +266,10 @@ class StateManager {
     /**
      * 👑 최종 결과 등급(Rank) 환산 — "도달 스테이지" 기준.
      *   게임의 목표(얼마나 오래 방어했나)·명예의 전당 순위와 동일한 잣대로 통일.
-     *   구간은 타수→도달 스테이지 시뮬레이션으로 보정(B=평균 300~400타 ≈ 스테이지 22~26).
+     *   임계 스테이지는 CONFIG.SPAWN_CURVE(_requiredKpm)에서 요구 타자속도를 역산해
+     *   깔끔한 타/분 구간(200·300·400·500·650·800타)에 맞춰 정렬한다.
+     *     requiredKpm = 100 + (stage-1)*10.5  (s68 소프트 캡 800타)
+     *     → C=s11≈205 · B=s20≈300 · A=s30≈405 · S=s39≈500 · SS=s53≈650 · SSS=s68≈800
      *   0점/0처치(사실상 미플레이)는 항상 D.
      */
     calculateRankGrade() {
@@ -276,20 +279,20 @@ class StateManager {
 
         const stage = this.currentStage || 1;
 
-        if (stage >= 70) {
-            return 'SSS';   // 최상위 (≈800타+)
-        } else if (stage >= 50) {
-            return 'SS';    // 고수 (≈700타)
-        } else if (stage >= 34) {
-            return 'S';     // 숙련 상
-        } else if (stage >= 27) {
-            return 'A';     // 숙련 (≈450~600타)
-        } else if (stage >= 22) {
-            return 'B';     // 평균 (≈300~400타)
-        } else if (stage >= 10) {
-            return 'C';     // 초급 (≈200~280타)
+        if (stage >= 68) {
+            return 'SSS';   // 월드클래스 (≈800타+, 소프트 캡 도달점)
+        } else if (stage >= 53) {
+            return 'SS';    // 고수 (≈650타)
+        } else if (stage >= 39) {
+            return 'S';     // 상급 (≈500타)
+        } else if (stage >= 30) {
+            return 'A';     // 숙련 (≈400타)
+        } else if (stage >= 20) {
+            return 'B';     // 평균 (≈300타)
+        } else if (stage >= 11) {
+            return 'C';     // 초급 (≈200타)
         } else {
-            return 'D';     // 입문
+            return 'D';     // 입문 (<200타)
         }
     }
 
