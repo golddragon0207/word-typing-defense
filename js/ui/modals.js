@@ -77,7 +77,7 @@
     if (maxLenSelect) {
       maxLenSelect.addEventListener('change', () => {
         if (typeof wordPacks === 'undefined') return;
-        wordPacks.liveChatMaxLen = Number(maxLenSelect.value) || 10;
+        wordPacks.liveChatMaxLen = Number(maxLenSelect.value) || 6;
         this.showToastInternal(`💬 라이브 채팅 제시어 최대 길이: ${wordPacks.liveChatMaxLen}자`, 'info');
       });
     }
