@@ -181,7 +181,7 @@ class MonsterManager {
         const bossWord = this._pickBossWord(stage);
 
         // 🐲 보스 난이도 스케일: 각 보스가 "직전 일반 스테이지보다 조금 더 어렵도록" 튜닝.
-        //    - 차지 시간 : _bossChargeMs — 그 스테이지 요구 타수의 CONFIG.BOSS.kpmMult(×1.25)배 속도를
+        //    - 차지 시간 : _bossChargeMs — 직전 일반 스테이지(stage-1) 요구 타수의 CONFIG.BOSS.kpmMult(×1.15)배 속도를
         //                  요구하도록 역산. 요구 타수 상승에 자동 연동돼 후반에도 보스가 뒤처지지 않는다.
         //                  (일반 스테이지 생존 최소 속도로는 첫 게이지를 다 못 밀어내 ~1회 피격 = 스파이크)
         //    - 체력(정타): 2 → 5, s30/60/90에서 +1씩(완만화 — 잦은 체력 점프로 보스가 급등하는 것 방지).
@@ -274,20 +274,24 @@ class MonsterManager {
     }
 
     /**
-     * 🐲 보스 차지 시간(ms) — "그 스테이지 요구 타수의 kpmMult배 속도"를 요구하도록 역산.
+     * 🐲 보스 차지 시간(ms) — "직전 일반 스테이지(stage-1) 요구 타수의 kpmMult배 속도"를 요구하도록 역산.
      *    즉 일반 스테이지 생존 최소 속도로는 차지를 다 못 밀어내 ~1회 피격(=난이도 스파이크).
      *    (요구 타수 상승에 자동 연동되므로 후반에도 보스가 뒤처지지 않음. CONFIG.BOSS로 튜닝.)
      * @param {number} stage
      * @returns {number} 차지 시간(ms)
      */
     _bossChargeMs(stage) {
-        const bcfg = (typeof CONFIG !== 'undefined' && CONFIG.BOSS) || { kpmMult: 1.25, minChargeSec: 1.5 };
+        const bcfg = (typeof CONFIG !== 'undefined' && CONFIG.BOSS) || { kpmMult: 1.15, minChargeSec: 1.5 };
         const pool = (typeof wordPacks !== 'undefined' && Array.isArray(wordPacks.bossWords) && wordPacks.bossWords.length)
             ? this._bossPool(stage) : null;
         const avgKb = pool
             ? pool.reduce((a, w) => a + wordPacks.getKeystrokeCount(w), 0) / pool.length
             : 21; // 폴백: 보스 문구 평균 타수 근사
-        const sec = 60 * avgKb / (bcfg.kpmMult * this._requiredKpm(stage));
+        // 🎯 기준 요구타수는 '직전 일반 스테이지(stage-1)'. 보스 스테이지엔 일반 몹 구간이 없어
+        //    플레이어가 실제로 겪은 마지막 속도가 stage-1이기 때문. (그 스테이지(stage) 요구타수로 잡으면
+        //    겪어보지 못한 속도 기준 + 곱셈 스파이크가 겹쳐 4→5 갭이 과도해짐.)
+        const refStage = Math.max(1, stage - 1);
+        const sec = 60 * avgKb / (bcfg.kpmMult * this._requiredKpm(refStage));
         return Math.round(Math.max(bcfg.minChargeSec, sec) * 1000);
     }
 

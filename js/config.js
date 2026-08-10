@@ -111,13 +111,17 @@ const CONFIG = {
   //    ※ 튜닝: 초반 관대/빡빡=kpmStart, 상승 기울기=kpmStep, 속도 목표 천장=kpmMax, 후반 조임세기=kpmStepAfterMax.
   SPAWN_CURVE: { kpmStart: 100, kpmStep: 10.5, kpmMax: 800, kpmStepAfterMax: 3, avgWordKeystrokes: 9 },
 
-  // 🐲 보스 난이도 (MonsterManager._bossChargeMs) — 보스를 "그 스테이지보다 조금 더 어려운 스파이크"로.
-  //    차지 시간 = 60 * 보스문구평균타수 / (kpmMult * 요구타수(stage))  → 일반 스테이지 요구 타수의 kpmMult배
+  // 🐲 보스 난이도 (MonsterManager._bossChargeMs) — 보스를 "직전 스테이지보다 조금 더 어려운 스파이크"로.
+  //    차지 시간 = 60 * 보스문구평균타수 / (kpmMult * 요구타수(stage-1))  → 직전 일반 스테이지 요구 타수의 kpmMult배
   //    속도를 내야 게이지를 다 밀어냄. 그 미만이면 첫 게이지를 못 막아 ~1회 피격(공격력 = 10 + 보스index*2).
-  //    - kpmMult 1.25 : 스파이크 세기. ↑일수록 보스가 더 빡셈(무오타 버스트 강요). 1.15≈완만, 1.35≈가혹.
+  //    ▶ 기준을 stage가 아니라 'stage-1'로 두는 이유: 보스 스테이지엔 일반 몹 구간이 없어 플레이어가
+  //      실제로 겪은 마지막 속도가 직전 스테이지다. 이렇게 해야 4→5 같은 첫 보스 진입 갭이 과하지 않다.
+  //    - kpmMult 1.15 : 스파이크 세기. ↑일수록 보스가 더 빡셈(무오타 버스트 강요). 1.10≈완만, 1.25≈가혹.
+  //         (예: 보스5 = 1.15×131.5타(직전 스테이지4) ≈ 151타 = 스테이지4 대비 +15%(≈스테이지6 수준)의
+  //          자연스러운 연속선. 초반 일반 스테이지(스테이지당 +10.5타)에서 보스로 넘어갈 때의 갭을 메운 값.)
   //    - minChargeSec 1.5 : 차지 시간 하한(초). 후반 초고속 구간에서 차지가 인간 불가로 짧아지는 것 방지.
   //    ※ 요구 타수(SPAWN_CURVE)에 자동 연동되므로, 스폰 곡선을 바꿔도 보스가 같이 스케일된다.
-  BOSS: { kpmMult: 1.25, minChargeSec: 1.5 },
+  BOSS: { kpmMult: 1.15, minChargeSec: 1.5 },
 
   // 🛡️ 화면 동시 출전 몬스터 절대 상한 (방송 마비 방지 — 계획서상 하드 상한선).
   //    MonsterManager가 난이도별 maxMonsterCap과 Math.min으로 clamp하는 "천장" 값.
