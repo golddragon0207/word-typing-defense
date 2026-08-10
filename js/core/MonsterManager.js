@@ -234,8 +234,7 @@ class MonsterManager {
      * @returns {string}
      */
     _pickBossWord(stage) {
-        const active = (typeof wordPacks !== 'undefined') ? wordPacks.getActiveBossWords() : null;
-        if (!Array.isArray(active) || active.length === 0) {
+        if (typeof wordPacks === 'undefined' || !Array.isArray(wordPacks.bossWords) || wordPacks.bossWords.length === 0) {
             return '최종방어선돌파';
         }
         const candidates = this._bossPool(stage);
@@ -262,7 +261,7 @@ class MonsterManager {
      *    _bossPool이 보스 스폰·리롤(=정타)마다 호출되므로, 원본 배열이 바뀔 때만 다시 정렬한다.
      */
     _getSortedBossWords() {
-        const src = wordPacks.getActiveBossWords();
+        const src = wordPacks.bossWords;
         if (this._sortedBossWords && this._sortedBossWordsSrc === src) {
             return this._sortedBossWords;
         }
@@ -292,7 +291,7 @@ class MonsterManager {
      */
     _bossChargeMs(stage) {
         const bcfg = (typeof CONFIG !== 'undefined' && CONFIG.BOSS) || { kpmMult: 1.15, minChargeSec: 1.5 };
-        const pool = (typeof wordPacks !== 'undefined' && Array.isArray(wordPacks.getActiveBossWords()) && wordPacks.getActiveBossWords().length)
+        const pool = (typeof wordPacks !== 'undefined' && Array.isArray(wordPacks.bossWords) && wordPacks.bossWords.length)
             ? this._bossPool(stage) : null;
         const avgKb = pool
             ? pool.reduce((a, w) => a + wordPacks.getKeystrokeCount(w), 0) / pool.length
