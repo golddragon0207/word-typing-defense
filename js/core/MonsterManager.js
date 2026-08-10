@@ -39,14 +39,14 @@ class MonsterManager {
         // 🎮 난이도별 밸런스 테이블 조회 (config.js CONFIG.DIFFICULTY)
         const cfg = (typeof getDifficultyConfig === 'function')
             ? getDifficultyConfig(difficulty)
-            : { speedMult: 1.0, maxMonsterCap: 15, spawnIntervalBase: 2400, spawnIntervalStep: 150, spawnIntervalMin: 800 };
+            : { speedMult: 1.0, maxMonsterCap: 15 };
 
-        // 낙하 속도: 스테이지마다 +0.05로 가속하되 **stage 12에서 상한**(이후 고정, 0.85).
-        //   목표 타수(실제 키 입력 기준: s1≈50 … s4≈80)를 만들도록 스폰 주기와 함께 시뮬레이션으로 튜닝.
-        //   후반 무한 스테이지에서 낙하가 계속 빨라지면 반응 시간이 압축돼 일반 스테이지 요구 타수가
-        //   보스를 추월(=보스가 오히려 쉬워짐)하던 역전이 생기므로 stage 12에서 상한을 둔다.
-        //   stage1=0.30(낙하 약 30초, 538px÷18px/s) … stage12=0.85에서 고정 (× 난이도 speedMult)
-        const speedStage = Math.min(stage, 12);
+        // 낙하 속도: 스테이지마다 +0.05로 가속하되 **stage 60에서 상한**(이후 고정, 3.25).
+        //   요구 타자속도(스폰)와 별개로 "실수 봐주는 버퍼(반응창)"를 후반까지 계속 좁혀, 800타 소프트 캡 이후
+        //   무오타 지구력을 강요하는 보조 축(요구 타수 자체는 CONFIG.SPAWN_CURVE가 정한다). (상한 stage24 → stage60로 연장)
+        //   stage1=0.30(낙하 ≈30초, 538px÷18px/s) … stage60=3.25(낙하 ≈2.8초)에서 고정 (× 난이도 speedMult)
+        //   ※ 반응 하한 ≈2.8s에서 멈춘다: 더 좁히면(≈1.5s↓) 인간 불가·일반 스테이지가 보스보다 어려워지는 역전 발생.
+        const speedStage = Math.min(stage, 60);
         this.speed = (0.30 + (speedStage - 1) * 0.05) * cfg.speedMult;
         // 절대 상한(CONFIG.MAX_MONSTER_CAP)을 넘지 않도록 항상 clamp
         const hardCap = (typeof CONFIG !== 'undefined' && CONFIG.MAX_MONSTER_CAP) || 15;
@@ -60,11 +60,16 @@ class MonsterManager {
 
         console.log(`[MonsterManager] Stage ${stage} 시작! (난이도: ${difficulty}, 동시상한: ${this.MAX_MONSTER_CAP}, 보스전: ${isBossStage ? 'YES' : 'NO'}, 시작지연: ${startDelayMs}ms)`);
 
-        // 주기적 몬스터 생성 주기 (난이도별 스폰 주기 + Max Monster Cap 적용)
-        const spawnInterval = Math.max(
-            cfg.spawnIntervalMin,
-            cfg.spawnIntervalBase - (stage * cfg.spawnIntervalStep)
-        );
+        // 주기적 몬스터 생성 주기 — CONFIG.SPAWN_CURVE의 "목표 요구 타자속도(한컴 타/분)"에서 역산.
+        //   linear      = kpmStart + (stage-1)*kpmStep          (s1=100타 → 선형 상승)
+        //   requiredKpm = linear<=kpmMax ? linear               (600타 소프트 캡 전)
+        //               : kpmMax + (linear-kpmMax)*(kpmStepAfterMax/kpmStep)  (캡 이후 완만 상승 — 불멸 제거)
+        //   spawnInterval(ms) = max(400, round(60000 * 단어당평균타수 / requiredKpm))
+        //   (구 'base - stage*step' 선형 스폰은 요구 타수가 후반 급가속이라, 선형 타수 상승을 위해 역산 방식으로 대체)
+        const sc = (typeof CONFIG !== 'undefined' && CONFIG.SPAWN_CURVE)
+            || { kpmStart: 100, kpmStep: 10.5, kpmMax: 600, kpmStepAfterMax: 3, avgWordKeystrokes: 9 };
+        const requiredKpm = this._requiredKpm(stage);   // 요구 타자속도(스폰 주기·보스 차지 시간 공용 기준)
+        const spawnInterval = Math.max(400, Math.round(60000 * sc.avgWordKeystrokes / requiredKpm));
 
         // 실제 몬스터 등장 시작 로직 (게임 시작 시 startDelayMs 만큼 그레이스 타임 후 실행)
         const beginSpawning = () => {
@@ -172,19 +177,17 @@ class MonsterManager {
         // 후반 보스일수록 더 긴(어려운) 제시어를 우선 출제
         const bossWord = this._pickBossWord(stage);
 
-        // 🐲 보스 난이도 스케일: 보스 인덱스(5→0, 10→1, 15→2 …) 기준으로 후반일수록 강해지되,
-        //    각 보스가 "직전 일반 스테이지보다 조금 더 어렵도록" 목표 타수(실제 키 입력)로 역산해 튜닝.
-        //    - 차지 시간 : 첫 보스(s5)는 20s(≈100타, 직전 s4≈80 +20)로 완만하게 시작 →
-        //                  이후 15.5s부터 보스마다 -0.9s씩 단축(≈9s 하한)해 요구 타수를 s10≈140 … 로 상승.
+        // 🐲 보스 난이도 스케일: 각 보스가 "직전 일반 스테이지보다 조금 더 어렵도록" 튜닝.
+        //    - 차지 시간 : _bossChargeMs — 그 스테이지 요구 타수의 CONFIG.BOSS.kpmMult(×1.25)배 속도를
+        //                  요구하도록 역산. 요구 타수 상승에 자동 연동돼 후반에도 보스가 뒤처지지 않는다.
+        //                  (일반 스테이지 생존 최소 속도로는 첫 게이지를 다 못 밀어내 ~1회 피격 = 스파이크)
         //    - 체력(정타): 2 → 5, s30/60/90에서 +1씩(완만화 — 잦은 체력 점프로 보스가 급등하는 것 방지).
         //    - 공격력    : 10 → 매 보스 +2 (후반 치명성 — 못 따라가면 실제 사망 가능).
-        //    - 제시어    : _pickBossWord가 후반일수록 긴 문구 우선 출제.
+        //    - 제시어    : _pickBossWord가 후반일수록 긴 문구 우선 출제(차지도 그 평균 길이로 역산).
         //    ※ 차지 공격에 '명중'당하면 update()에서 chargeTime을 다시 늘려(차지 느려짐) 연속 피격을 완화.
         const bossIndex = Math.max(0, Math.floor(stage / 5) - 1);
         const requiredHits = Math.min(5, 2 + Math.floor(stage / 30));  // 보스 체력: 2 → 5 (완만)
-        const chargeTime = 1000 * (bossIndex === 0
-            ? 20                                                       // 첫 보스(s5): 20s ≈ 100타
-            : Math.max(9, 15.5 - (bossIndex - 1) * 0.9));              // s10부터 15.5s → -0.9s/보스 (하한 9s)
+        const chargeTime = this._bossChargeMs(stage);                  // 요구 타수 ×kpmMult 속도 요구(자동 스케일)
         const attackDamage = 10 + bossIndex * 2;                        // 공격력: 10 → 매 보스 +2
 
         const boss = {
@@ -220,14 +223,53 @@ class MonsterManager {
         if (typeof wordPacks === 'undefined' || !Array.isArray(wordPacks.bossWords) || wordPacks.bossWords.length === 0) {
             return '최종방어선돌파';
         }
-        const pool = wordPacks.bossWords;
-        // 획수 오름차순 정렬 후, 스테이지가 높을수록 뒤쪽(더 긴) 절반으로 후보를 좁힌다.
-        const sorted = pool.slice().sort((a, b) =>
-            wordPacks.getHangulStrokeCount(a) - wordPacks.getHangulStrokeCount(b));
-        let candidates = sorted;
-        if (stage >= 30) candidates = sorted.slice(Math.floor(sorted.length / 2)); // 상위 50% (긴 문구)
-        else if (stage >= 15) candidates = sorted.slice(Math.floor(sorted.length / 4)); // 하위 25% 제외
+        const candidates = this._bossPool(stage);
         return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    /**
+     * 📈 해당 스테이지의 "목표 요구 타자속도(한컴 자소 타/분)" — 스폰 주기와 보스 차지 시간이 공용 참조.
+     *    CONFIG.SPAWN_CURVE: s1=kpmStart → +kpmStep/스테이지 → kpmMax 소프트 캡 → 이후 +kpmStepAfterMax/스테이지.
+     * @param {number} stage
+     * @returns {number} 요구 타자속도(타/분)
+     */
+    _requiredKpm(stage) {
+        const sc = (typeof CONFIG !== 'undefined' && CONFIG.SPAWN_CURVE)
+            || { kpmStart: 100, kpmStep: 10.5, kpmMax: 600, kpmStepAfterMax: 3, avgWordKeystrokes: 9 };
+        const linear = sc.kpmStart + (stage - 1) * sc.kpmStep;
+        return (linear <= sc.kpmMax)
+            ? linear
+            : sc.kpmMax + (linear - sc.kpmMax) * ((sc.kpmStepAfterMax || 0) / sc.kpmStep);
+    }
+
+    /**
+     * 🐲 해당 스테이지의 보스 제시어 후보 풀(획수 오름차순 정렬 후 후반일수록 긴 문구로 좁힘).
+     *    _pickBossWord(랜덤 출제)와 _bossChargeMs(평균 타수로 차지 역산)가 공용 사용.
+     */
+    _bossPool(stage) {
+        const sorted = wordPacks.bossWords.slice().sort((a, b) =>
+            wordPacks.getHangulStrokeCount(a) - wordPacks.getHangulStrokeCount(b));
+        if (stage >= 30) return sorted.slice(Math.floor(sorted.length / 2)); // 상위 50%(긴 문구)
+        if (stage >= 15) return sorted.slice(Math.floor(sorted.length / 4)); // 하위 25% 제외
+        return sorted;
+    }
+
+    /**
+     * 🐲 보스 차지 시간(ms) — "그 스테이지 요구 타수의 kpmMult배 속도"를 요구하도록 역산.
+     *    즉 일반 스테이지 생존 최소 속도로는 차지를 다 못 밀어내 ~1회 피격(=난이도 스파이크).
+     *    (요구 타수 상승에 자동 연동되므로 후반에도 보스가 뒤처지지 않음. CONFIG.BOSS로 튜닝.)
+     * @param {number} stage
+     * @returns {number} 차지 시간(ms)
+     */
+    _bossChargeMs(stage) {
+        const bcfg = (typeof CONFIG !== 'undefined' && CONFIG.BOSS) || { kpmMult: 1.25, minChargeSec: 1.5 };
+        const pool = (typeof wordPacks !== 'undefined' && Array.isArray(wordPacks.bossWords) && wordPacks.bossWords.length)
+            ? this._bossPool(stage) : null;
+        const avgKb = pool
+            ? pool.reduce((a, w) => a + wordPacks.getKeystrokeCount(w), 0) / pool.length
+            : 21; // 폴백: 보스 문구 평균 타수 근사
+        const sec = 60 * avgKb / (bcfg.kpmMult * this._requiredKpm(stage));
+        return Math.round(Math.max(bcfg.minChargeSec, sec) * 1000);
     }
 
     /**

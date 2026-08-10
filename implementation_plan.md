@@ -81,11 +81,11 @@
 
 ### 7. 🎚️ 밸런스 테이블 (`CONFIG.DIFFICULTY`)
 * 표준(`normal`) 밸런스 기준 값을 적용:
-  * `speedMult`(낙하속도 배율), `maxMonsterCap`(동시 상한, 15 고정), `spawnIntervalBase/Step/Min`(스폰 주기), `killPerStageBase/Step`(스테이지 클리어 처치목표), `maxHp`(기지 체력), `damagePerLeak`(피격 데미지).
-* **완만한 난이도 곡선**: 스테이지 간 난이도 점프를 최소화하고 후반에는 요구 타수가 평탄해지도록(일반 스테이지는 항상 직전~다음 보스보다 낮게, 보스는 각 스테이지보다 "조금 더" 어렵게) 낙하·스폰·처치수를 튜닝(단어팩 획수 분포 + 현실적 플레이 모델로 시뮬레이션 검증).
-  * 낙하 속도: `speed = (0.30 + (min(stage,12)-1)*0.05) * speedMult` — **stage12(0.85)에서 상한**.
-  * 스폰 주기: `spawnIntervalBase 10500·Step 1300·Min 4000`(스테이지1 약 9초 → 촘촘해지다 stage6경 4초 하한).
-  * 처치 수: `killPerStageBase 8·Step 0.5`(2스테이지당 +1).
+  * `speedMult`(낙하속도 배율), `maxMonsterCap`(동시 상한, 15 고정), `killPerStageBase/Step`(스테이지 클리어 처치목표), `maxHp`(기지 체력), `damagePerLeak`(피격 데미지). **스폰 주기는 난이도 테이블이 아니라 `CONFIG.SPAWN_CURVE`(전 난이도 공용)에서 목표 요구 타자속도로 역산**.
+* **요구 타자속도 곡선(실력 = 도달 스테이지)**: "몇 타를 쳐야 스테이지를 깨는가"는 스폰 주기가 결정하므로(`요구타수 ≈ 60000÷스폰주기 × 단어당타수`), **목표 타자속도(한컴 자소 기준)에서 스폰 주기를 역산**한다. 단어팩 획수 분포 + 현실적 플레이 모델(이산사건 시뮬)로 검증.
+  * 스폰(`CONFIG.SPAWN_CURVE`): `requiredKpm = start100 + (stage-1)*step10.5`, `max800`(소프트 캡, ≈s68) 도달 후 `+afterMax3타/스테이지`로만 완만 상승(절대 평평해지지 않음 = 무오타 초고속 불멸 제거). 스폰 주기(ms) = `max(400, 60000*9 ÷ requiredKpm)`. → **s1=100타(초보 클리어) · s20≈300 · s40≈510 · s60≈720 · s68≈800타**.
+  * 낙하 속도(반응 압박 보조축): `speed = (0.30 + (min(stage,60)-1)*0.05) * speedMult` — **stage60(반응 ≈2.8초)에서 상한**. 요구 타수는 안 바꾸고 "실수 봐주는 버퍼"만 후반까지 좁힘.
+  * 처치 수: `killPerStageBase 8·Step 0.5`(2스테이지당 +1) — 소프트 캡 이후 지구력 축.
 * `MonsterManager`/`StateManager`/`game.js`가 `getDifficultyConfig()`로 공용 참조.
 
 ### 8. 💻 PC 전용 UI 및 모달/레이아웃 (1024×768)
@@ -117,8 +117,8 @@
 * **보스 제시어 팩(`bossWords`, 30종)**: `_pickBossWord(stage)`가 고난도 시스템 붕괴 테마 문구 선택.
 * **⚡ 차지 보스**: 고정 위치(`y:260`, `speed:0`)에서 차지 게이지를 채움.
   * 체력: `requiredHits = min(5, 2 + floor(stage/30))`
-  * 차지시간: `chargeTime = bossIndex===0 ? 20s : max(9s, 15.5 - (bossIndex-1)*0.9s)`
-  * 공격력: `attackDamage = 10 + bossIndex * 2`
+  * 차지시간(`_bossChargeMs`, `CONFIG.BOSS`): `60 * 보스문구평균타수 ÷ (kpmMult1.25 * requiredKpm(stage))`, 하한 `minChargeSec 1.5s`. → **그 스테이지 요구 타수의 1.25배 속도**를 내야 게이지를 다 밀어냄(=일반 스테이지보다 조금 더 어려운 스파이크). 요구 타수 곡선에 자동 연동돼 후반에도 안 뒤처짐.
+  * 공격력: `attackDamage = 10 + bossIndex * 2`(무한↑ — 후반 치명성).
   * 정타 시: 게이지 절반 밀어내기(`chargeElapsed -= chargeTime * 0.5`) + 제시어 리롤.
   * 명중 공격 발동 시: 정액 피해 + 다음 차지시간 1.5배~2배 연장 (`chargeAttackCount`).
   * 처치 보상: 보스 완전 처치 시 기지 체력 25% 회복(`healBase(maxHp * 0.25)`).

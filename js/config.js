@@ -67,46 +67,72 @@ const CONFIG = {
   // - maxMonsterCap: 화면에 동시 출전 가능한 최대 몬스터 수. 방송 마비 방지를 위해
   //   난이도 상관없이 항상 15로 고정 (계획서상 하드 상한선, 절대 넘기지 않음)
   // - speedMult: 몬스터 낙하 속도 배율
-  // - spawnIntervalBase/Step/Min: 스폰 주기(ms) = max(spawnIntervalMin, spawnIntervalBase - stage * spawnIntervalStep)
+  // - 스폰 주기(ms): 난이도 테이블이 아니라 아래 CONFIG.SPAWN_CURVE에서 "목표 타자속도 곡선"으로 역산(전 난이도 공용).
   // - killPerStageBase/Step: 스테이지 클리어에 필요한 처치 수 = killPerStageBase + floor((stage-1) * killPerStageStep)
   // - maxHp: 기지 최대 체력 / damagePerLeak: 몬스터 1마리가 기지에 도달했을 때 입는 피해
   DIFFICULTY: {
-    // ⚠️ 낙하·스폰·처치 수는 **목표 타수(실제 키 입력 기준)** 에 맞춰 시뮬레이션으로 튜닝됨:
-    //   s1≈50 · s2≈55 · s3≈65 · s4≈80 타 → 이후 s9경 ≈130타에서 평탄(스폰 하한 4000ms + 낙하 stage12 상한).
-    //   초반은 스폰 주기가 빠르게 촘촘해지며(base10500·step1300) 요구 타수를 올리고, 후반은 평탄해져
-    //   일반 스테이지가 항상 직전~다음 보스보다 낮게 유지된다(보스가 각 스테이지보다 조금 더 어렵도록).
-    //   처치 수는 killPerStageBase 8·Step 0.5(2스테이지당 +1) — 후반 마라톤 방지.
-    //   (v3.6에서 방어선 하향+상단 스폰으로 낙하 거리 538px 확보 → 초반이 더 관대해짐)
+    // ⚙️ 난이도 곡선: "스테이지가 오를수록 요구 타자속도(한컴 자소 기준)가 선형 상승 → 800타에서 소프트 캡,
+    //   이후는 집중력·지구력 싸움"이 되도록 튜닝. (스폰 주기는 CONFIG.SPAWN_CURVE에서 역산 — 전 난이도 공용)
+    //   ▶ 핵심 원리: 스테이지를 깨려면 결국 "몬스터가 쏟아지는 속도만큼" 쳐내야 하므로,
+    //      요구 타자속도 ≈ (60000 ÷ 스폰주기ms) × 단어당타수(~9). → 목표 타자속도에서 스폰주기를 역산한다.
+    //   ① 요구 타자속도 곡선(SPAWN_CURVE: start100·step10.5·max800·afterMax3): s1=100타(초보 클리어) →
+    //      스테이지당 +10.5타로 선형 상승 → s20≈300타 → s40≈510타 → s60≈720타 →
+    //      s68에서 소프트 캡 800타 도달 → 이후는 +3타/s로만 완만히 상승(평평해지지 않음 = 불멸 제거).
+    //      스폰 주기로 환산하면 s1≈5400ms → s68≈675ms → 이후 서서히 더 짧아짐(하한 400ms).
+    //      "초보(100타)~월드클래스(800타+)"까지 실력이 곧 도달 스테이지가 되도록 하는 **주 난이도 축**.
+    //   ② 낙하 속도(MonsterManager: 0.30 + (min(stage,60)-1)*0.05): s60에서 상한(반응 ≈2.8s).
+    //      요구 타자속도는 ①이 정하고, 낙하는 "실수·머뭇거림을 봐주는 버퍼"를 스테이지마다 줄여
+    //      같은 요구 타수라도 후반일수록 무오타를 강요하는 **반응 압박(연출) 축**. (반응 하한 ≈2.8s, s60서 고정)
+    //   ③ 처치 수(killPerStageBase 8·Step 0.5, 2스테이지당 +1): s68에서 요구 타자속도가 소프트 캡(800타)에
+    //      닿은 뒤에는 처치 수(지구력)+보스 치명성(공격력 무한↑)+스폰 완만 조임이 겹쳐 난이도를 이어받는다
+    //      (=속도 목표는 사실상 멈추고, 무오타 지구력으로 갈리는 집중력 싸움).
+    //   ※ 화면 동시 몬스터는 항상 15 상한(MAX_MONSTER_CAP, 방송 보호).
     //   (난이도 선택 UI는 없어 실제로는 normal만 사용되지만, 표는 speedMult를 축으로 일관되게 유지)
     easy: {
       speedMult: 0.75,
-      maxMonsterCap: 15,
-      spawnIntervalBase: 10500, spawnIntervalStep: 1300, spawnIntervalMin: 4000,
-      killPerStageBase: 8, killPerStageStep: 0.5,
+      maxMonsterCap: 15,      killPerStageBase: 8, killPerStageStep: 0.5,
       maxHp: 130, damagePerLeak: 8
     },
     normal: {
       speedMult: 1.0,
-      maxMonsterCap: 15,
-      spawnIntervalBase: 10500, spawnIntervalStep: 1300, spawnIntervalMin: 4000,
-      killPerStageBase: 8, killPerStageStep: 0.5,
+      maxMonsterCap: 15,      killPerStageBase: 8, killPerStageStep: 0.5,
       maxHp: 100, damagePerLeak: 10
     },
     hard: {
       speedMult: 1.4,
-      maxMonsterCap: 15,
-      spawnIntervalBase: 10500, spawnIntervalStep: 1300, spawnIntervalMin: 4000,
-      killPerStageBase: 8, killPerStageStep: 0.5,
+      maxMonsterCap: 15,      killPerStageBase: 8, killPerStageStep: 0.5,
       maxHp: 100, damagePerLeak: 12
     },
     hell: {
       speedMult: 2.0,
-      maxMonsterCap: 15, // ⚠️ 계획서상 하드 상한선(Max Monster Cap = 15) — 이 값을 넘기면 안 됨
-      spawnIntervalBase: 10500, spawnIntervalStep: 1300, spawnIntervalMin: 4000,
-      killPerStageBase: 8, killPerStageStep: 0.5,
+      maxMonsterCap: 15, // ⚠️ 계획서상 하드 상한선(Max Monster Cap = 15) — 이 값을 넘기면 안 됨      killPerStageBase: 8, killPerStageStep: 0.5,
       maxHp: 90, damagePerLeak: 15
     }
   },
+
+  // 🎯 스폰 주기 곡선 (전 난이도 공용) — "목표 요구 타자속도(한컴 자소 기준, 타/분)"에서 스폰 주기를 역산.
+  //    MonsterManager:
+  //      linear      = kpmStart + (stage-1)*kpmStep
+  //      requiredKpm = linear<=kpmMax ? linear : kpmMax + (linear-kpmMax)*(kpmStepAfterMax/kpmStep)  // 소프트 캡
+  //      spawnInterval(ms) = clamp(60000*avgWordKeystrokes / requiredKpm, 하한 400ms)
+  //    - kpmStart 100 : 스테이지1 요구 타자속도(초보도 클리어 가능한 하한)
+  //    - kpmStep 10.5 : 상한 전 스테이지당 상승폭(선형). s20≈300 · s40≈510 · s60≈720타
+  //    - kpmMax  800  : 요구 타자속도 소프트 캡(≈s68 도달). "속도 목표"의 천장이자 집중력 싸움의 시작점.
+  //    - kpmStepAfterMax 3 : 소프트 캡 이후 완만 상승폭(3타/스테이지). 스폰이 절대 평평해지지 않아
+  //         **무오타 초고속 플레이의 불멸을 제거**(속도는 거의 안 오르지만 계속 조금씩 조여짐).
+  //         s80≈837 · s100≈897타 → 900타는 ≈s101, 1000타는 ≈s134에서 결국 뚫림.
+  //    - avgWordKeystrokes 9 : 단어팩 평균 타수(중앙값 기준). 실제 단어가 길수록 체감 요구치는 이보다 높아짐
+  //    ※ 하한 400ms는 화면 동시 15마리 상한(fallTime 6.2s ÷ 15)에서 나오는 실제 물량 천장(≈1350타)과 맞물림.
+  //    ※ 튜닝: 초반 관대/빡빡=kpmStart, 상승 기울기=kpmStep, 속도 목표 천장=kpmMax, 후반 조임세기=kpmStepAfterMax.
+  SPAWN_CURVE: { kpmStart: 100, kpmStep: 10.5, kpmMax: 800, kpmStepAfterMax: 3, avgWordKeystrokes: 9 },
+
+  // 🐲 보스 난이도 (MonsterManager._bossChargeMs) — 보스를 "그 스테이지보다 조금 더 어려운 스파이크"로.
+  //    차지 시간 = 60 * 보스문구평균타수 / (kpmMult * 요구타수(stage))  → 일반 스테이지 요구 타수의 kpmMult배
+  //    속도를 내야 게이지를 다 밀어냄. 그 미만이면 첫 게이지를 못 막아 ~1회 피격(공격력 = 10 + 보스index*2).
+  //    - kpmMult 1.25 : 스파이크 세기. ↑일수록 보스가 더 빡셈(무오타 버스트 강요). 1.15≈완만, 1.35≈가혹.
+  //    - minChargeSec 1.5 : 차지 시간 하한(초). 후반 초고속 구간에서 차지가 인간 불가로 짧아지는 것 방지.
+  //    ※ 요구 타수(SPAWN_CURVE)에 자동 연동되므로, 스폰 곡선을 바꿔도 보스가 같이 스케일된다.
+  BOSS: { kpmMult: 1.25, minChargeSec: 1.5 },
 
   // 🛡️ 화면 동시 출전 몬스터 절대 상한 (방송 마비 방지 — 계획서상 하드 상한선).
   //    MonsterManager가 난이도별 maxMonsterCap과 Math.min으로 clamp하는 "천장" 값.
