@@ -197,7 +197,78 @@
       return;
     }
 
-    const renderCard = (rankLabel, note) => {
+    const scores = (this.leaderboardCache && this.leaderboardCache.scores) ? this.leaderboardCache.scores : [];
+    const myName = this.getMyNickname();
+
+    // 1. 캐시된 랭킹 목록에서 내 위치(인덱스) 검색
+    let myIdx = -1;
+    if (myName) {
+      myIdx = scores.findIndex(e => e.nickname === myName);
+    }
+    if (myIdx === -1) {
+      myIdx = scores.findIndex(e => e.score === myBest.score && (e.stage || 1) === (myBest.stage || 1));
+    }
+
+    const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+
+    // 행 렌더링 유틸리티 (위 / 나 / 아래)
+    const renderRows = (subList, myIndexInSub, noteText) => {
+      let html = subList.map(({ entry, rank }) => {
+        const isMe = (rank === myIndexInSub + 1) || (!!myName && entry.nickname === myName);
+        return `
+        <div class="leaderboard-row${isMe ? ' is-me' : ''}">
+          <span class="lb-rank">${medals[rank - 1] || '#' + rank}</span>
+          <span class="lb-nickname">${this.escapeHtml(entry.nickname)}${isMe ? '<span class="lb-me-tag">나</span>' : ''}</span>
+          <span class="lb-stage">STAGE ${entry.stage || 1}</span>
+          <span class="lb-grade rank-${(entry.grade || 'D').toLowerCase()}">${entry.grade || 'D'}</span>
+          <span class="lb-meta">${(entry.score || 0).toLocaleString()}점 · 방어속도 ${entry.wpm || 0}</span>
+          <span class="lb-date">${entry.date || ''}</span>
+        </div>`;
+      }).join('');
+
+      if (noteText) {
+        html += `<p class="leaderboard-note">${noteText}</p>`;
+      }
+      listEl.innerHTML = html;
+    };
+
+    // 2. 캐시 목록에서 내 위치를 찾았으면 위/나/아래 (3개 행) 구간 추출해 렌더링
+    if (myIdx !== -1) {
+      const myRank = myIdx + 1;
+      let startIdx = Math.max(0, myIdx - 1);
+      let endIdx = Math.min(scores.length - 1, myIdx + 1);
+
+      // 1위이거나 마지막 순위일 때 3개 슬롯을 보장하도록 범위 조정
+      if (myIdx === 0 && scores.length >= 3) endIdx = Math.min(scores.length - 1, 2);
+      if (myIdx === scores.length - 1 && scores.length >= 3) startIdx = Math.max(0, scores.length - 3);
+
+      const subList = scores.slice(startIdx, endIdx + 1).map((entry, offset) => ({
+        entry,
+        rank: startIdx + offset + 1
+      }));
+
+      const globalOn = !!(window.GlobalLeaderboard && window.GlobalLeaderboard.enabled);
+      if (globalOn) {
+        if (sourceEl) sourceEl.textContent = `🙋 내 글로벌 순위 — #${myRank}위 / ${scores.length.toLocaleString()}명 중 (위아래 랭킹 함께 보기)`;
+        const res = await window.GlobalLeaderboard.fetchPercentile(myBest.score);
+        if (res && res.available && res.enough) {
+          const p = res.topPercent;
+          const pStr = p < 1 ? p.toFixed(1) : Math.round(p);
+          const finalRank = res.rank || myRank;
+          if (sourceEl) sourceEl.textContent = `🙋 내 글로벌 순위 — #${finalRank}위 / ${(res.total || scores.length).toLocaleString()}명 · 상위 ${pStr}% (위아래 랭킹 함께 보기)`;
+          renderRows(subList, myIdx, `상위 ${pStr}% · 총 ${(res.total || scores.length).toLocaleString()}명 중 (위/나/아래 순위 함께 표시)`);
+        } else {
+          renderRows(subList, myIdx, `총 ${scores.length.toLocaleString()}명 중 (위/나/아래 순위 함께 표시)`);
+        }
+      } else {
+        if (sourceEl) sourceEl.textContent = `🙋 내 로컬 순위 — #${myRank}위 / ${scores.length.toLocaleString()}명 (위아래 랭킹 함께 보기)`;
+        renderRows(subList, myIdx, '이 브라우저 저장 기록 기준 (위/나/아래 순위 함께 표시)');
+      }
+      return;
+    }
+
+    // 3. 캐시 목록 밖인 경우 단일 카드 폴백
+    const renderSingleCard = (rankLabel, note) => {
       listEl.innerHTML = `
       <div class="leaderboard-row is-me">
         <span class="lb-rank">${rankLabel}</span>
@@ -213,36 +284,19 @@
     const globalOn = !!(window.GlobalLeaderboard && window.GlobalLeaderboard.enabled);
     if (!globalOn) {
       if (sourceEl) sourceEl.textContent = '🙋 내 기록 (이 브라우저 개인 최고)';
-      renderCard('★', '글로벌 순위는 Firebase 연동 시 표시됩니다.');
+      renderSingleCard('★', '글로벌 순위는 Firebase 연동 시 표시됩니다.');
       return;
     }
 
-    if (sourceEl) sourceEl.textContent = '🙋 내 글로벌 순위 조회 중…';
-    renderCard('…', '글로벌 순위 집계 중…');
-
-    const token = (this._myRankToken = (this._myRankToken || 0) + 1);
-    let res = (this._myRankCache && this._myRankCache.score === myBest.score) ? this._myRankCache.res : null;
-    if (!res) {
-      res = await window.GlobalLeaderboard.fetchPercentile(myBest.score);
-      if (token !== this._myRankToken) return;        // 그새 다른 조회로 교체됨
-      if (res && res.available && res.enough) this._myRankCache = { score: myBest.score, res };
-    }
-    if (this.leaderboardView !== 'me') return;         // 그새 뷰가 바뀜
-
+    const res = await window.GlobalLeaderboard.fetchPercentile(myBest.score);
     if (!res || !res.available) {
       if (sourceEl) sourceEl.textContent = '🙋 내 기록';
-      renderCard('★', '(글로벌 순위 조회 불가 — 로컬 최고 기록만 표시)');
+      renderSingleCard('★', '(글로벌 순위 조회 불가 — 로컬 최고 기록만 표시)');
       return;
     }
-    if (!res.enough) {
-      if (sourceEl) sourceEl.textContent = '🙋 내 기록';
-      renderCard('★', `글로벌 순위 집계 중… (표본 ${(res.total || 0).toLocaleString()}명, 조금 더 쌓이면 표시)`);
-      return;
-    }
-    const p = res.topPercent;
-    const pStr = p < 1 ? p.toFixed(1) : Math.round(p);
-    if (sourceEl) sourceEl.textContent = `🙋 내 글로벌 순위 — #${res.rank}위 / ${res.total.toLocaleString()}명 · 상위 ${pStr}%`;
-    renderCard(`#${res.rank}`, `상위 ${pStr}% · 총 ${res.total.toLocaleString()}명 중 (점수 기준 순위 — 전체 목록은 스테이지 기준이라 순서가 다를 수 있어요)`);
+    const pStr = res.enough ? (res.topPercent < 1 ? res.topPercent.toFixed(1) : Math.round(res.topPercent)) + '%' : '집계 중';
+    if (sourceEl) sourceEl.textContent = `🙋 내 글로벌 순위 — #${res.rank || '?'}위 / ${(res.total || 0).toLocaleString()}명 · 상위 ${pStr}`;
+    renderSingleCard(`#${res.rank || '?'}`, `상위 ${pStr} · 총 ${(res.total || 0).toLocaleString()}명 중`);
   };
 
   /**

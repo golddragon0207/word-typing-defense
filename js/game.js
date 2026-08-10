@@ -817,25 +817,35 @@ class GameEngine {
         rankBadgeEl.className = `rank-grade-badge rank-${rank.toLowerCase()}`;
       }
 
-      // 🌐 글로벌 상위 %(누적 기록 기준). 누적 기록이 MIN_SAMPLE 미만이면 '집계 중',
-      //    Firebase 미설정/오프라인이면 아예 숨긴다. (조회는 비동기 — 먼저 '집계 중'을 띄우고 갱신)
+      // 🏆 정확한 등수(#N위) 및 🌐 글로벌 상위 %(누적 기록 기준) 표시
+      const rankNumEl = document.getElementById('result-rank-num');
       const pctEl = document.getElementById('result-percentile');
-      if (pctEl) {
-        if (window.GlobalLeaderboard && window.GlobalLeaderboard.enabled) {
-          pctEl.classList.remove('hidden');
-          pctEl.innerText = '상위 집계 중…';
-          window.GlobalLeaderboard.fetchPercentile(this.stateManager.score).then(res => {
-            if (!res || !res.available) { pctEl.classList.add('hidden'); return; }
+
+      if (window.GlobalLeaderboard && window.GlobalLeaderboard.enabled) {
+        if (pctEl) { pctEl.classList.remove('hidden'); pctEl.innerText = '상위 집계 중…'; }
+        if (rankNumEl) rankNumEl.classList.add('hidden');
+        window.GlobalLeaderboard.fetchPercentile(this.stateManager.score).then(res => {
+          if (!res || !res.available) {
+            if (pctEl) pctEl.classList.add('hidden');
+            this._updateLocalRankNum(rankNumEl);
+            return;
+          }
+          if (rankNumEl && res.rank) {
+            rankNumEl.innerText = `🏆 #${res.rank}위`;
+            rankNumEl.classList.remove('hidden');
+          }
+          if (pctEl) {
             if (res.enough) {
               const p = res.topPercent;
               pctEl.innerText = `상위 ${p < 1 ? p.toFixed(1) : Math.round(p)}%`;
             } else {
               pctEl.innerText = '상위 집계 중…';
             }
-          });
-        } else {
-          pctEl.classList.add('hidden');
-        }
+          }
+        });
+      } else {
+        if (pctEl) pctEl.classList.add('hidden');
+        this._updateLocalRankNum(rankNumEl);
       }
 
       // 📊 게임 종료 이벤트 로깅 (닉네임 등 개인식별정보는 넘기지 않음)
@@ -878,5 +888,26 @@ class GameEngine {
         if (window.refreshAdfitSlot) window.refreshAdfitSlot('ad-container-gameover');
       }, 150);
     }
+  }
+
+  /**
+   * 💾 오프라인/로컬 리더보드용 내 등수(#N위) 계산 및 표시
+   */
+  _updateLocalRankNum(rankNumEl) {
+    if (!rankNumEl || !this.stateManager) return;
+    const scores = this.stateManager.getTopScores(200);
+    const myScore = this.stateManager.score;
+    const myStage = this.stateManager.currentStage;
+    let localRank = 1;
+    for (let i = 0; i < scores.length; i++) {
+      const s = scores[i];
+      if ((s.stage || 1) > myStage || ((s.stage || 1) === myStage && (s.score || 0) > myScore)) {
+        localRank++;
+      } else {
+        break;
+      }
+    }
+    rankNumEl.innerText = `🏆 #${localRank}위`;
+    rankNumEl.classList.remove('hidden');
   }
 }

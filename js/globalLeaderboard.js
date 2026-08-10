@@ -207,17 +207,16 @@ const GlobalLeaderboard = {
         .limit(this.PERCENTILE_SCAN_CAP)
         .get();
 
-      const total = snap.size; // 0점 제외 누적 기록 수 (SCAN_CAP 이하이면 정확한 전체 누적값)
-      if (total < this.MIN_SAMPLE) {
-        return { available: true, enough: false, total };
-      }
-
-      // 점수 내림차순이라 내 점수보다 높은 문서가 앞쪽에 모여 있다 → 처음 ≤ 내 점수를 만나면 중단.
       const docs = snap.docs;
       let above = 0;
       for (let i = 0; i < docs.length; i++) {
         if ((docs[i].data().score || 0) > s) above++;
         else break;
+      }
+
+      const total = snap.size; // 0점 제외 누적 기록 수 (SCAN_CAP 이하이면 정확한 전체 누적값)
+      if (total < this.MIN_SAMPLE) {
+        return { available: true, enough: false, total, rank: above + 1 };
       }
 
       let topPercent = ((above + 1) / (total + 1)) * 100;
