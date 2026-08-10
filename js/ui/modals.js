@@ -232,15 +232,22 @@
       listEl.innerHTML = html;
     };
 
-    // 2. 캐시 목록에서 내 위치를 찾았으면 위/나/아래 (3개 행) 구간 추출해 렌더링
+    // 2. 캐시 목록에서 내 위치를 찾았으면 위/나/아래 (총 5개 행: 위 2명 + 나 + 아래 2명) 구간 추출해 렌더링
     if (myIdx !== -1) {
       const myRank = myIdx + 1;
-      let startIdx = Math.max(0, myIdx - 1);
-      let endIdx = Math.min(scores.length - 1, myIdx + 1);
+      let startIdx = Math.max(0, myIdx - 2);
+      let endIdx = Math.min(scores.length - 1, myIdx + 2);
 
-      // 1위이거나 마지막 순위일 때 3개 슬롯을 보장하도록 범위 조정
-      if (myIdx === 0 && scores.length >= 3) endIdx = Math.min(scores.length - 1, 2);
-      if (myIdx === scores.length - 1 && scores.length >= 3) startIdx = Math.max(0, scores.length - 3);
+      // 전체 기록이 5명 이상일 때 5개 슬롯을 보장하도록 범위 조정 (1위/2위/마지막 부근 클램핑)
+      if (scores.length >= 5) {
+        if (myIdx <= 2) {
+          startIdx = 0;
+          endIdx = 4;
+        } else if (myIdx >= scores.length - 3) {
+          startIdx = scores.length - 5;
+          endIdx = scores.length - 1;
+        }
+      }
 
       const subList = scores.slice(startIdx, endIdx + 1).map((entry, offset) => ({
         entry,
@@ -249,20 +256,20 @@
 
       const globalOn = !!(window.GlobalLeaderboard && window.GlobalLeaderboard.enabled);
       if (globalOn) {
-        if (sourceEl) sourceEl.textContent = `🙋 내 글로벌 순위 — #${myRank}위 / ${scores.length.toLocaleString()}명 중 (위아래 랭킹 함께 보기)`;
+        if (sourceEl) sourceEl.textContent = `🙋 내 글로벌 순위 — #${myRank}위 / ${scores.length.toLocaleString()}명 중 (위 2명 · 나 · 아래 2명)`;
         const res = await window.GlobalLeaderboard.fetchPercentile(myBest.score);
         if (res && res.available && res.enough) {
           const p = res.topPercent;
           const pStr = p < 1 ? p.toFixed(1) : Math.round(p);
           const finalRank = res.rank || myRank;
           if (sourceEl) sourceEl.textContent = `🙋 내 글로벌 순위 — #${finalRank}위 / ${(res.total || scores.length).toLocaleString()}명 · 상위 ${pStr}% (위아래 랭킹 함께 보기)`;
-          renderRows(subList, myIdx, `상위 ${pStr}% · 총 ${(res.total || scores.length).toLocaleString()}명 중 (위/나/아래 순위 함께 표시)`);
+          renderRows(subList, myIdx, `상위 ${pStr}% · 총 ${(res.total || scores.length).toLocaleString()}명 중 (위 2명 · 나 · 아래 2명 순위 함께 표시)`);
         } else {
-          renderRows(subList, myIdx, `총 ${scores.length.toLocaleString()}명 중 (위/나/아래 순위 함께 표시)`);
+          renderRows(subList, myIdx, `총 ${scores.length.toLocaleString()}명 중 (위 2명 · 나 · 아래 2명 순위 함께 표시)`);
         }
       } else {
         if (sourceEl) sourceEl.textContent = `🙋 내 로컬 순위 — #${myRank}위 / ${scores.length.toLocaleString()}명 (위아래 랭킹 함께 보기)`;
-        renderRows(subList, myIdx, '이 브라우저 저장 기록 기준 (위/나/아래 순위 함께 표시)');
+        renderRows(subList, myIdx, '이 브라우저 저장 기록 기준 (위 2명 · 나 · 아래 2명 순위 함께 표시)');
       }
       return;
     }
