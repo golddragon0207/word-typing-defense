@@ -43,7 +43,7 @@
 ### 2. 🙋 `!참여` 참가 등록 & 봇 자동 보충
 * **`!참여`만 참가로 인정**: `!참여`를 친 시청자만 참가자 명단(`joinedViewers`)에 등록되어 **라이브 채팅 제시어 후보·MVP 집계 대상** 자격을 얻고, 동시에 출전 대기열(`viewerQueue`)에 1건 등록된다(`processChatMessage` → `enqueueViewer`). 화면 출전은 즉시가 아니라 **스폰 주기가 돌아왔을 때** `MonsterManager.spawnMonster` → `getNextMonsterData`가 대기열에서 순번대로 한 명씩 꺼내 몬스터로 소환하는 방식이다. **`!참여`하지 않은 시청자의 일반 채팅은 라이브 모드 여부와 무관하게 무시**한다. 라이브 모드가 켜져 있을 때는 이미 `!참여`로 등록한 시청자의 후속 채팅만 대기열에 추가로 누적된다.
 * **봇 자동 보충(스폰 시점 폴백)**: 대기열이 비었을 때만 소환 시점에 `[BOT]`을 한 명 생성한다(`getNextMonsterData`). 실참여자가 큐에 있으면 항상 봇보다 먼저 출전한다.
-* **소환 딜레이(`START_SPAWN_DELAY_MS`/`STAGE_UP_SPAWN_DELAY_MS`, 기본 5000ms)**: 게임 시작 직후와 스테이지 전환 때마다 5초 대기 후 첫 소환을 시작해 시청자가 `!참여`로 모일 여유를 준다. 게임 시작 시 화면 중앙 카운트다운 오버레이(`#start-countdown`)에 5초 카운트다운 연출(보스 스테이지는 이 딜레이 뒤 WARNING→보스 소환).
+* **소환 딜레이(`START_SPAWN_DELAY_MS` 5000ms / `STAGE_UP_SPAWN_DELAY_MS` 3000ms)**: 게임 시작 직후는 5초, 스테이지 전환 때는 3초 대기 후 첫 소환을 시작해 시청자가 `!참여`로 모일 여유를 준다. 게임 시작 시 화면 중앙 카운트다운 오버레이(`#start-countdown`)에 5초 카운트다운 연출(보스 스테이지는 이 딜레이 뒤 WARNING→보스 소환).
 * **대기열(`MAX_QUEUE_LENGTH` 30)**: 순번 대기 상한. 화면 동시 15 + 대기 30 = 순간 최대 45명 파이프라인.
 * **1인당 큐 상한(`MAX_QUEUE_PER_VIEWER` 2)**: 한 시청자가 큐에 동시에 대기할 수 있는 항목을 최대 2개로 제한(도배로 큐 독점 방지, 여러 시청자가 골고루 등장). `[BOT]`은 예외.
 * **참여자 명단 상한(`MAX_JOINED_VIEWERS` 10,000)**: `joinedViewers` 누적 인원 상한(무제한 누적 방지용 안전장치, 대형 방송도 사실상 제한 없음). 가득 차면 새 시청자의 `!참여`는 무시(기존 참여자 재참여는 계속 동작).
@@ -159,7 +159,7 @@
    * 1024×768 고정 레이아웃, 모달 잘림 방지, `.modal-actions`/`.modal-footer` 분리, `body.obs-overlay` 투명 스타일, 토스트/등급뱃지/단어칩/피버 등 컴포넌트 스타일.
 
 3. **`js/config.js`**
-   * `CONFIG.YOUTUBE_API_KEY`, `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY`/`CONFIG.SOOP_DEBUG`, `CONFIG.FIREBASE`, `CONFIG.KAKAO_ADFIT`(6개), `CONFIG.DIFFICULTY`(밸런스 테이블) + `getDifficultyConfig()`, `CONFIG.MAX_MONSTER_CAP`(15), `CONFIG.START_SPAWN_DELAY_MS`/`STAGE_UP_SPAWN_DELAY_MS`(5000), `CONFIG.QUEUE` 튜닝값, 광고 리프레시 로직.
+   * `CONFIG.YOUTUBE_API_KEY`, `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY`/`CONFIG.SOOP_DEBUG`, `CONFIG.FIREBASE`, `CONFIG.KAKAO_ADFIT`(6개), `CONFIG.DIFFICULTY`(밸런스 테이블) + `getDifficultyConfig()`, `CONFIG.MAX_MONSTER_CAP`(15), `CONFIG.START_SPAWN_DELAY_MS`(5000)/`STAGE_UP_SPAWN_DELAY_MS`(3000), `CONFIG.QUEUE` 튜닝값, 광고 리프레시 로직.
 
 4. **`js/wordPacks.js`**
    * 단어팩(기본/프리셋/보스), 시청자 대기열(`{nickname, chatWord}`) 관리, `!참여` 처리·참가자 명단, 봇 자동 보충, 라이브 채팅 정제(`sanitizeLiveChatWord`), 비속어 필터(13종), 한글 자모 획수(`getHangulStrokeCount`) 및 자소 타수(`getKeystrokeCount`) 유틸.
