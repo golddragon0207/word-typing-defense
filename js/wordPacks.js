@@ -138,7 +138,7 @@ const wordPacks = {
   // 상단 컨트롤바의 "💬 라이브 채팅 모드" 버튼으로 게임 중에도 즉시 켜고 끌 수 있다.
   liveChatMode: false,
   liveChatMaxLen: 6,         // 라이브 채팅 문구 최대 글자수 (몬스터 밸런스에 맞춰 6자 고정 — 조정 UI 없음)
-  liveChatStripSpecial: true, // 이모티콘/특수문자 제거 여부 (true 고정 — 조정 UI 없음)
+  liveChatStripSpecial: true, // 한글만 남기기(영문·숫자·이모티콘·특수문자 제거) 여부 (true 고정 — 조정 UI 없음)
 
   // 5. 비속어/욕설 간이 필터 목록 (마스킹 처리)
   badWords: [
@@ -164,10 +164,13 @@ const wordPacks = {
 
   /**
    * 📡 실시간 채팅 메시지 수신 처리 (chatIntegration.js에서 호출)
-   * - '!참여' 입력 시 참가자 명단(joinedViewers)에 등록 + 대기열(Queue)에 소환 예약
+   * - '!참여' 입력 시 참가자 명단(joinedViewers)에 등록. 일반 모드는 즉시 단어팩 랜덤 몬스터로 소환하고,
+   *   라이브 채팅 모드는 등록만 하고 랜덤 몬스터를 띄우지 않는다(진짜 한글 채팅만 타깃이 되도록).
    * - '!참여'하지 않은 시청자의 일반 채팅은 무시(라이브 모드 여부와 무관)
    * - 비속어 필터링 적용
    * - 💬 라이브 채팅 모드가 켜져 있으면, '!참여' 등록자의 후속 채팅 원문을 정제해 타이핑 타깃으로 저장
+   *   (게임 상태 게이트 없음 — 홈 화면·게임 중·일시정지 어디서든 등록은 받는다. 홈에선 대기열에 쌓이기만 하고
+   *    실제 몬스터 스폰은 MonsterManager가 도는 PLAYING 구간에서 이뤄진다.)
    * @param {string} nickname - 채팅 발화 시청자 닉네임(플랫폼 접두사 포함)
    * @param {string} messageText - 채팅 원문
    */
@@ -178,7 +181,11 @@ const wordPacks = {
     const hasJoinCommand = /!참여/.test(msg);
     const safeNickname = this.filterText(nickname).slice(0, 20);
 
-    // 1) `!참여`를 친 시청자만 참가자 명단에 등록하고, 우선 일반 단어팩 몬스터로 한 번 소환합니다.
+    // 1) `!참여`를 친 시청자를 참가자 명단에 등록한다.
+    //    - 일반(비-라이브) 모드: 등록과 동시에 단어팩 랜덤 몬스터로 한 번 소환(기존 참여 연출).
+    //    - 💬 라이브 채팅 모드: 등록만 하고 랜덤 몬스터는 띄우지 않는다. 그 시청자가 '한글 채팅'을
+    //      실제로 쳐야 그 문구로 몬스터가 된다(억지 랜덤 단어 대신 진짜 채팅만 타깃이 되도록).
+    //      단, `!참여 안녕`처럼 같은 줄에 한글이 붙어 있으면 그 문구를 바로 타깃으로 큐에 넣는다.
     if (hasJoinCommand) {
       const wasJoined = this.joinedViewers.has(safeNickname);
       // 명단이 가득 찼는데(=상한 도달) 새 시청자면 참여 거부. 기존 참여자의 재참여는 계속 허용.
@@ -186,7 +193,13 @@ const wordPacks = {
         return false;
       }
       this.joinedViewers.add(safeNickname);
-      this.enqueueViewer(safeNickname);
+      if (this.liveChatMode) {
+        // sanitizeLiveChatWord가 `!참여` 토큰을 제거하므로, 순수 `!참여`는 빈값 → 큐 미적재(몬스터 X).
+        const joinWord = this.sanitizeLiveChatWord(msg);
+        if (joinWord) this.enqueueViewer(safeNickname, joinWord);
+      } else {
+        this.enqueueViewer(safeNickname);
+      }
       return true;
     }
 
@@ -214,10 +227,21 @@ const wordPacks = {
   },
 
   /**
+   * 🧹 대기열(viewerQueue)만 비운다 — 참여자 명단(joinedViewers)은 유지.
+   *    라이브 채팅 모드에서 START로 새 판을 시작할 때, 홈 화면에서 오간 잡담 한글 채팅이
+   *    첫 몬스터 제시어가 되지 않도록 game.js startGame()이 호출한다.
+   *    (명단은 유지하므로 시청자가 다시 `!참여`할 필요는 없다.)
+   */
+  clearQueue() {
+    this.viewerQueue = [];
+  },
+
+  /**
    * 💬 라이브 채팅 원문을 안전한 타이핑 타깃으로 정제
    * - '!참여' 명령어 토큰 제거
    * - 띄어쓰기(공백) 전량 제거 — 공백은 몇 칸을 쳤는지 알 수 없어 타이핑 판정이 애매해지므로 항상 삭제
-   * - (설정 시) 한글/영문/숫자 외 문자(이모티콘, 특수문자 등) 제거
+   * - (설정 시) 한글 외 문자(영문·숫자·이모티콘·특수문자) 전량 제거 — 한/영 전환이 필요한
+   *   영문 혼용 타깃('억까')을 원천 차단하고 한글만 남긴다
    * - 비속어 필터링
    * - 최대 글자수로 자르기
    * 결과가 빈 문자열이면 null에 준하는 빈 값을 반환 → 호출부에서 단어팩으로 자동 폴백
@@ -232,7 +256,12 @@ const wordPacks = {
     cleaned = cleaned.replace(/\s+/g, '');
 
     if (this.liveChatStripSpecial) {
-      cleaned = cleaned.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]/g, '');
+      // 🇰🇷 라이브 채팅 타깃은 '한글만' 남긴다(완성형 가-힣 + 자모 ㄱ-ㅎ/ㅏ-ㅣ).
+      //    영문·숫자·이모티콘·특수문자를 전부 제거하는 이유: 제시어에 영문이 섞이면
+      //    (예: "레게노gg") 플레이어가 단어 중간에 한/영 키를 눌러야 해 사실상 칠 수 없는
+      //    '억까' 타깃이 된다. 한글 IME 상태 그대로 끝까지 칠 수 있게 영문/숫자를 걸러낸다.
+      //    (ㅋㅋ·ㅠㅠ 같은 자모 연타는 한글 입력 상태로 그대로 쳐지므로 남긴다.)
+      cleaned = cleaned.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣ]/g, '');
     }
 
     cleaned = this.filterText(cleaned).trim();

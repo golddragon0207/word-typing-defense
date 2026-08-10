@@ -333,6 +333,14 @@ class GameEngine {
     this.mvpTracker = new Map(); // 🏅 새 판 시작 시 MVP 집계 초기화
     // ⚠️ 참여자 명단은 여기서 리셋하지 않는다. 게임 시작 전에 모인 시청자가 지워지기 때문.
     //    명단 리셋은 판이 끝나 메인으로 돌아갈 때(returnToMain)에서 수행한다.
+    // 💬 라이브 채팅 모드: 새 판 시작 시 '대기열만' 비운다. 홈 화면에서 오간 잡담 한글 채팅이
+    //    첫 몬스터 제시어로 튀어나오지 않게 하기 위함(제시어는 START 이후 친 채팅부터 인정).
+    //    명단(joinedViewers)은 유지하므로 시청자는 다시 !참여할 필요가 없다.
+    //    (비-라이브 모드는 홈에서 !참여한 시청자를 첫 몬스터로 등장시키는 기존 동작을 유지)
+    if (typeof wordPacks !== 'undefined' && wordPacks.liveChatMode
+        && typeof wordPacks.clearQueue === 'function') {
+      wordPacks.clearQueue();
+    }
 
     if (this.stateManager) this.stateManager.resetGame(this.config);
     if (this.turretManager) this.turretManager.setupTurrets(1, this.config.playerNames, canvas);
