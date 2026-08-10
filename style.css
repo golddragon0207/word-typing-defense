@@ -498,6 +498,12 @@ html {
   gap: 12px;
   padding: 6px 14px 14px;
   border-top: 1px solid #2a3550;
+  /* 패널이 열려도 카드가 화면을 넘지 않도록 본문만 내부 스크롤.
+     1024×768(최소 지원 해상도)에서 START 버튼·하단 광고 배너가 잘리지 않게 유지.
+     큰 화면(≈1080p+)에선 본문이 다 들어가 스크롤이 생기지 않음. */
+  max-height: calc(100vh - 545px);
+  min-height: 120px;
+  overflow-y: auto;
 }
 
 /* 패널 안으로 옮긴 스트리머 닉네임 입력 (참여자 명단 바로 위) */
