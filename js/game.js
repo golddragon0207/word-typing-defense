@@ -554,7 +554,7 @@ class GameEngine {
     banner.classList.remove('hidden');
 
     clearTimeout(this._bannerTimeout);
-    this._bannerTimeout = setTimeout(() => banner.classList.add('hidden'), 2000);
+    this._bannerTimeout = setTimeout(() => banner.classList.add('hidden'), 3000);
   }
 
   /**

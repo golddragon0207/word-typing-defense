@@ -75,11 +75,14 @@ class MonsterManager {
         const beginSpawning = () => {
             this.startTimeout = null;
             if (isBossStage) {
-                // 🛡️ 5 Stage 단위 보스전: WARNING 배너 콜백 후 약간의 텀을 두고 보스 소환
+                // 🛡️ 5 Stage 단위 보스전: WARNING 배너 콜백 후 보스 소환.
+                //   ⚠️ 배너는 화면 중앙(top:42%)에 3000ms 동안 떠 있다가 display:none으로 '즉시' 사라진다.
+                //      보스 제시어도 중앙 부근에 뜨므로, 배너보다 먼저 소환하면 제시어가 warning에 가려진다.
+                //      → 배너가 사라진 뒤(3000ms) 소환하도록 3200ms로 텀을 잡아 겹침을 없앤다.
                 if (typeof this.onBossWarning === 'function') {
                     this.onBossWarning(stage);
                 }
-                this.bossTimeout = setTimeout(() => { this.bossTimeout = null; this.spawnBoss(); }, 1800);
+                this.bossTimeout = setTimeout(() => { this.bossTimeout = null; this.spawnBoss(); }, 3200);
             } else {
                 this.spawnMonster();
             }
