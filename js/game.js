@@ -458,16 +458,25 @@ class GameEngine {
         this.advanceStage();
       } else {
         this.stageKillCount += 1;
-        const diffCfg = (typeof getDifficultyConfig === 'function')
-          ? getDifficultyConfig(this.config.difficulty)
-          : { killPerStageBase: 8, killPerStageStep: 0.5 };
-        const killTarget = diffCfg.killPerStageBase + Math.floor((this.stateManager.currentStage - 1) * diffCfg.killPerStageStep);
+        const killTarget = this.getStageKillTarget();
         const isBossStageWaiting = this.monsterManager && this.stateManager.currentStage % 5 === 0;
         if (!isBossStageWaiting && this.stageKillCount >= killTarget) {
           this.advanceStage();
         }
       }
     }
+  }
+
+  /**
+   * 🎯 현재 스테이지의 처치 목표 수. 스테이지 진행 판정과 스폰 스로틀(MonsterManager)이 공용으로 참조한다.
+   *    (killPerStageBase + (stage-1)×killPerStageStep, 난이도 테이블 기준)
+   */
+  getStageKillTarget() {
+    const diffCfg = (typeof getDifficultyConfig === 'function')
+      ? getDifficultyConfig(this.config.difficulty)
+      : { killPerStageBase: 8, killPerStageStep: 0.5 };
+    const stage = this.stateManager ? this.stateManager.currentStage : 1;
+    return diffCfg.killPerStageBase + Math.floor((stage - 1) * diffCfg.killPerStageStep);
   }
 
   /**

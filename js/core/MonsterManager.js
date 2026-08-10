@@ -427,9 +427,28 @@ class MonsterManager {
         // 🛡️ 보스 스테이지에는 일반 몬스터(산성비)를 절대 스폰하지 않는다 — 보스 하나만 상대.
         //    (보스가 이미 소환된 뒤에도 주기 스폰이 계속돼 산성비가 쏟아지던 버그 방지)
         if (this._isBossStage) return;
+        // 🎯 스폰 스로틀: (누적 처치수 + 화면상 몬스터)가 스테이지 킬 목표에 도달하면 더 스폰하지 않는다.
+        //    목표를 '카운트'로만 보고 동시상한까지 계속 스폰하면, 목표 달성 순간 화면에 남은 몹이
+        //    startStage()의 clear()로 한꺼번에 증발한다("마지막 몹이 알아서 잡히는" 현상). 필요한 만큼만
+        //    스폰해 두면 마지막 처치 때 화면이 비어 증발이 없다. 바닥 도달로 사라진 몹은 화면수에서
+        //    빠져 자동으로 스폰이 재개되므로 소프트락도 없다.
+        if (this._reachedStageSpawnQuota()) return;
         if (this.monsters.length < this.MAX_MONSTER_CAP) {
             this.spawnMonster();
         }
+    }
+
+    /**
+     * 🎯 이번 스테이지 스폰 쿼터 도달 여부 — (처치수 + 화면상 일반몹) ≥ 킬 목표면 true.
+     *    game.js(GameEngine)가 목표 수·처치수를 관리하므로 window.gameEngine에서 참조한다.
+     */
+    _reachedStageSpawnQuota() {
+        const ge = (typeof window !== 'undefined') ? window.gameEngine : null;
+        if (!ge || typeof ge.getStageKillTarget !== 'function') return false;
+        const target = ge.getStageKillTarget();
+        if (!target || target <= 0) return false;
+        const aliveNonBoss = this.monsters.reduce((n, m) => n + (m.isBoss ? 0 : 1), 0);
+        return (ge.stageKillCount || 0) + aliveNonBoss >= target;
     }
 
     /**

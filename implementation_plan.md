@@ -78,6 +78,7 @@
 
 ### 6. 🛡️ 대형 방송 마비 방지 (Max Monster Cap)
 * 화면 동시 출전 몬스터를 **`CONFIG.MAX_MONSTER_CAP`(기본 15)로 고정 제한**(하드 상한). MonsterManager가 밸런스 테이블의 `maxMonsterCap`과 `Math.min`으로 clamp.
+* **스폰 스로틀(처치목표 초과 스폰 방지)**: 주기 스폰(`_spawnTick`)은 `(누적 처치수 + 화면상 일반몹) < 스테이지 킬 목표`일 때만 소환한다(`_reachedStageSpawnQuota` → `GameEngine.getStageKillTarget`). 목표를 카운트로만 보고 동시상한까지 계속 스폰하면, 목표 달성 순간 남은 몹이 `startStage()`의 `clear()`로 증발("마지막 몹이 저절로 잡히는" 현상)하므로, 필요한 만큼만 스폰해 둔다. 바닥 도달로 사라진 몹은 화면수에서 빠져 스폰이 자동 재개되어 소프트락은 없다.
 
 ### 7. 🎚️ 밸런스 테이블 (`CONFIG.DIFFICULTY`)
 * 난이도 선택 UI가 없어 표준(`normal`) 밸런스 한 세트만 사용한다(`getDifficultyConfig()`가 반환):
