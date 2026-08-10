@@ -46,7 +46,7 @@ word-typing-defense/
 ├─ style.css                     사이버펑크 네온 스타일, 1024×768 고정 레이아웃 + 비율 스케일, OBS 투명
 ├─ js/
 │  ├─ config.js                  API 키·Firebase·애드핏 설정, 밸런스 테이블(CONFIG.DIFFICULTY, normal 단일), 큐/봇 튜닝
-│  ├─ wordPacks.js               단어팩(프리셋/보스), 시청자 대기열·명단, !참여·봇 보충, 라이브 채팅 정제
+│  ├─ wordPacks.js               6글자 기본 제시어 풀(126종)·보스 제시어, 시청자 대기열·명단, !참여·봇 보충, 라이브 채팅 정제
 │  ├─ audio.js                   Web Audio API 효과음
 │  ├─ chatIntegration.js         SOOP·치지직·유튜브 URL 파서 및 실시간 채팅 클라이언트
 │  ├─ globalLeaderboard.js       Firebase 글로벌 리더보드 + 건의사항 + Analytics (선택형)
@@ -55,7 +55,7 @@ word-typing-defense/
 │  ├─ ui/                        GameEngine 부분 클래스(prototype 확장) — UI 배선/렌더링
 │  │  ├─ fx.js                   토스트 알림 + 배경 스타필드
 │  │  ├─ chatPanel.js            채팅 연동 패널·참여자 명단·대기열 렌더
-│  │  ├─ modals.js               단어팩·명예의전당·건의사항 모달 + 공용 유틸
+│  │  ├─ modals.js               명예의전당·후원·건의사항 모달 + 공용 유틸
 │  │  └─ quickControls.js        상단바 잠금 + 라이브/OBS/사운드 토글
 │  ├─ core/
 │  │  ├─ StateManager.js         상태·점수·피버

@@ -60,41 +60,6 @@
   };
 
   /* ==========================================================
-   * 📝 단어/닉네임 팩 모달 이벤트
-   * ========================================================== */
-  P.bindWordPackModalEvents = function () {
-    const packSelect = document.getElementById('select-word-pack');
-    if (packSelect) {
-      packSelect.addEventListener('change', () => {
-        if (typeof wordPacks === 'undefined') return;
-        wordPacks.applyPresetPack(packSelect.value);
-        this.renderWordPackPreview();
-        this.showToastInternal('📝 단어 팩이 적용되었습니다.', 'success');
-      });
-    }
-
-    // 💬 라이브 채팅 제시어 세부 설정(최대 글자수·특수문자 제거)은 UI에서 제거하고
-    //    wordPacks 기본값(liveChatMaxLen=6, liveChatStripSpecial=true)으로 고정한다.
-    //    홈 참여자 명단 헤더의 토글 버튼(#btn-modal-live-chat-toggle)만 남아 모드 ON/OFF를 담당.
-  };
-
-  /**
-   * 📋 현재 실제로 게임에 사용 중인 단어 목록(프리셋 또는 커스텀)을 모달에 칩 형태로 미리보기
-   */
-  P.renderWordPackPreview = function () {
-    const previewEl = document.getElementById('word-pack-preview');
-    if (!previewEl || typeof wordPacks === 'undefined') return;
-
-    const words = wordPacks.getActiveWords();
-    if (!words || words.length === 0) {
-      previewEl.innerHTML = '<span class="word-pack-preview-empty">표시할 단어가 없습니다.</span>';
-      return;
-    }
-
-    previewEl.innerHTML = words.map(w => `<span class="word-chip">${this.escapeHtml(w)}</span>`).join('');
-  };
-
-  /* ==========================================================
    * 🏆 명예의 전당 (최고 도달 스테이지 기준 단일 TOP 5, localStorage + 글로벌)
    * ========================================================== */
 

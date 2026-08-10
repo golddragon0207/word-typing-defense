@@ -31,7 +31,6 @@
       </div>
 
       <div class="quick-controls">
-        <button id="btn-word-modal" class="btn btn-neon purple qc-btn" data-tip="단어/닉네임 팩"><span class="qc-ic">📝</span><span class="qc-tx">단어/닉네임 팩</span></button>
         <button id="btn-leaderboard-modal" class="btn btn-neon gold qc-btn" data-tip="명예의 전당 (Top 5)"><span class="qc-ic">🏆</span><span class="qc-tx">명예의 전당 (Top 5)</span></button>
         <button id="btn-support-modal" class="btn btn-neon gold qc-btn" data-tip="후원 (Donate)"><span class="qc-ic">☕</span><span class="qc-tx">후원 (Donate)</span></button>
         <button id="btn-suggestion-modal" class="btn btn-neon pink qc-btn" data-tip="건의사항"><span class="qc-ic">💡</span><span class="qc-tx">건의사항</span></button>
@@ -318,40 +317,6 @@
       </div>
 
     </main>
-
-    <div id="modal-words" class="modal-backdrop hidden">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h2>📝 단어 & 닉네임 팩 설정</h2>
-          <button class="btn-close" data-close="modal-words">✕</button>
-        </div>
-        <div class="modal-body">
-          <div class="word-pack-selector">
-            <label>기본 내장 팩 선택:</label>
-            <select id="select-word-pack">
-              <option value="mixed">🔀 종합 믹스 팩 (추천)</option>
-              <option value="memes">🔥 스트리머 방송 밈 & 유행어 팩</option>
-              <option value="hardcore">💀 오타 유발 억까 매운맛 팩</option>
-              <option value="spelling">💡 자주 틀리는 맞춤법 퀴즈 팩</option>
-            </select>
-          </div>
-
-          <div class="word-pack-preview-section">
-            <label>📋 이 팩에 들어있는 단어 미리보기:</label>
-            <div id="word-pack-preview" class="word-pack-preview"></div>
-          </div>
-
-        </div>
-
-        <div class="modal-actions modal-actions-pad">
-          <button class="btn btn-primary" data-close="modal-words">적용 완료</button>
-        </div>
-
-        <div class="modal-footer">
-          <div id="ad-container-words" class="ad-banner-box"></div>
-        </div>
-      </div>
-    </div>
 
     <div id="modal-leaderboard" class="modal-backdrop hidden">
       <div class="modal-card">

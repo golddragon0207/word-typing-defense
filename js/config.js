@@ -2,7 +2,7 @@
  * ============================================================
  * STREAMER WORD DEFENSE — 전역 설정 파일 (js/config.js)
  *
- * ✅ 카카오 애드핏 배너 6개 ID 및 광고 동적 리프레시 관리
+ * ✅ 카카오 애드핏 배너 5개 ID 및 광고 동적 리프레시 관리
  * ============================================================
  */
 
@@ -53,11 +53,10 @@ const CONFIG = {
     measurementId: "G-K6VVVNWNWM"
   },
 
-  // 💰 수익화: 카카오 애드핏 (Kakao AdFit) 728x90 PC 전용 배너 설정 (총 6개)
+  // 💰 수익화: 카카오 애드핏 (Kakao AdFit) 728x90 PC 전용 배너 설정 (총 5개)
   KAKAO_ADFIT: {
     MAIN: "DAN-sCTP6AnIeAemuGrC",         // 메인_최하단_728x90 ID
     GAMEOVER: "DAN-wtmcwTgfJbkapFIQ",     // 결과창_카드_728x90 ID
-    WORDS: "DAN-Jdl49AhXKb3Dg6Ce",        // 모달_단어팩_728x90 ID
     LEADERBOARD: "DAN-4f2Zy9rvtpYIdFwz", // 모달_명예의전당_728x90 ID
     SUPPORT: "DAN-7HAZgjuUDNHfPgph",      // 모달_후원_728x90 ID
     SUGGESTION: "DAN-0yaoDJ8fNLA4tD92",   // 모달_건의사항_728x90 ID
@@ -162,11 +161,10 @@ function getDifficultyConfig(difficulty) {
 }
 window.getDifficultyConfig = getDifficultyConfig;
 
-// 광고 슬롯 - 컨테이너 ID 맵핑 객체 (총 6개)
+// 광고 슬롯 - 컨테이너 ID 맵핑 객체 (총 5개)
 const AD_CONTAINER_MAP = {
   'ad-container-main': CONFIG.KAKAO_ADFIT.MAIN,
   'ad-container-gameover': CONFIG.KAKAO_ADFIT.GAMEOVER,
-  'ad-container-words': CONFIG.KAKAO_ADFIT.WORDS,
   'ad-container-leaderboard': CONFIG.KAKAO_ADFIT.LEADERBOARD,
   'ad-container-support': CONFIG.KAKAO_ADFIT.SUPPORT,
   'ad-container-suggestion': CONFIG.KAKAO_ADFIT.SUGGESTION

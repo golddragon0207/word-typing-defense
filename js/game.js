@@ -128,7 +128,6 @@ class GameEngine {
   bindUIEvents() {
     // 모달 팝업 및 해당 카카오 애드핏 배너 슬롯 매핑
     const modalMap = [
-      { btnId: 'btn-word-modal', modalId: 'modal-words', adContainerId: 'ad-container-words' },
       { btnId: 'btn-leaderboard-modal', modalId: 'modal-leaderboard', adContainerId: 'ad-container-leaderboard' },
       { btnId: 'btn-support-modal', modalId: 'modal-support', adContainerId: 'ad-container-support' },
       { btnId: 'btn-suggestion-modal', modalId: 'modal-suggestion', adContainerId: 'ad-container-suggestion' }
@@ -153,8 +152,6 @@ class GameEngine {
             if (lbSearch) { lbSearch.value = ''; lbSearch.classList.remove('hidden'); }
             this.loadLeaderboard();
           }
-          if (modalId === 'modal-words') this.renderWordPackPreview();
-
           // ⚡ 2. 광고 호출 함수는 그대로 유지하되, 모달이 다 뜨고 난 150ms 뒤 비동기로 실행
           setTimeout(() => {
             if (window.refreshAdfitSlot && adContainerId) {
@@ -258,7 +255,6 @@ class GameEngine {
     }
 
     this.bindChatModalEvents();
-    this.bindWordPackModalEvents();
     this.bindLiveChatToggle();
     this.bindObsToggle();
     this.bindSfxToggle();

@@ -22,7 +22,7 @@
     const current = state || (this.stateManager ? this.stateManager.currentState : 'MENU');
     const inGame = current === 'PLAYING' || current === 'READY';
 
-    const lockIds = ['btn-word-modal', 'btn-leaderboard-modal', 'btn-support-modal', 'btn-suggestion-modal'];
+    const lockIds = ['btn-leaderboard-modal', 'btn-support-modal', 'btn-suggestion-modal'];
     lockIds.forEach(id => {
       const btn = document.getElementById(id);
       if (!btn) return;
