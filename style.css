@@ -1862,12 +1862,28 @@ html {
   font-weight: 800;
 }
 
-/* 참여자 명단 헤더(라벨 + 초기화 버튼) 한 줄 배치 */
+/* 참여자 명단 헤더(라벨 + [라이브 모드·초기화] 버튼) 한 줄 배치 */
 .participants-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 헤더 오른쪽 버튼 묶음(라이브 모드 토글 + 참여자 초기화) */
+.participants-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 라이브 모드 ON일 때 토글 버튼 자체를 보라색으로 강조(설정 박스 제거 후 상태 표시) */
+#btn-modal-live-chat-toggle.active {
+  color: #ffffff;
+  background: rgba(191, 0, 255, 0.26) !important;
+  border-color: #d65cff !important;
+  box-shadow: 0 0 12px rgba(191, 0, 255, 0.6);
 }
 
 .btn-reset-participants {

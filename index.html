@@ -188,7 +188,10 @@
                 <div class="participants-section">
                   <div class="participants-header">
                     <label>🙋 참여자 명단:</label>
-                    <button id="btn-reset-participants" class="btn-reset-participants" type="button">🗑️ 참여자 초기화</button>
+                    <div class="participants-header-actions">
+                      <button id="btn-modal-live-chat-toggle" class="btn btn-neon purple btn-sm" data-tip="라이브 채팅 모드: 켜면 !참여 시청자의 채팅이 제시어가 됩니다">💬 라이브 모드: OFF</button>
+                      <button id="btn-reset-participants" class="btn-reset-participants" type="button">🗑️ 참여자 초기화</button>
+                    </div>
                   </div>
                   <div id="participant-list" class="participant-chips-container"></div>
                   <p class="chat-option-note">💡 방송 채팅창에 <strong>!참여</strong> 라고 해야 자동참여 됩니다!</p>
@@ -289,25 +292,6 @@
           <div class="word-pack-preview-section">
             <label>📋 이 팩에 들어있는 단어 미리보기:</label>
             <div id="word-pack-preview" class="word-pack-preview"></div>
-          </div>
-
-          <div class="live-chat-settings">
-            <div class="live-chat-settings-title">
-              <span>💬 라이브 채팅 제시어 설정</span>
-              <button id="btn-modal-live-chat-toggle" class="btn btn-neon purple btn-sm">💬 라이브 모드: OFF</button>
-            </div>
-            <p class="live-chat-settings-desc">라이브 채팅 모드를 켜면 <strong>!참여한 시청자</strong>의 채팅이 순서대로 대기열에 쌓여 차례차례 몬스터로 등장합니다 (친 사람 모두 반영, 대형 방송은 큐 상한·1인당 제한으로 자동 조절).
-            </p>
-            <div class="live-chat-settings-row">
-              <label for="select-live-chat-max-len">최대 글자수</label>
-              <select id="select-live-chat-max-len">
-                <option value="4">4자</option>
-                <option value="6" selected>6자</option>
-                <option value="8">8자</option>
-              </select>
-              <label class="live-chat-check"><input type="checkbox" id="chk-live-chat-strip-special" checked />
-                이모티콘·특수문자 제거</label>
-            </div>
           </div>
 
         </div>

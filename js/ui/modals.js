@@ -73,22 +73,9 @@
       });
     }
 
-    const maxLenSelect = document.getElementById('select-live-chat-max-len');
-    if (maxLenSelect) {
-      maxLenSelect.addEventListener('change', () => {
-        if (typeof wordPacks === 'undefined') return;
-        wordPacks.liveChatMaxLen = Number(maxLenSelect.value) || 6;
-        this.showToastInternal(`💬 라이브 채팅 제시어 최대 길이: ${wordPacks.liveChatMaxLen}자`, 'info');
-      });
-    }
-
-    const stripSpecialCheck = document.getElementById('chk-live-chat-strip-special');
-    if (stripSpecialCheck) {
-      stripSpecialCheck.addEventListener('change', () => {
-        if (typeof wordPacks === 'undefined') return;
-        wordPacks.liveChatStripSpecial = stripSpecialCheck.checked;
-      });
-    }
+    // 💬 라이브 채팅 제시어 세부 설정(최대 글자수·특수문자 제거)은 UI에서 제거하고
+    //    wordPacks 기본값(liveChatMaxLen=6, liveChatStripSpecial=true)으로 고정한다.
+    //    홈 참여자 명단 헤더의 토글 버튼(#btn-modal-live-chat-toggle)만 남아 모드 ON/OFF를 담당.
   };
 
   /**
@@ -97,13 +84,6 @@
   P.renderWordPackPreview = function () {
     const previewEl = document.getElementById('word-pack-preview');
     if (!previewEl || typeof wordPacks === 'undefined') return;
-
-    const maxLenSelect = document.getElementById('select-live-chat-max-len');
-    if (maxLenSelect) maxLenSelect.value = String(wordPacks.liveChatMaxLen);
-    const stripSpecialCheck = document.getElementById('chk-live-chat-strip-special');
-    if (stripSpecialCheck) stripSpecialCheck.checked = !!wordPacks.liveChatStripSpecial;
-
-    this._syncLiveChatModalBtn(!!wordPacks.liveChatMode);
 
     const words = wordPacks.getActiveWords();
     if (!words || words.length === 0) {
