@@ -168,13 +168,15 @@
     const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
     listEl.innerHTML = indexed.map(({ entry, rank }) => {
       const isMe = !!myName && entry.nickname === myName;
+      const pt = entry.playTimeStr || (entry.playTimeSec ? (Math.floor(entry.playTimeSec / 60) > 0 ? Math.floor(entry.playTimeSec / 60) + '분 ' + (entry.playTimeSec % 60) + '초' : (entry.playTimeSec % 60) + '초') : '');
+      const ptText = pt ? ` · ⏱️ ${pt}` : '';
       return `
       <div class="leaderboard-row${isMe ? ' is-me' : ''}">
         <span class="lb-rank">${medals[rank - 1] || rank}</span>
         <span class="lb-nickname">${this.escapeHtml(entry.nickname)}${isMe ? '<span class="lb-me-tag">나</span>' : ''}</span>
         <span class="lb-stage">STAGE ${entry.stage || 1}</span>
         <span class="lb-grade rank-${(entry.grade || 'D').toLowerCase()}">${entry.grade || 'D'}</span>
-        <span class="lb-meta">${(entry.score || 0).toLocaleString()}점 · 방어속도 ${entry.wpm || 0}</span>
+        <span class="lb-meta">${(entry.score || 0).toLocaleString()}점${ptText} · 방어속도 ${entry.wpm || 0}</span>
         <span class="lb-date">${entry.date || ''}</span>
       </div>`;
     }).join('');
@@ -215,13 +217,15 @@
     const renderRows = (subList, myIndexInSub, noteText) => {
       let html = subList.map(({ entry, rank }) => {
         const isMe = (rank === myIndexInSub + 1) || (!!myName && entry.nickname === myName);
+        const pt = entry.playTimeStr || (entry.playTimeSec ? (Math.floor(entry.playTimeSec / 60) > 0 ? Math.floor(entry.playTimeSec / 60) + '분 ' + (entry.playTimeSec % 60) + '초' : (entry.playTimeSec % 60) + '초') : '');
+        const ptText = pt ? ` · ⏱️ ${pt}` : '';
         return `
         <div class="leaderboard-row${isMe ? ' is-me' : ''}">
           <span class="lb-rank">${medals[rank - 1] || '#' + rank}</span>
           <span class="lb-nickname">${this.escapeHtml(entry.nickname)}${isMe ? '<span class="lb-me-tag">나</span>' : ''}</span>
           <span class="lb-stage">STAGE ${entry.stage || 1}</span>
           <span class="lb-grade rank-${(entry.grade || 'D').toLowerCase()}">${entry.grade || 'D'}</span>
-          <span class="lb-meta">${(entry.score || 0).toLocaleString()}점 · 방어속도 ${entry.wpm || 0}</span>
+          <span class="lb-meta">${(entry.score || 0).toLocaleString()}점${ptText} · 방어속도 ${entry.wpm || 0}</span>
           <span class="lb-date">${entry.date || ''}</span>
         </div>`;
       }).join('');
@@ -276,13 +280,15 @@
 
     // 3. 캐시 목록 밖인 경우 단일 카드 폴백
     const renderSingleCard = (rankLabel, note) => {
+      const pt = myBest.playTimeStr || (myBest.playTimeSec ? (Math.floor(myBest.playTimeSec / 60) > 0 ? Math.floor(myBest.playTimeSec / 60) + '분 ' + (myBest.playTimeSec % 60) + '초' : (myBest.playTimeSec % 60) + '초') : '');
+      const ptText = pt ? ` · ⏱️ ${pt}` : '';
       listEl.innerHTML = `
       <div class="leaderboard-row is-me">
         <span class="lb-rank">${rankLabel}</span>
         <span class="lb-nickname">${this.escapeHtml(myBest.nickname)}<span class="lb-me-tag">나</span></span>
         <span class="lb-stage">STAGE ${myBest.stage || 1}</span>
         <span class="lb-grade rank-${(myBest.grade || 'D').toLowerCase()}">${myBest.grade || 'D'}</span>
-        <span class="lb-meta">${(myBest.score || 0).toLocaleString()}점 · 방어속도 ${myBest.wpm || 0}</span>
+        <span class="lb-meta">${(myBest.score || 0).toLocaleString()}점${ptText} · 방어속도 ${myBest.wpm || 0}</span>
         <span class="lb-date">${myBest.date || ''}</span>
       </div>
       ${note ? `<p class="leaderboard-note">${note}</p>` : ''}`;

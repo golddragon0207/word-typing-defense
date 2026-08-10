@@ -784,6 +784,7 @@ class GameEngine {
 
       const stageEl = document.getElementById('result-stage');
       const scoreEl = document.getElementById('result-score');
+      const playtimeEl = document.getElementById('result-playtime');
       const wpmEl = document.getElementById('result-wpm');
       const comboEl = document.getElementById('result-combo');
       const killsEl = document.getElementById('result-kills');
@@ -792,6 +793,7 @@ class GameEngine {
 
       if (stageEl) stageEl.innerText = `STAGE ${this.stateManager.currentStage}`;
       if (scoreEl) scoreEl.innerText = this.stateManager.score.toLocaleString();
+      if (playtimeEl) playtimeEl.innerText = this.stateManager.getFormattedPlayTime();
       if (wpmEl) wpmEl.innerText = this.stateManager.maxWpm;
       if (comboEl) comboEl.innerText = this.stateManager.maxCombo;
       if (killsEl) killsEl.innerText = this.stateManager.totalKills;
@@ -877,6 +879,8 @@ class GameEngine {
           wpm: this.stateManager.maxWpm,
           combo: this.stateManager.maxCombo,
           grade: rank,
+          playTimeSec: this.stateManager.getPlayTimeSec(),
+          playTimeStr: this.stateManager.getFormattedPlayTime(),
           date: new Date().toISOString().slice(0, 10)
         }).then(ok => {
           if (ok) this.showToastInternal('🌐 글로벌 명예의 전당에 기록을 제출했습니다.', 'info');

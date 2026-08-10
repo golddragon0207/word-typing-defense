@@ -324,6 +324,29 @@ class StateManager {
     }
 
     /**
+     * ⏱️ 플레이 시간(초 단위) 계산
+     * @returns {number}
+     */
+    getPlayTimeSec() {
+        if (!this.startTime) return 0;
+        return Math.max(0, Math.floor((performance.now() - this.startTime) / 1000));
+    }
+
+    /**
+     * ⏱️ 플레이 시간 포맷팅 ("2분 35초" 또는 "45초")
+     * @returns {string}
+     */
+    getFormattedPlayTime() {
+        const sec = this.getPlayTimeSec();
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        if (m > 0) {
+            return `${m}분 ${s}초`;
+        }
+        return `${s}초`;
+    }
+
+    /**
      * 🏆 현재 전적을 localStorage에 저장 — '최고 도달 스테이지' 기준 단일 통합 랭킹.
      *    스테이지 내림차순(동점이면 점수 내림차순)으로 정렬해 상위 STORE_MAX개만 보관한다.
      * @param {string} nickname
@@ -340,6 +363,8 @@ class StateManager {
             wpm: this.maxWpm,
             combo: this.maxCombo,
             grade: this.calculateRankGrade(),
+            playTimeSec: this.getPlayTimeSec(),
+            playTimeStr: this.getFormattedPlayTime(),
             date: new Date().toISOString().slice(0, 10)
         };
 

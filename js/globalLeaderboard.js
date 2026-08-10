@@ -24,7 +24,7 @@
  *     match /leaderboard/{entryId} {
  *       allow read: if true;
  *       allow create: if request.resource.data.keys().hasOnly(
- *                         ['nickname','score','stage','wpm','combo','grade','date','createdAt']
+ *                         ['nickname','score','stage','wpm','combo','grade','playTimeSec','playTimeStr','date','createdAt']
  *                       )
  *                     && request.resource.data.nickname is string
  *                     && request.resource.data.nickname.size() <= 20
@@ -148,6 +148,8 @@ const GlobalLeaderboard = {
         wpm: entry.wpm || 0,
         combo: entry.combo || 0,
         grade: entry.grade || 'D',
+        playTimeSec: entry.playTimeSec || 0,
+        playTimeStr: entry.playTimeStr || '0초',
         date: entry.date || new Date().toISOString().slice(0, 10),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
