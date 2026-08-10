@@ -43,7 +43,7 @@ word-typing-defense/
 ├─ index.html                    메인 화면·모달·상단 컨트롤바·광고 슬롯·Firebase SDK 로드
 ├─ style.css                     사이버펑크 네온 스타일, 1024×768 고정 레이아웃 + 비율 스케일, OBS 투명
 ├─ js/
-│  ├─ config.js                  API 키·Firebase·애드핏 설정, 밸런스 테이블(CONFIG.DIFFICULTY), 큐/봇 튜닝
+│  ├─ config.js                  API 키·Firebase·애드핏 설정, 밸런스 테이블(CONFIG.DIFFICULTY, normal 단일), 큐/봇 튜닝
 │  ├─ wordPacks.js               단어팩(프리셋/보스), 시청자 대기열·명단, !참여·봇 보충, 라이브 채팅 정제
 │  ├─ audio.js                   Web Audio API 효과음
 │  ├─ chatIntegration.js         SOOP·치지직·유튜브 URL 파서 및 실시간 채팅 클라이언트
