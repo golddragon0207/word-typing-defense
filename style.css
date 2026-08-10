@@ -1173,7 +1173,10 @@ html {
   background:
     radial-gradient(ellipse at center, rgba(255, 220, 0, 0.35) 0%, rgba(255, 120, 0, 0) 55%),
     radial-gradient(ellipse at center, rgba(255, 60, 0, 0) 35%, rgba(255, 45, 0, 0.5) 100%);
-  animation: feverFlash 1.15s ease-out;
+  /* forwards: 애니메이션이 끝난 뒤에도 마지막 키프레임(opacity 0)을 유지한다.
+     (기본값 none이면 종료 후 기본 상태 opacity 1로 되돌아가, 오버레이가 숨겨지는 1300ms까지의
+      꼬리 구간 동안 플래시가 '다시 한 번' 번쩍 보이던 문제를 방지) */
+  animation: feverFlash 1.15s ease-out forwards;
 }
 
 @keyframes feverFlash {
@@ -1195,7 +1198,9 @@ html {
   white-space: nowrap;
   color: #fff3c4;
   text-shadow: 0 0 18px #ff9500, 0 0 36px #ff3d00, 0 0 60px #ff0055;
-  animation: feverTextPop 1.2s cubic-bezier(0.2, 1.2, 0.3, 1);
+  /* forwards: 종료 후 마지막 키프레임(opacity 0) 유지 → 오버레이 숨김(1300ms)까지의 꼬리 구간에
+     텍스트가 기본 opacity 1로 되돌아가 '두 번째로' 다시 나타나던 문제를 방지 */
+  animation: feverTextPop 1.2s cubic-bezier(0.2, 1.2, 0.3, 1) forwards;
 }
 
 @keyframes feverTextPop {
@@ -1225,7 +1230,9 @@ html {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse at center, rgba(255, 0, 40, 0) 42%, rgba(255, 0, 40, 0.55) 100%);
-  animation: bossAttackFlash 0.7s ease-out;
+  /* forwards: 종료 후 마지막 키프레임(opacity 0) 유지 → 오버레이 숨김(950ms)까지의 꼬리 구간에
+     기본 opacity 1로 되돌아가 비네트가 '다시 한 번' 번쩍이던 문제 방지 (피버 오버레이와 동일 조치) */
+  animation: bossAttackFlash 0.7s ease-out forwards;
 }
 
 @keyframes bossAttackFlash {
@@ -1247,7 +1254,8 @@ html {
   white-space: nowrap;
   color: #ffe0e0;
   text-shadow: 0 0 14px #ff0033, 0 0 28px #ff0033;
-  animation: bossAttackTextPop 0.9s ease-out;
+  /* forwards: 종료 후 마지막 키프레임(opacity 0) 유지 → 꼬리 구간 재등장 방지 */
+  animation: bossAttackTextPop 0.9s ease-out forwards;
 }
 
 @keyframes bossAttackTextPop {
