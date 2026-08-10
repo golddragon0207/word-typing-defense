@@ -488,7 +488,7 @@ class GameEngine {
     this.stateManager.currentStage += 1;
     this.stageKillCount = 0;
 
-    // ⏱️ 스테이지업 때마다 잠깐 숨 돌릴 여유(기본 5초) 후 다음 몬스터/보스 소환
+    // ⏱️ 스테이지업 때마다 잠깐 숨 돌릴 여유(기본 3초, CONFIG.STAGE_UP_SPAWN_DELAY_MS) 후 다음 몬스터/보스 소환
     const stageUpDelay = (typeof CONFIG !== 'undefined' && CONFIG.STAGE_UP_SPAWN_DELAY_MS != null)
       ? CONFIG.STAGE_UP_SPAWN_DELAY_MS : 5000;
     this.monsterManager.startStage(this.stateManager.currentStage, this.config.difficulty, stageUpDelay);
@@ -509,7 +509,7 @@ class GameEngine {
   triggerFeverBurst() {
     if (!this.monsterManager || !this.stateManager) return;
 
-    // 🔥 화면 한복판에서 크게 터지는 피버 연출(플래시 + 대형 텍스트 + 흔들림)
+    // 🔥 화면 한복판에서 크게 터지는 피버 연출(플래시 + 대형 텍스트, 멀미 방지로 흔들림 없음)
     this.playFeverOverlay();
 
     const cleared = this.monsterManager.clearNonBoss();

@@ -32,7 +32,9 @@ const CONFIG = {
 
   // SOOP 채팅 파싱 디버그 로그(원본 프레임/파싱 결과를 콘솔에 출력). 라이브에서 필드 인덱스 튜닝용.
   // (치지직 연동 디버그 로그도 이 플래그를 함께 사용합니다.)
-  SOOP_DEBUG: true,
+  // ⚠️ 프로덕션 기본값은 false — 켜면 채팅 메시지마다 원본 프레임을 콘솔에 출력해(JSON.stringify 포함)
+  //    대형 방송에서 콘솔이 도배되고 성능에 부담이 됩니다. 파싱 규격을 조정할 때만 true로 켜세요.
+  SOOP_DEBUG: false,
   // 🌐 글로벌 명예의 전당(Firestore) + 📊 애널리틱스 연동용 설정
   // Firebase 콘솔(https://console.firebase.google.com/) > 프로젝트 설정 > 일반 > "내 앱" > 웹 앱에서
   // 발급받은 firebaseConfig 값을 그대로 아래에 붙여넣으세요.

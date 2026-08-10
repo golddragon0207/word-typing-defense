@@ -137,8 +137,8 @@ const wordPacks = {
   // (안전하게 정제된 뒤) 타이핑 타깃 단어로 쓰인다. 끄면 항상 단어팩에서만 뽑힘.
   // 상단 컨트롤바의 "💬 라이브 채팅 모드" 버튼으로 게임 중에도 즉시 켜고 끌 수 있다.
   liveChatMode: false,
-  liveChatMaxLen: 6,         // 라이브 채팅 문구 최대 글자수 (몬스터 밸런스에 맞춰 기본 6자, 모달에서 4/6/8 조정)
-  liveChatStripSpecial: true, // 이모티콘/특수문자 제거 여부 (단어팩 모달에서 조정 가능)
+  liveChatMaxLen: 6,         // 라이브 채팅 문구 최대 글자수 (몬스터 밸런스에 맞춰 6자 고정 — 조정 UI 없음)
+  liveChatStripSpecial: true, // 이모티콘/특수문자 제거 여부 (true 고정 — 조정 UI 없음)
 
   // 5. 비속어/욕설 간이 필터 목록 (마스킹 처리)
   badWords: [

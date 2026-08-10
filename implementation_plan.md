@@ -34,7 +34,7 @@
 * **다중 플랫폼 동시 연동**: `channels[]` 배열 구조로 SOOP + 치지직 + 유튜브 동시 연결. 각 플랫폼 채팅은 플랫폼 접두사(🔵/🟢/🔴)와 함께 하나의 시청자 대기열로 병합. 연동 모달 기본 탭·시작화면 배지는 **SOOP 선두** 배치.
 * **참여자 목록 표시**: `!참여`한 시청자를 홈 화면 채팅 연동 패널(`<details id="home-chat-panel">`)에 실시간 목록(총원 + 최근 참여자 칩)으로 표시.
 * **스트리머 닉네임 필수 입력**: 스트리머 닉네임 칸(`#input-player-nickname`)은 홈 화면 채팅 연동 패널 안(참여자 명단 바로 위)에 위치하며 **필수 입력**. 빈 값으로 게임 시작 시 시작을 막고 패널을 펼쳐 입력칸에 포커스.
-* **SOOP 실제 채팅 클라이언트 (`connectSoop`)**: `player_live_api.php`로 방송번호(BNO)·**채팅방번호(CHATNO)**·채팅서버(CHDOMAIN/CHPT) 조회 → `wss://{CHDOMAIN}:{CHPT+1}/Websocket/{BJID}` 접속(서브프로토콜 `chat`) → **LOGIN(svc 1, 익명 CONNECT 페이로드 = 구분자×3 + `16` + 구분자)** → 응답 후 **JOIN(svc 2, 입장 대상은 `CHATNO`)** → 주기 PING(svc 0, 60초), 수신 CHAT(svc 5) 패킷을 `0x0c` 구분자로 파싱해 닉네임·메시지 추출. `CONFIG.SOOP_DEBUG`로 원본 프레임 로그 출력.
+* **SOOP 실제 채팅 클라이언트 (`connectSoop`)**: `player_live_api.php`로 방송번호(BNO)·**채팅방번호(CHATNO)**·채팅서버(CHDOMAIN/CHPT) 조회 → `wss://{CHDOMAIN}:{CHPT+1}/Websocket/{BJID}` 접속(서브프로토콜 `chat`) → **LOGIN(svc 1, 익명 CONNECT 페이로드 = 구분자×3 + `16` + 구분자)** → 응답 후 **JOIN(svc 2, 입장 대상은 `CHATNO`)** → 주기 PING(svc 0, 60초), 수신 CHAT(svc 5) 패킷을 `0x0c` 구분자로 파싱해 닉네임·메시지 추출. `CONFIG.SOOP_DEBUG`(**프로덕션 기본 false** — 켜면 채팅 메시지마다 원본 프레임을 콘솔 출력)로 파싱 규격 튜닝 로그 확인.
 * **치지직 실제 채팅 클라이언트 (`connectChzzk`)**: `polling/v2/channels/{채널ID}/live-status`로 방송 상태(OPEN)·채팅방ID(`chatChannelId`) 조회 → `comm-api.game.naver.com/.../access-token`으로 익명 읽기용 `accessToken` 발급(code 42601이면 성인 인증 방송이라 익명 불가) → `chatChannelId` 문자코드 합 해시로 채팅 서버(`kr-ss1~9`) 결정 → `wss://kr-ss{N}.chat.naver.com/chat` 접속 → **CONNECT(cmd 100, `accTkn` 포함)** → CONNECTED(cmd 10100) 후 CHAT(cmd 93101)의 `profile.nickname`/`msg` 파싱. keepalive: 서버 PING(cmd 0)→PONG(cmd 10000) + 20초 주기 PING. REST 호출은 CORS 대상이라 프록시 경유, WS는 직접 연결.
 * **CORS 프록시 / 웹소켓**: SOOP·치지직 REST API는 **하나의 무료 Cloudflare Worker 프록시**([`proxy/soop-cors-proxy.worker.js`](proxy/soop-cors-proxy.worker.js), SOOP/아프리카 + `api.chzzk.naver.com`·`comm-api.game.naver.com` 도메인 허용) 경유; 채팅 웹소켓은 양쪽 다 브라우저에서 직접 연결; 유튜브는 Data API v3 폴링.
 * **Smart Fallback**: 방송 비활성화·주소 오류·통신 장애·프록시 미설정 시 토스트 안내 후, 대기열이 비면 `getNextMonsterData`가 자동으로 `[BOT]` 가상 시청자를 배정(대기열 소비 시점의 자연 폴백 구조).
@@ -74,7 +74,7 @@
 ### 5. 📝 단어팩 & 라이브 제시어 길이 처리
 * **기본 제시어 풀(`wordPacks.words`)**: 방송/게임/개발/음식·일상/밈/자연 등 6개 카테고리 약 95개 단어로 구성. **몬스터 제시어는 팩 구분 없이 전부 6글자 이하**로 통일해 밸런스를 균일화. 별도 JSON/`fetch` 없이 배열 정적 관리.
 * 프리셋 팩 선택: `mixed`(기본 믹스), `memes`(방송 밈 21종), `hardcore`(억까 오타유발 10종), `spelling`(맞춤법 퀴즈 10종), `english`(영문 & IT 10종) + 모달 내 실시간 칩 미리보기(`renderWordPackPreview`). **모든 팩 제시어 6글자 이하 통일**(hardcore 잰말놀이·english 영타도 6자 이하로 맞춤). 단, `spelling`은 맞춤법 O/X 표기가 교육용 컨셉이라 글자수·특수문자 규칙에서 예외.
-* 라이브 채팅 제시어: 시청자가 길게 치면 최대 글자수(모달 설정 4/6/8, 기본 6)로 **잘라서(truncate)** 사용. **띄어쓰기(공백)는 몇 칸인지 판정이 애매해 항상 전량 제거**하고, 이모티콘·특수문자도 제거(설정 시). 숫자는 유지.
+* 라이브 채팅 제시어: 시청자가 길게 치면 최대 글자수(**6자 고정**, `wordPacks.liveChatMaxLen`)로 **잘라서(truncate)** 사용. **띄어쓰기(공백)는 몇 칸인지 판정이 애매해 항상 전량 제거**하고, 이모티콘·특수문자도 제거(`liveChatStripSpecial=true` 고정). 숫자는 유지. (길이·특수문자 조정 UI는 §3대로 제거되어 값이 고정이다.)
 
 ### 6. 🛡️ 대형 방송 마비 방지 (Max Monster Cap)
 * 화면 동시 출전 몬스터를 **`CONFIG.MAX_MONSTER_CAP`(기본 15)로 고정 제한**(하드 상한). MonsterManager가 밸런스 테이블의 `maxMonsterCap`과 `Math.min`으로 clamp.
