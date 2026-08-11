@@ -192,16 +192,17 @@ class MonsterManager {
         const bossWord = this._pickBossWord(stage);
 
         // 🐲 보스 난이도 스케일: 각 보스가 "직전 일반 스테이지보다 조금 더 어렵도록" 튜닝.
-        //    - 차지 시간 : _bossChargeMs — 직전 일반 스테이지(stage-1) 요구 타수의 CONFIG.BOSS.kpmMult(×1.15)배 속도를
-        //                  요구하도록 역산. 요구 타수 상승에 자동 연동돼 후반에도 보스가 뒤처지지 않는다.
-        //                  (일반 스테이지 생존 최소 속도로는 첫 게이지를 다 못 밀어내 ~1회 피격 = 스파이크)
+        //    - 차지 시간 : _bossChargeMs(word, stage) — **무피격(한 대도 안 맞는) 요구 속도가** 직전 일반 스테이지(stage-1)
+        //                  요구 타수의 CONFIG.BOSS.kpmMult(×1.15)배가 되도록, **출제된 그 단어의 타수로** 역산.
+        //                  (게이지 절반 밀림 + requiredHits회 누적을 보정한 무피격 기준. 단어별 역산이라 길이가 달라도
+        //                   요구 속도는 일정.) 요구 타수 상승에 자동 연동돼 후반에도 보스가 뒤처지지 않는다.
         //    - 체력(정타): 2 → 5, s30/60/90에서 +1씩(완만화 — 잦은 체력 점프로 보스가 급등하는 것 방지).
         //    - 공격력    : 10 → 매 보스 +2 (후반 치명성 — 못 따라가면 실제 사망 가능).
-        //    - 제시어    : _pickBossWord가 후반일수록 긴 문구 우선 출제(차지도 그 평균 길이로 역산).
+        //    - 제시어    : _pickBossWord가 후반일수록 긴 문구 우선 출제(차지도 그 단어 타수로 역산돼 요구 속도는 동일).
         //    ※ 차지 공격에 '명중'당하면 update()에서 chargeTime을 다시 늘려(차지 느려짐) 연속 피격을 완화.
         const bossIndex = Math.max(0, Math.floor(stage / 5) - 1);
-        const requiredHits = Math.min(5, 2 + Math.floor(stage / 30));  // 보스 체력: 2 → 5 (완만)
-        const chargeTime = this._bossChargeMs(stage);                  // 요구 타수 ×kpmMult 속도 요구(자동 스케일)
+        const requiredHits = this._bossRequiredHits(stage);            // 보스 체력: 2 → 5 (완만)
+        const chargeTime = this._bossChargeMs(bossWord, stage);       // 무피격 요구속도 = ×kpmMult가 되게 그 단어로 역산
         const attackDamage = 10 + bossIndex * 2;                        // 공격력: 10 → 매 보스 +2
 
         const boss = {
@@ -285,37 +286,65 @@ class MonsterManager {
     }
 
     /**
-     * 🐲 보스 차지 시간(ms) — "직전 일반 스테이지(stage-1) 요구 타수의 kpmMult배 속도"를 요구하도록 역산.
-     *    즉 일반 스테이지 생존 최소 속도로는 차지를 다 못 밀어내 ~1회 피격(=난이도 스파이크).
-     *    (요구 타수 상승에 자동 연동되므로 후반에도 보스가 뒤처지지 않음. CONFIG.BOSS로 튜닝.)
+     * 🐲 보스 처치에 필요한 정타 횟수(requiredHits). 차지 시간의 무피격 역산(2N/(N+1))에도 쓰이므로 공용 헬퍼로 둔다.
+     *    2 → 5, s30/60/90에서 +1씩(완만화 — 잦은 체력 점프로 보스가 급등하는 것 방지).
+     * @param {number} stage
+     * @returns {number} 필요 정타 횟수(N)
+     */
+    _bossRequiredHits(stage) {
+        return Math.min(5, 2 + Math.floor(stage / 30));
+    }
+
+    /**
+     * 🐲 보스 차지 시간(ms) — **"한 대도 안 맞는(무피격) 요구 속도"가 직전 일반 스테이지의 kpmMult배가 되도록** 역산.
+     *    ⚠️ '클리어(게이지 1회 밀어내기)' 기준이 아니라 '무피격' 기준이다.
+     *    정타 시 게이지는 절반만 밀리고(checkHit) N=requiredHits회를 연속으로 막아야 무피격이라, 게이지가 누적된다.
+     *    누적을 풀면 무피격 조건은  타이핑시간 W < 차지시간 C × (N+1)/(2N).  이를 뒤집어
+     *    "무피격 속도 = kpmMult × 직전요구타속"이 되게 C를 **그 단어의 실제 타수 k**로 역산한다:
+     *        W_max(ms) = 60000·k / (kpmMult · reqKpm(stage-1)),   C = W_max × 2N/(N+1).
+     *    ✅ 차지가 단어 타수에 비례하므로, 5글자든 6글자든 무피격 요구속도가 **모든 보스 단어에서 정확히 동일**해진다
+     *       (풀 평균으로 한 번만 잡던 옛 방식은 단어 길이 편차가 그대로 난도 편차가 되어 요구속도가 널뛰었다).
+     *    🎯 기준 요구타수는 '직전 일반 스테이지(stage-1)' — 보스 스테이지엔 일반 몹 구간이 없어 플레이어가
+     *       실제로 겪은 마지막 속도가 stage-1이기 때문(첫 보스 진입 갭 완화). CONFIG.BOSS로 튜닝.
+     * @param {string} word - 현재(출제된) 보스 제시어
      * @param {number} stage
      * @returns {number} 차지 시간(ms)
      */
-    _bossChargeMs(stage) {
+    _bossChargeMs(word, stage) {
         const bcfg = (typeof CONFIG !== 'undefined' && CONFIG.BOSS) || { kpmMult: 1.15, minChargeSec: 1.5 };
-        const pool = (typeof wordPacks !== 'undefined' && Array.isArray(wordPacks.bossWords) && wordPacks.bossWords.length)
-            ? this._bossPool(stage) : null;
-        const avgKb = pool
-            ? pool.reduce((a, w) => a + wordPacks.getKeystrokeCount(w), 0) / pool.length
+        const k = (typeof wordPacks !== 'undefined' && typeof wordPacks.getKeystrokeCount === 'function' && word)
+            ? wordPacks.getKeystrokeCount(word)
             : 15; // 폴백: 보스 문구(5~6글자) 평균 타수 근사
-        // 🎯 기준 요구타수는 '직전 일반 스테이지(stage-1)'. 보스 스테이지엔 일반 몹 구간이 없어
-        //    플레이어가 실제로 겪은 마지막 속도가 stage-1이기 때문. (그 스테이지(stage) 요구타수로 잡으면
-        //    겪어보지 못한 속도 기준 + 곱셈 스파이크가 겹쳐 4→5 갭이 과도해짐.)
+        const n = this._bossRequiredHits(stage);
         const refStage = Math.max(1, stage - 1);
-        const sec = 60 * avgKb / (bcfg.kpmMult * this._requiredKpm(refStage));
+        const wMaxMs = 60000 * k / (bcfg.kpmMult * this._requiredKpm(refStage)); // 무피격 최대 타이핑 시간
+        const sec = (wMaxMs * (2 * n) / (n + 1)) / 1000;                          // 게이지 절반 밀림·N회 누적 보정
         return Math.round(Math.max(bcfg.minChargeSec, sec) * 1000);
     }
 
     /**
      * 🔁 보스 제시어를 직전과 겹치지 않는 새 문구로 교체(정타 밀어내기·공격 발동 공용).
+     *    새 단어는 타수가 달라 차지 시간도 달라지므로, **차지 시간을 새 단어 기준으로 다시 역산**하고
+     *    진행 중인 게이지는 **비율(ratio)로 이월**해 창 길이가 바뀌어도 게이지 위치가 튀지 않게 한다.
+     *    현재까지의 공격 연장(chargeAttackCount)도 새 단어의 기준 차지 시간에 다시 적용한다.
      * @param {Object} boss - 교체 대상 보스 몬스터
      */
     _rerollBossWord(boss) {
         if (typeof wordPacks === 'undefined' || !boss) return;
+        // 새 창으로 이월할 게이지 비율(밀어내기/리셋이 반영된 현재 값 기준)
+        const oldCharge = boss.chargeTime || 1;
+        const ratio = Math.min(1, Math.max(0, (boss.chargeElapsed || 0) / oldCharge));
+
         let next = this._pickBossWord(this.currentStage);
         let guard = 0;
         while (next === boss.text && guard++ < 8) next = this._pickBossWord(this.currentStage);
         boss.text = next;
+
+        // 새 단어 타수로 무피격 차지 시간 재역산 + 지금까지의 공격 연장 재적용
+        const newBase = this._bossChargeMs(next, this.currentStage);
+        boss.baseChargeTime = newBase;
+        boss.chargeTime = Math.min(newBase * 2, newBase * (1 + 0.5 * (boss.chargeAttackCount || 0)));
+        boss.chargeElapsed = ratio * boss.chargeTime; // 게이지 위치를 새 창 비율로 이월
     }
 
     /**
@@ -402,10 +431,9 @@ class MonsterManager {
                     m._attackFlashUntil = nowMs + 450; // 렌더러 공격 플래시
                     if (typeof this.onBossAttack === 'function') this.onBossAttack(m.attackDamage || 10);
                     // ⏳ 공격이 기지에 명중할 때마다 다음 차지 시간을 늘려(공격 간격↑) 연속 피격을 완화.
-                    //    기준값의 +50%씩 누적, 최대 2배까지(예: s5 base 20s → 30s → 40s).
+                    //    기준값의 +50%씩 누적, 최대 2배까지. 실제 chargeTime 재계산은 _rerollBossWord가
+                    //    새 단어 기준값(baseChargeTime)에 이 카운트를 다시 적용해 처리한다(게이지는 0으로 리셋됨).
                     m.chargeAttackCount = (m.chargeAttackCount || 0) + 1;
-                    const base = m.baseChargeTime || m.chargeTime;
-                    m.chargeTime = Math.min(base * 2, base * (1 + 0.5 * m.chargeAttackCount));
                     this._rerollBossWord(m); // 공격 발동 후 새 제시어로 교체(정타 밀어내기와 동일)
                 }
                 continue; // 보스는 낙하/기지 도달 로직을 건너뜀
