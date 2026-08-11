@@ -10,6 +10,7 @@ class MonsterManager {
         this.monsters = [];
         this.currentStage = 1;
         this.spawnInterval = null;
+        this._spawnIntervalMs = null; // 주기 스폰 간격(ms) — 재개 시 인터벌 위상 리셋에 재사용
         this.startTimeout = null; // 게임 시작 그레이스 타임(첫 스폰 지연) 타이머
         this.bossTimeout = null;  // 보스 소환 지연 타이머
         this.speed = 1.0;
@@ -82,6 +83,7 @@ class MonsterManager {
             }
 
             this._isBossStage = isBossStage;
+            this._spawnIntervalMs = spawnInterval;               // 재개 시 위상 리셋용으로 주기 보관
             this.spawnInterval = setInterval(() => this._spawnTick(), spawnInterval);
         };
 
@@ -488,10 +490,19 @@ class MonsterManager {
     /**
      * ▶ 일시정지 해제 시 호출 — 정지 중 타이머가 발화하며 스킵됐던 '스테이지 첫 등장'을 복구한다.
      *    (spawnMonster/spawnBoss는 isPaused일 때 스폰을 건너뛰므로, 재개 후 화면이 비는 것을 방지)
+     *    - 스폰 인터벌 위상 리셋: 인터벌은 정지 중에도 실시간으로 계속 돌아(틱만 스킵), 재개 시 '남은 짜투리'만큼
+     *      다음 스폰이 앞당겨져 몹이 바로 튀어나오는 체감을 만든다. 재개 순간 타이머를 새로 시작해
+     *      **첫 스폰이 재개 후 온전히 한 주기 뒤**에 나오게 한다(재개 그레이스가 준 여유를 스폰이 잡아먹지 않도록).
      *    - 보스 스테이지: 보스 소환 타이머가 이미 발화(bossTimeout=null)했는데 아직 보스가 없으면 지금 소환.
      *    - 일반 스테이지: 스폰이 시작됐는데(spawnInterval 활성) 화면에 몬스터가 하나도 없으면 하나 소환.
      */
     resumeSpawns() {
+        // 주기 스폰 인터벌 위상 리셋(정지 동안 흐른 real-time 만큼 앞당겨지는 것 방지)
+        if (this.spawnInterval && this._spawnIntervalMs) {
+            clearInterval(this.spawnInterval);
+            this.spawnInterval = setInterval(() => this._spawnTick(), this._spawnIntervalMs);
+        }
+
         if (this._isBossStage) {
             if (!this.bossSpawnedForStage && !this.startTimeout && !this.bossTimeout) {
                 this.spawnBoss();
