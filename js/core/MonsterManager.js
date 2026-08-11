@@ -67,7 +67,7 @@ class MonsterManager {
         //   spawnInterval(ms) = max(400, round(60000 * 단어당평균타수 / requiredKpm))
         //   (구 'base - stage*step' 선형 스폰은 요구 타수가 후반 급가속이라, 선형 타수 상승을 위해 역산 방식으로 대체)
         const sc = (typeof CONFIG !== 'undefined' && CONFIG.SPAWN_CURVE)
-            || { kpmStart: 100, kpmStep: 10.5, kpmMax: 800, kpmStepAfterMax: 3, avgWordKeystrokes: 9 };
+            || { kpmStart: 100, kpmStep: 10.5, kpmMax: 800, kpmStepAfterMax: 3, avgWordKeystrokes: 8.9 };
         const requiredKpm = this._requiredKpm(stage);   // 요구 타자속도(스폰 주기·보스 차지 시간 공용 기준)
         const spawnInterval = Math.max(400, Math.round(60000 * sc.avgWordKeystrokes / requiredKpm));
 
@@ -114,8 +114,9 @@ class MonsterManager {
 
         // 🎯 화면에 이미 떠 있는 제시어를 넘겨 중복 단어 회피(같은 단어 몬스터 동시 등장 방지)
         const onScreenWords = new Set(this.monsters.map(m => m.text));
+        // 🎯 현재 스테이지를 넘겨 3글자/4글자 풀 선택 확률에 반영(초반=3글자 위주 → 후반=4글자 위주).
         const data = (typeof wordPacks !== 'undefined')
-            ? wordPacks.getNextMonsterData(null, onScreenWords)
+            ? wordPacks.getNextMonsterData(null, onScreenWords, this.currentStage)
             : { nickname: '[BOT] 시뮬레이터', isBot: true, word: '타자연습', isLiveChat: false };
 
         // CanvasRenderer가 논리(CSS) 좌표계로 그리므로 clientWidth(논리 픽셀) 기준으로 스폰 위치 계산
@@ -133,7 +134,8 @@ class MonsterManager {
         const spawnX = (minX < maxX) ? (Math.random() * (maxX - minX) + minX) : (safeWidth / 2);
 
         // 🎯 제시어 난이도(한글 자모 획수)에 비례한 점수: 어려운(길고 획수 많은) 단어일수록 높은 점수.
-        //    기본점 = '획수 × 6' (기본팩 평균 ≈16획이 스테이지1에서 ≈100점이 되도록 보정 — 배수 조정 가능).
+        //    기본점 = '획수 × 6' (3글자 평균 ≈15.5획→≈93점 · 4글자 평균 ≈20.4획→≈122점이 스테이지1 기준 —
+        //    글자수가 짧아져도 음절 획수가 높아 기존 6글자(≈100점)와 같은 점수대가 유지된다. 배수 조정 가능).
         //    스테이지 배수 = 반선형 '1 + (stage-1) × 0.5' — 기존 '×stage'(선형) 대비 후반 성장을 절반으로 완화해
         //    스테이지가 오를수록 점수가 복리로 폭주하던 것을 억제(계수 0.5 조정 가능).
         const strokes = (typeof wordPacks !== 'undefined' && typeof wordPacks.getHangulStrokeCount === 'function')
@@ -249,7 +251,7 @@ class MonsterManager {
      */
     _requiredKpm(stage) {
         const sc = (typeof CONFIG !== 'undefined' && CONFIG.SPAWN_CURVE)
-            || { kpmStart: 100, kpmStep: 10.5, kpmMax: 800, kpmStepAfterMax: 3, avgWordKeystrokes: 9 };
+            || { kpmStart: 100, kpmStep: 10.5, kpmMax: 800, kpmStepAfterMax: 3, avgWordKeystrokes: 8.9 };
         const linear = sc.kpmStart + (stage - 1) * sc.kpmStep;
         return (linear <= sc.kpmMax)
             ? linear
@@ -295,7 +297,7 @@ class MonsterManager {
             ? this._bossPool(stage) : null;
         const avgKb = pool
             ? pool.reduce((a, w) => a + wordPacks.getKeystrokeCount(w), 0) / pool.length
-            : 21; // 폴백: 보스 문구 평균 타수 근사
+            : 15; // 폴백: 보스 문구(5~6글자) 평균 타수 근사
         // 🎯 기준 요구타수는 '직전 일반 스테이지(stage-1)'. 보스 스테이지엔 일반 몹 구간이 없어
         //    플레이어가 실제로 겪은 마지막 속도가 stage-1이기 때문. (그 스테이지(stage) 요구타수로 잡으면
         //    겪어보지 못한 속도 기준 + 곱셈 스파이크가 겹쳐 4→5 갭이 과도해짐.)
