@@ -267,13 +267,10 @@ class ChatIntegrationEngine {
 
     try {
       // 1) 라이브 정보 조회 (CORS 프록시 경유)
-      //    ⚠️ SOOP 도메인 이전(sooplive.co.kr → sooplive.com): player_live_api가 .com으로 옮겨가면서
-      //       구 live.sooplive.co.kr/afreeca/player_live_api.php 경로는 404가 된다(호스트는 살아있음).
-      //       신규 .com을 우선 시도하고, 실패(HTTP 오류)하면 구 .co.kr로 폴백해 두 도메인을 모두 지원한다.
-      //       ※ .com이 실제로 열리려면 프록시 화이트리스트에 sooplive.com이 있어야 하고(현 소스엔 반영됨),
-      //         Cloudflare Worker **재배포가 선행**돼야 한다 — 미배포면 프록시가 .com을 403으로 막는다
-      //         (docs/SOOP_연동_설정.md 참고).
-      const apiHosts = ['live.sooplive.com', 'live.sooplive.co.kr'];
+      //    SOOP live API는 live.sooplive.co.kr/afreeca/player_live_api.php다(현재 유지보수되는
+      //    오픈소스 라이브러리들도 이 co.kr 엔드포인트를 그대로 사용). 확인된 .co.kr을 우선 시도하고,
+      //    혹시 몰라 .com도 폴백으로 둔다. (도메인/Referer 조합은 모두 정상 응답 — 프록시 재배포 불필요)
+      const apiHosts = ['live.sooplive.co.kr', 'live.sooplive.com'];
       const body = `bid=${encodeURIComponent(bid)}&type=live&player_type=html5&mode=landing&from_api=0&pwd=&stream_type=common&quality=HD`;
 
       let info = null;
