@@ -55,7 +55,7 @@
 
   | 구분 | 상단 뱃지(닉네임) | 하단 제시어 | 하단 박스 색 |
   | :--- | :--- | :--- | :--- |
-  | **라이브 OFF(기본)** | `!참여` 시청자 닉네임 | 기본 제시어 풀(`wordPacks.words`, **화면에 떠 있는 단어 제외**) | 일반 색 (`rgb(168, 0, 52)`) |
+  | **라이브 OFF(기본)** | `!참여` 시청자 닉네임 | 기본 제시어 풀(`wordPacks.words3`/`words4`, **화면에 떠 있는 단어 제외**) | 일반 색 (`rgb(168, 0, 52)`) |
   | **라이브 ON** | `!참여` 시청자 닉네임 | 그 시청자가 친 채팅 문구(정제) | 보라색 (`rgb(74, 0, 140)`, stroke `#bf00ff`) |
 
 * **기본(OFF)**: `!참여` 시청자의 후속 채팅은 대기열에 쌓지 않고, 소환 시 제시어를 항상 안전한 단어팩에서 뽑는다(`processChatMessage`가 라이브 분기를 건너뛰어 후속 일반 채팅은 무시 → `chatWord`가 `null`이라 팩 단어 사용). 부적절한 채팅 문구가 화면에 뜨는 방송 사고를 원천 차단.
@@ -64,7 +64,7 @@
 * **제시어 인정 시점 = 게임 시작부터(라이브 모드)**: 채팅 수집은 게임 상태 게이트가 없어 홈 화면부터 계속 대기열에 쌓이지만, 라이브 모드에선 `startGame()`이 새 판 시작 때 **대기열만 비운다**(`wordPacks.clearQueue()`). 홈 화면에서 오간 잡담 한글 채팅이 첫 몬스터 제시어로 튀어나오지 않게 하기 위함이며, 참여자 명단(`joinedViewers`)은 유지되므로 시청자는 다시 `!참여`할 필요가 없다. START 이후(5초 그레이스 포함) 친 채팅부터 제시어로 인정된다.
 * **💬 채팅 대기열 누적**: 라이브 모드에선 `!참여`한 시청자의 후속 한글 채팅이 **순서대로 대기열(`viewerQueue`)에 쌓여** 차례차례 몬스터로 등장한다(친 사람 모두 반영). 채팅 폭주는 `CONFIG.QUEUE.MAX_QUEUE_LENGTH`(30) + 1인당 `MAX_QUEUE_PER_VIEWER`(2)로 조절되고, 아무도 안 치면 봇 보충으로 폴백. 라이브 문구 몬스터는 좌상단 대기열 패널에 `🔥`로 강조.
 * **토글 위치(2곳, 양방향 동기화)**: ① 상단 컨트롤바 `💬 라이브 채팅 모드` 버튼 — **게임 중에도 즉시 ON/OFF**(OBS·사운드 토글과 동일한 라이브 컨트롤). ② 홈 화면 **참여자 명단 헤더**의 `💬 라이브 모드` 버튼 — 방송 세팅 단계에서 참여자 명단 바로 옆에서 켠다. 두 버튼(`#btn-live-chat-toggle` / `#btn-modal-live-chat-toggle`)은 실시간 동기화되며, ON이면 보라색으로 활성 표시. 클릭 후 버튼 포커스 해제(`_blurQuickControl`, 라이브/OBS/사운드 공용) — 게임 중이면 입력창으로 포커스를 되돌린다.
-* **세부 설정(고정값)**: 제시어 최대 글자수 `6자` · 이모티콘/특수문자 제거는 `wordPacks` 기본값(`liveChatMaxLen=6`, `liveChatStripSpecial=true`)으로 **고정**(별도 UI 없음 — 과거 단어/닉네임 팩 모달의 설정 박스는 제거). 상태 전환 토스트는 🟢 ON / 🔴 OFF 표기.
+* **세부 설정(고정값)**: 제시어 최대 글자수 `4자`(일반 몬스터 최대치) · 이모티콘/특수문자 제거는 `wordPacks` 기본값(`liveChatMaxLen=4`, `liveChatStripSpecial=true`)으로 **고정**(별도 UI 없음 — 과거 단어/닉네임 팩 모달의 설정 박스는 제거). 상태 전환 토스트는 🟢 ON / 🔴 OFF 표기.
 * **시각 강조**: 라이브 채팅 문구가 쓰인 몬스터는 하단 박스를 **보라색**(`rgb(74, 0, 140)`)으로 렌더링해 팩 단어 몬스터와 구분.
 * ※ 시청자 채팅은 항상 **닉네임(상단 태그)** 으로 반영되며, 채팅 문구가 타깃이 되는 것은 라이브 모드일 때만.
 
@@ -99,7 +99,7 @@
 * **버튼/광고 구역 분리**: `.modal-actions`(버튼, 위) + `.modal-footer`(광고, 아래) 분리.
 
 ### 9. 🎯 스마트 타깃 우선순위 & OBS 가시성
-* **랜덤 단어 중복 회피**: 랜덤 제시어는 스폰 시 **화면에 이미 떠 있는 단어를 제외**하고 뽑아(`getNextMonsterData(_, excludeWords)`) "제시어 하나 = 타깃 하나"를 유지한다(같은 단어 몬스터가 동시에 뜨는 복제성 혼란 방지). 단어 풀이 화면 상한보다 커서 대부분 회피 가능하며, 전부 겹치면 원본 풀로 폴백. **라이브 채팅 문구(`chatWord`)는 시청자 실제 메시지라 회피 대상에서 제외** — 도배로 같은 문구가 겹치면 친 만큼 등장한다.
+* **랜덤 단어 중복 회피**: 랜덤 제시어는 스폰 시 **화면에 이미 떠 있는 단어를 제외**하고 뽑아(`getNextMonsterData(_, excludeWords, stage)`) "제시어 하나 = 타깃 하나"를 유지한다(같은 단어 몬스터가 동시에 뜨는 복제성 혼란 방지). 단어 풀이 화면 상한보다 커서 대부분 회피 가능하며, 전부 겹치면 원본 풀로 폴백. **라이브 채팅 문구(`chatWord`)는 시청자 실제 메시지라 회피 대상에서 제외** — 도배로 같은 문구가 겹치면 친 만큼 등장한다.
 * **바닥 우선 타깃팅**: 동일 제시어 다수 시(주로 라이브 채팅 도배) 기지에 가장 가까운(Y 최대) 몬스터 우선 처치(`checkHit`) → 친 횟수만큼 아래쪽부터 정리.
 * **OBS 크로마키 가시성**: 텍스트 두꺼운 아웃라인(Stroke) + Drop Shadow. `body.obs-overlay` 클래스로 배경 투명화.
 
@@ -168,7 +168,7 @@
    * `CONFIG.YOUTUBE_API_KEY`, `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY`/`CONFIG.SOOP_DEBUG`, `CONFIG.FIREBASE`, `CONFIG.KAKAO_ADFIT`(6개), `CONFIG.DIFFICULTY`(밸런스 테이블) + `getDifficultyConfig()`, `CONFIG.MAX_MONSTER_CAP`(15), `CONFIG.START_SPAWN_DELAY_MS`(5000)/`STAGE_UP_SPAWN_DELAY_MS`(3000)/`RESUME_GRACE_MS`(5000), `CONFIG.QUEUE` 튜닝값, 광고 리프레시 로직.
 
 4. **`js/wordPacks.js`**
-   * 단어팩(기본/프리셋/보스), 시청자 대기열(`{nickname, chatWord}`) 관리, `!참여` 처리·참가자 명단, 봇 자동 보충, 라이브 채팅 정제(`sanitizeLiveChatWord`), 비속어 필터(13종), 한글 자모 획수(`getHangulStrokeCount`) 및 자소 타수(`getKeystrokeCount`) 유틸.
+   * 제시어 풀(기본 3·4글자 `words3`/`words4` 스테이지별 비율 + 보스 `bossWords` 5~6글자), 시청자 대기열(`{nickname, chatWord}`) 관리, `!참여` 처리·참가자 명단, 봇 자동 보충, 라이브 채팅 정제(`sanitizeLiveChatWord`), 비속어 필터(13종), 한글 자모 획수(`getHangulStrokeCount`) 및 자소 타수(`getKeystrokeCount`) 유틸.
 
 5. **`js/audio.js`**
    * Web Audio API 효과음 5종(레이저/폭발/피버/오타/팡파르) + Mute.
@@ -201,7 +201,7 @@
 14. **`js/ui/*.js`** (GameEngine 부분 클래스 — game.js 뒤·main.js 앞에 로드)
     * **`fx.js`**: 토스트 알림(`showToastInternal`, 전역 `window.showToast`) + 배경 스타필드(90개).
     * **`chatPanel.js`**: 방송 채팅 연동 모달·참여자 명단·출전 대기열 패널 렌더링.
-    * **`modals.js`**: 단어팩·명예의전당(`renderLeaderboard` async)·건의사항 모달 + 공용 유틸(`escapeHtml`/`copyToClipboard`).
+    * **`modals.js`**: 명예의전당(`renderLeaderboard` async)·후원·건의사항 모달 + 공용 유틸(`escapeHtml`/`copyToClipboard`).
     * **`quickControls.js`**: 상단바 잠금(`updateTopBarLock`) + 라이브 채팅/OBS/사운드 토글 + 라벨/포커스 헬퍼(`_setQcLabel`/`_blurQuickControl`).
 
 15. **`js/main.js`**

@@ -1,7 +1,7 @@
 /**
  * MonsterManager.js
  * 인터넷 밈(Meme), 스트리머 유행어, 시청자 닉네임이 적용된 몬스터 관리 모듈
- * - wordPacks.js를 통해 실시간 채팅 시청자 대기열 / 프리셋 단어 팩과 연동
+ * - wordPacks.js를 통해 실시간 채팅 시청자 대기열 / 3·4글자 제시어 풀과 연동
  * - 5 Stage 단위 보스전(WARNING) 지원
  */
 class MonsterManager {

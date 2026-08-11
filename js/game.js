@@ -84,7 +84,7 @@ class GameEngine {
     if (this.stateManager) {
       this.stateManager.onFeverStart = () => this.triggerFeverBurst();
 
-      // 🔒 게임 플레이 중에는 플레이와 무관한 상단바 버튼(단어팩·명예의전당·후원·건의사항)을
+      // 🔒 게임 플레이 중에는 플레이와 무관한 상단바 버튼(명예의전당·후원·건의사항)을
       //    비활성화한다. 이 모달들은 열려도 게임을 멈추지 않아, 플레이 중 클릭 시 그냥 지게 되기 때문.
       //    (라이브 채팅 모드·OBS 크로마키·사운드는 방송 중 즉시 조정이 필요하므로 잠그지 않는다)
       this.stateManager.onStateChange = (newState) => this.updateTopBarLock(newState);
