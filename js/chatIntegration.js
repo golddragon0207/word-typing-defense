@@ -267,23 +267,38 @@ class ChatIntegrationEngine {
 
     try {
       // 1) 라이브 정보 조회 (CORS 프록시 경유)
-      const apiTarget = `https://live.sooplive.co.kr/afreeca/player_live_api.php?bjid=${encodeURIComponent(bid)}`;
-      const apiUrl = proxy + encodeURIComponent(apiTarget);
+      //    ⚠️ SOOP 도메인 이전(sooplive.co.kr → sooplive.com): player_live_api가 .com으로 옮겨가면서
+      //       구 live.sooplive.co.kr/afreeca/player_live_api.php 경로는 404가 된다(호스트는 살아있음).
+      //       신규 .com을 우선 시도하고, 실패(HTTP 오류)하면 구 .co.kr로 폴백해 두 도메인을 모두 지원한다.
+      //       ※ .com이 실제로 열리려면 프록시 화이트리스트에 sooplive.com이 있어야 하고(현 소스엔 반영됨),
+      //         Cloudflare Worker **재배포가 선행**돼야 한다 — 미배포면 프록시가 .com을 403으로 막는다
+      //         (docs/SOOP_연동_설정.md 참고).
+      const apiHosts = ['live.sooplive.com', 'live.sooplive.co.kr'];
       const body = `bid=${encodeURIComponent(bid)}&type=live&player_type=html5&mode=landing&from_api=0&pwd=&stream_type=common&quality=HD`;
 
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body
-      });
-      if (!res.ok) throw new Error(`라이브 정보 조회 실패 (HTTP ${res.status})`);
+      let info = null;
+      let lastErr = '';
+      for (const host of apiHosts) {
+        try {
+          const apiTarget = `https://${host}/afreeca/player_live_api.php?bjid=${encodeURIComponent(bid)}`;
+          const res = await fetch(proxy + encodeURIComponent(apiTarget), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body
+          });
+          if (!res.ok) { lastErr = `HTTP ${res.status} @ ${host}`; continue; } // 다음 도메인으로 폴백
+          info = await res.json();
+          if (debug) console.log(`[SOOP] player_live_api 응답 (${host}):`, JSON.stringify(info));
+          break; // 정상 응답 확보 → 폴백 중단
+        } catch (e) {
+          lastErr = `${e.message} @ ${host}`;
+        }
+      }
+      if (!info) throw new Error(`라이브 정보 조회 실패 (${lastErr})`);
 
-      const info = await res.json();
       const ch = info && info.CHANNEL ? info.CHANNEL : {};
-      // 접힘 없이 그대로 복사할 수 있도록 JSON 문자열로 출력
       if (debug) {
         console.log(`[SOOP] 파싱된 BJ ID: "${bid}"`);
-        console.log(`[SOOP] player_live_api 응답 전체:`, JSON.stringify(info));
         console.log(`[SOOP] CHANNEL 요약: RESULT=${ch.RESULT}, BNO=${ch.BNO}, CHATNO=${ch.CHATNO}, CHDOMAIN=${ch.CHDOMAIN}, CHPT=${ch.CHPT}, BPWD=${ch.BPWD}`);
       }
 

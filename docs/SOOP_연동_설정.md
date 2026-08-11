@@ -56,7 +56,7 @@ SOOP_PROXY: "https://soop-proxy.<당신의계정>.workers.dev/?url=",
 
 ## 이제 스트리머는?
 
-홈 화면 **방송 채팅 연동 패널 → SOOP 탭** → 방송국 주소(`https://play.sooplive.co.kr/아이디`)를
+홈 화면 **방송 채팅 연동 패널 → SOOP 탭** → 방송국 주소(`https://sooplive.com/아이디`)를
 붙여넣고 **+ BJ 추가**. 시청자가 채팅창에 **`!참여`** 를 치면 참여자 명단에
 자동으로 들어갑니다.
 

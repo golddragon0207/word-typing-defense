@@ -23,9 +23,9 @@
  */
 
 // 오픈 프록시 악용 방지: SOOP/아프리카 + 치지직(네이버) 채팅 API 도메인만 허용.
-//   - SOOP:   *.sooplive.co.kr, *.afreecatv.com
+//   - SOOP:   *.sooplive.com, *.sooplive.co.kr, *.afreecatv.com
 //   - 치지직: api.chzzk.naver.com(라이브 상태), comm-api.game.naver.com(접근 토큰)
-const ALLOWED_HOST = /(^|\.)sooplive\.co\.kr$|(^|\.)afreecatv\.com$|(^|\.)chzzk\.naver\.com$|(^|\.)game\.naver\.com$/i;
+const ALLOWED_HOST = /(^|\.)sooplive\.com$|(^|\.)sooplive\.co\.kr$|(^|\.)afreecatv\.com$|(^|\.)chzzk\.naver\.com$|(^|\.)game\.naver\.com$/i;
 
 function corsHeaders(extra = {}) {
   return {
@@ -64,7 +64,7 @@ export default {
 
     // 대상 호스트에 맞는 Referer 지정 (네이버/치지직 API는 sooplive Referer를 싫어할 수 있음)
     const isNaver = /(^|\.)naver\.com$/i.test(t.hostname);
-    const referer = isNaver ? 'https://chzzk.naver.com/' : 'https://play.sooplive.co.kr/';
+    const referer = isNaver ? 'https://chzzk.naver.com/' : 'https://sooplive.com/';
 
     // 원 요청을 그대로 전달(pass-through)
     const init = {

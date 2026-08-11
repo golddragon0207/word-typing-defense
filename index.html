@@ -31,106 +31,112 @@
       </div>
 
       <div class="quick-controls">
-        <button id="btn-leaderboard-modal" class="btn btn-neon gold qc-btn" data-tip="명예의 전당 (Top 5)"><span class="qc-ic">🏆</span><span class="qc-tx">명예의 전당 (Top 5)</span></button>
-        <button id="btn-support-modal" class="btn btn-neon gold qc-btn" data-tip="후원 (Donate)"><span class="qc-ic">☕</span><span class="qc-tx">후원 (Donate)</span></button>
-        <button id="btn-suggestion-modal" class="btn btn-neon pink qc-btn" data-tip="건의사항"><span class="qc-ic">💡</span><span class="qc-tx">건의사항</span></button>
-        <button id="btn-live-chat-toggle" class="btn btn-neon purple qc-btn" data-tip="라이브 채팅 모드: OFF"><span class="qc-ic">💬</span><span class="qc-tx">라이브 채팅 모드: OFF</span></button>
-        <button id="btn-obs-toggle" class="btn btn-neon cyan qc-btn" data-tip="OBS 크로마키 (배경 투명)"><span class="qc-ic">📺</span><span class="qc-tx">OBS 크로마키 (배경 투명)</span></button>
-        <button id="btn-sfx-toggle" class="btn btn-neon gold qc-btn" data-tip="사운드: ON"><span class="qc-ic">🔊</span><span class="qc-tx">사운드: ON</span></button>
+        <button id="btn-leaderboard-modal" class="btn btn-neon gold qc-btn" data-tip="명예의 전당 (Top 5)"><span
+            class="qc-ic">🏆</span><span class="qc-tx">명예의 전당 (Top 5)</span></button>
+        <button id="btn-support-modal" class="btn btn-neon gold qc-btn" data-tip="후원 (Donate)"><span
+            class="qc-ic">☕</span><span class="qc-tx">후원 (Donate)</span></button>
+        <button id="btn-suggestion-modal" class="btn btn-neon pink qc-btn" data-tip="건의사항"><span
+            class="qc-ic">💡</span><span class="qc-tx">건의사항</span></button>
+        <button id="btn-live-chat-toggle" class="btn btn-neon purple qc-btn" data-tip="라이브 채팅 모드: OFF"><span
+            class="qc-ic">💬</span><span class="qc-tx">라이브 채팅 모드: OFF</span></button>
+        <button id="btn-obs-toggle" class="btn btn-neon cyan qc-btn" data-tip="OBS 크로마키 (배경 투명)"><span
+            class="qc-ic">📺</span><span class="qc-tx">OBS 크로마키 (배경 투명)</span></button>
+        <button id="btn-sfx-toggle" class="btn btn-neon gold qc-btn" data-tip="사운드: ON"><span
+            class="qc-ic">🔊</span><span class="qc-tx">사운드: ON</span></button>
       </div>
     </header>
 
     <main class="stage-frame">
       <div id="game-stage" class="game-viewport">
-      <canvas id="bg-canvas"></canvas>
-      <canvas id="gameCanvas"></canvas>
+        <canvas id="bg-canvas"></canvas>
+        <canvas id="gameCanvas"></canvas>
 
-      <div id="game-hud" class="hud-overlay hidden">
-        <div class="hud-card stage-card">
-          <span class="hud-label">STAGE</span>
-          <span id="hud-stage" class="hud-value highlight-stage">STAGE 1</span>
-        </div>
-
-        <div class="hud-card score-card">
-          <span class="hud-label">SCORE</span>
-          <span id="hud-score" class="hud-value">0</span>
-        </div>
-
-        <div class="hud-card wpm-card">
-          <span class="hud-label">방어 속도</span>
-          <span id="hud-wpm" class="hud-value">0</span>
-        </div>
-
-        <div class="hud-card combo-card">
-          <span class="hud-label">COMBO</span>
-          <span id="hud-combo" class="hud-value">0</span>
-        </div>
-
-        <div class="hud-card hp-card">
-          <span class="hud-label">기지 체력</span>
-          <div class="hp-bar-bg">
-            <div id="hud-hp-fill" class="hp-bar-fill" style="width: 100%;"></div>
+        <div id="game-hud" class="hud-overlay hidden">
+          <div class="hud-card stage-card">
+            <span class="hud-label">STAGE</span>
+            <span id="hud-stage" class="hud-value highlight-stage">STAGE 1</span>
           </div>
-          <span id="hud-hp-text" class="hp-text">100%</span>
+
+          <div class="hud-card score-card">
+            <span class="hud-label">SCORE</span>
+            <span id="hud-score" class="hud-value">0</span>
+          </div>
+
+          <div class="hud-card wpm-card">
+            <span class="hud-label">방어 속도</span>
+            <span id="hud-wpm" class="hud-value">0</span>
+          </div>
+
+          <div class="hud-card combo-card">
+            <span class="hud-label">COMBO</span>
+            <span id="hud-combo" class="hud-value">0</span>
+          </div>
+
+          <div class="hud-card hp-card">
+            <span class="hud-label">기지 체력</span>
+            <div class="hp-bar-bg">
+              <div id="hud-hp-fill" class="hp-bar-fill" style="width: 100%;"></div>
+            </div>
+            <span id="hud-hp-text" class="hp-text">100%</span>
+          </div>
+
+          <div class="hud-card fever-card">
+            <span class="hud-label">FEVER</span>
+            <div class="fever-bar-bg">
+              <div id="hud-fever-fill" class="fever-bar-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <button id="btn-pause" class="hud-pause-btn" type="button" title="일시정지 (ESC)">⏸</button>
         </div>
 
-        <div class="hud-card fever-card">
-          <span class="hud-label">FEVER</span>
-          <div class="fever-bar-bg">
-            <div id="hud-fever-fill" class="fever-bar-fill" style="width: 0%;"></div>
+        <div id="queue-panel" class="queue-panel hidden">
+          <div class="queue-panel-header">🕒 출전 대기열 <span id="queue-count" class="queue-count">0</span></div>
+          <div id="queue-list" class="queue-list"></div>
+        </div>
+
+        <div id="stage-banner" class="stage-banner-overlay hidden">
+          <div class="stage-banner-card">
+            <h2 id="stage-banner-title">STAGE 1 START!</h2>
+            <p id="stage-banner-desc">시청자 몬스터를 타자로 방어하세요!</p>
           </div>
         </div>
 
-        <button id="btn-pause" class="hud-pause-btn" type="button" title="일시정지 (ESC)">⏸</button>
-      </div>
-
-      <div id="queue-panel" class="queue-panel hidden">
-        <div class="queue-panel-header">🕒 출전 대기열 <span id="queue-count" class="queue-count">0</span></div>
-        <div id="queue-list" class="queue-list"></div>
-      </div>
-
-      <div id="stage-banner" class="stage-banner-overlay hidden">
-        <div class="stage-banner-card">
-          <h2 id="stage-banner-title">STAGE 1 START!</h2>
-          <p id="stage-banner-desc">시청자 몬스터를 타자로 방어하세요!</p>
+        <!-- 🔥 피버타임 발동 연출 (화면 전체 불빛 플래시 + 대형 텍스트) -->
+        <div id="fever-overlay" class="fever-overlay hidden">
+          <div class="fever-flash"></div>
+          <div class="fever-text">🔥 FEVER TIME 🔥</div>
         </div>
-      </div>
 
-      <!-- 🔥 피버타임 발동 연출 (화면 전체 불빛 플래시 + 대형 텍스트) -->
-      <div id="fever-overlay" class="fever-overlay hidden">
-        <div class="fever-flash"></div>
-        <div class="fever-text">🔥 FEVER TIME 🔥</div>
-      </div>
-
-      <!-- 💥 보스 차지 공격 발동 연출 (가장자리 붉은 위험 비네트 + 피해 텍스트) -->
-      <div id="boss-attack-overlay" class="boss-attack-overlay hidden">
-        <div class="boss-attack-flash"></div>
-        <div id="boss-attack-text" class="boss-attack-text">💥 기지 피격!</div>
-      </div>
-
-      <!-- ⏱️ 게임 시작 카운트다운 (첫 몬스터 등장까지 준비 시간) -->
-      <div id="start-countdown" class="start-countdown-overlay hidden">
-        <div class="start-countdown-card">
-          <p class="start-countdown-label">전투 시작까지</p>
-          <div id="start-countdown-num" class="start-countdown-num">5</div>
-          <p class="start-countdown-hint">곧 몬스터가 몰려옵니다 — <b>준비하세요!</b></p>
+        <!-- 💥 보스 차지 공격 발동 연출 (가장자리 붉은 위험 비네트 + 피해 텍스트) -->
+        <div id="boss-attack-overlay" class="boss-attack-overlay hidden">
+          <div class="boss-attack-flash"></div>
+          <div id="boss-attack-text" class="boss-attack-text">💥 기지 피격!</div>
         </div>
-      </div>
 
-      <!-- ⏸ 일시정지 오버레이 (ESC 키 또는 계속하기 버튼) -->
-      <div id="pause-overlay" class="pause-overlay hidden">
-        <div class="pause-card">
-          <h2>⏸ 일시정지</h2>
-          <p>ESC 키 또는 아래 버튼으로 계속하기</p>
-          <button id="btn-pause-resume" class="btn btn-primary btn-large">▶ 계속하기</button>
+        <!-- ⏱️ 게임 시작 카운트다운 (첫 몬스터 등장까지 준비 시간) -->
+        <div id="start-countdown" class="start-countdown-overlay hidden">
+          <div class="start-countdown-card">
+            <p class="start-countdown-label">전투 시작까지</p>
+            <div id="start-countdown-num" class="start-countdown-num">5</div>
+            <p class="start-countdown-hint">곧 몬스터가 몰려옵니다 — <b>준비하세요!</b></p>
+          </div>
         </div>
-      </div>
 
-      <!-- ⌨️ 타자 입력 바: 게임플레이라 고정 무대(1024×708) 안에 유지 -->
-      <div id="typing-input-bar" class="typing-bar hidden">
-        <div id="multi-input-container" class="multi-input-grid">
+        <!-- ⏸ 일시정지 오버레이 (ESC 키 또는 계속하기 버튼) -->
+        <div id="pause-overlay" class="pause-overlay hidden">
+          <div class="pause-card">
+            <h2>⏸ 일시정지</h2>
+            <p>ESC 키 또는 아래 버튼으로 계속하기</p>
+            <button id="btn-pause-resume" class="btn btn-primary btn-large">▶ 계속하기</button>
+          </div>
         </div>
-      </div>
+
+        <!-- ⌨️ 타자 입력 바: 게임플레이라 고정 무대(1024×708) 안에 유지 -->
+        <div id="typing-input-bar" class="typing-bar hidden">
+          <div id="multi-input-container" class="multi-input-grid">
+          </div>
+        </div>
       </div><!-- /#game-stage : 게임플레이(캔버스/HUD/대기열/배너/입력바)만 포함 -->
 
       <!-- 🏠 홈/게임오버 화면은 고정 무대 밖(.stage-frame = 상단바 아래 전체 영역)을 채우도록 분리 -->
@@ -206,7 +212,7 @@
                 <div id="tab-soop" class="tab-content active">
                   <label>SOOP (아프리카TV) 방송국 주소 (또는 BJ ID):</label>
                   <div class="input-with-btn">
-                    <input type="text" id="input-soop-id" placeholder="https://play.sooplive.co.kr/... 주소 전체 복사-붙여넣기" />
+                    <input type="text" id="input-soop-id" placeholder="https://sooplive.com/... 주소 전체 복사-붙여넣기" />
                     <button id="btn-add-soop" class="btn btn-neon cyan">+ BJ 추가</button>
                   </div>
                 </div>
@@ -214,7 +220,8 @@
                 <div id="tab-chzzk" class="tab-content">
                   <label>치지직 방송 주소 (또는 채널 ID):</label>
                   <div class="input-with-btn">
-                    <input type="text" id="input-chzzk-id" placeholder="https://chzzk.naver.com/live/... 주소 전체 복사-붙여넣기" />
+                    <input type="text" id="input-chzzk-id"
+                      placeholder="https://chzzk.naver.com/live/... 주소 전체 복사-붙여넣기" />
                     <button id="btn-add-chzzk" class="btn btn-neon green">+ 채널 추가</button>
                   </div>
                 </div>
@@ -236,8 +243,10 @@
                   <div class="participants-header">
                     <label>🙋 참여자 명단:</label>
                     <div class="participants-header-actions">
-                      <button id="btn-modal-live-chat-toggle" class="btn btn-neon purple btn-sm" data-tip="라이브 채팅 모드: 켜면 !참여 시청자의 채팅이 제시어가 됩니다">💬 라이브 모드: OFF</button>
-                      <button id="btn-reset-participants" class="btn-reset-participants" type="button">🗑️ 참여자 초기화</button>
+                      <button id="btn-modal-live-chat-toggle" class="btn btn-neon purple btn-sm"
+                        data-tip="라이브 채팅 모드: 켜면 !참여 시청자의 채팅이 제시어가 됩니다">💬 라이브 모드: OFF</button>
+                      <button id="btn-reset-participants" class="btn-reset-participants" type="button">🗑️ 참여자
+                        초기화</button>
                     </div>
                   </div>
                   <div id="participant-list" class="participant-chips-container"></div>
@@ -331,8 +340,8 @@
         </div>
         <div class="modal-body">
           <p id="leaderboard-source" class="modal-desc">최고 도달 스테이지 기준 TOP 5입니다.</p>
-          <input id="leaderboard-search" class="leaderboard-search" type="text"
-            placeholder="🔎 닉네임 검색 (전체 순위에서 찾기)" autocomplete="off" maxlength="20" />
+          <input id="leaderboard-search" class="leaderboard-search" type="text" placeholder="🔎 닉네임 검색 (전체 순위에서 찾기)"
+            autocomplete="off" maxlength="20" />
           <div id="leaderboard-list" class="leaderboard-grid"></div>
         </div>
 
