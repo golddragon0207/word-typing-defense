@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>word-typing-defense (스트리머 워드 디펜스)</title>
 
-  <link rel="stylesheet" href="style.css?v=20260818-10">
+  <link rel="stylesheet" href="style.css?v=20260818-11">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -201,7 +201,6 @@
               <div class="platform-tabs">
                 <button class="tab-btn active" data-tab="tab-soop">🔵 SOOP (숲/아프리카)</button>
                 <button class="tab-btn" data-tab="tab-chzzk">🟢 치지직 (Chzzk)</button>
-                <button class="tab-btn" data-tab="tab-youtube">🔴 유튜브 라이브</button>
               </div>
 
               <div class="tab-contents">
@@ -219,14 +218,6 @@
                     <input type="text" id="input-chzzk-id"
                       placeholder="https://chzzk.naver.com/live/... 주소 전체 복사-붙여넣기" />
                     <button id="btn-add-chzzk" class="btn btn-neon green">+ 채널 추가</button>
-                  </div>
-                </div>
-
-                <div id="tab-youtube" class="tab-content">
-                  <label>유튜브 라이브 주소 (또는 Video ID):</label>
-                  <div class="input-with-btn">
-                    <input type="text" id="input-yt-url" placeholder="https://www.youtube.com/watch?v=XXXXXX" />
-                    <button id="btn-add-yt" class="btn btn-neon red">+ 방송 추가</button>
                   </div>
                 </div>
 
@@ -266,7 +257,6 @@
             <span>지원 플랫폼:</span>
             <span class="badge soop">🔵 SOOP(숲/아프리카)</span>
             <span class="badge chzzk">🟢 치지직(Chzzk)</span>
-            <span class="badge youtube">🔴 유튜브 라이브</span>
           </div>
 
           <button id="btn-start-game" class="btn btn-primary btn-giant">🔥 게임 시작 (START)</button>
@@ -430,7 +420,7 @@
   <script src="js/config.js"></script>
   <script src="js/wordPacks.js"></script>
   <script src="js/audio.js"></script>
-  <script src="js/globalLeaderboard.js?v=20260818-1"></script>
+  <script src="js/globalLeaderboard.js?v=20260818-2"></script>
 
   <script src="js/core/StateManager.js?v=20260818-1"></script>
   <script src="js/core/TurretManager.js"></script>
@@ -439,14 +429,14 @@
 
   <script src="js/renderers/CanvasRenderer.js"></script>
 
-  <script src="js/chatIntegration.js?v=20260818-1"></script>
+  <script src="js/chatIntegration.js?v=20260818-2"></script>
 
   <!-- 🎮 GameEngine 클래스 정의 → ui/*가 prototype 확장 → main.js가 인스턴스화(순서 중요) -->
-  <script src="js/game.js"></script>
-  <script src="js/ui/fx.js"></script>
-  <script src="js/ui/chatPanel.js?v=20260818-2"></script>
+  <script src="js/game.js?v=20260818-1"></script>
+  <script src="js/ui/fx.js?v=20260818-2"></script>
+  <script src="js/ui/chatPanel.js?v=20260818-3"></script>
   <script src="js/ui/modals.js"></script>
-  <script src="js/ui/quickControls.js?v=20260818-1"></script>
+  <script src="js/ui/quickControls.js?v=20260818-2"></script>
   <script src="js/main.js"></script>
 </body>
 

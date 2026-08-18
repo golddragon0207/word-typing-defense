@@ -87,6 +87,21 @@
   /* ==========================================================
    * 🌌 배경 파티클(스타필드) 연출 — #bg-canvas
    * ========================================================== */
+  P.syncBackgroundStarfield = function () {
+    const obsTransparent = document.body && document.body.classList.contains('obs-overlay');
+    const shouldPause = document.hidden || obsTransparent;
+
+    if (shouldPause) {
+      if (this.bgAnimId) cancelAnimationFrame(this.bgAnimId);
+      this.bgAnimId = null;
+      return;
+    }
+
+    if (typeof this._startBgAnimation === 'function') {
+      this._startBgAnimation();
+    }
+  };
+
   P.startBackgroundStarfield = function () {
     const canvas = document.getElementById('bg-canvas');
     if (!canvas) return;
@@ -102,11 +117,41 @@
       hue: Math.random() > 0.5 ? '0, 243, 255' : '191, 0, 255'
     }));
 
-    const loop = () => {
-      this.renderBackgroundStarfield();
+    if (this.bgAnimId) cancelAnimationFrame(this.bgAnimId);
+    if (this._bgVisibilityHandler) {
+      document.removeEventListener('visibilitychange', this._bgVisibilityHandler);
+    }
+
+    let lastDrawTime = null;
+    const frameInterval = 1000 / 30;
+    const loop = (timestamp) => {
+      const obsTransparent = document.body && document.body.classList.contains('obs-overlay');
+      if (document.hidden || obsTransparent) {
+        this.bgAnimId = null;
+        return;
+      }
+
+      if (lastDrawTime == null || timestamp - lastDrawTime >= frameInterval) {
+        const deltaTime = lastDrawTime == null
+          ? 1 / 30
+          : Math.min((timestamp - lastDrawTime) / 1000, 0.1);
+        lastDrawTime = timestamp;
+        this.renderBackgroundStarfield(deltaTime);
+      }
       this.bgAnimId = requestAnimationFrame(loop);
     };
-    this.bgAnimId = requestAnimationFrame(loop);
+
+    const start = () => {
+      const obsTransparent = document.body && document.body.classList.contains('obs-overlay');
+      if (document.hidden || obsTransparent || this.bgAnimId) return;
+      lastDrawTime = null;
+      this.bgAnimId = requestAnimationFrame(loop);
+    };
+    this._startBgAnimation = start;
+
+    this._bgVisibilityHandler = () => this.syncBackgroundStarfield();
+    document.addEventListener('visibilitychange', this._bgVisibilityHandler);
+    start();
   };
 
   P.resizeBgCanvas = function () {
@@ -119,7 +164,7 @@
     canvas.height = Math.max(1, Math.round((rect.height || 660) * dpr));
   };
 
-  P.renderBackgroundStarfield = function () {
+  P.renderBackgroundStarfield = function (deltaTime = 1 / 60) {
     if (!this.bgCtx || !this.bgCanvas) return;
     const ctx = this.bgCtx;
     const w = this.bgCanvas.width;
@@ -128,7 +173,7 @@
     ctx.clearRect(0, 0, w, h);
 
     this.bgStars.forEach(star => {
-      star.y += star.speed * 0.002;
+      star.y += star.speed * deltaTime * 0.12;
       if (star.y > 1) star.y = 0;
 
       const px = star.x * w;

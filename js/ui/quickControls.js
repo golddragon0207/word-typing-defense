@@ -106,6 +106,9 @@
     if (!btn) return;
     btn.addEventListener('click', () => {
       const active = document.body.classList.toggle('obs-overlay');
+      if (typeof this.syncBackgroundStarfield === 'function') {
+        this.syncBackgroundStarfield();
+      }
       btn.classList.toggle('active', active);
       this._setQcLabel(btn, active ? 'OBS 투명 ON' : 'OBS 투명 OFF');
       this.showToastInternal(active ? '📺 OBS 크로마키 모드가 켜졌습니다.' : '📺 OBS 크로마키 모드가 꺼졌습니다.', 'info');

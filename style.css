@@ -1139,12 +1139,6 @@ body {
   border: 1px solid #00f3ff;
 }
 
-.badge.youtube {
-  background: rgba(255, 0, 85, 0.15);
-  color: #ff0055;
-  border: 1px solid #ff0055;
-}
-
 /* ==========================================
    AD BANNER BOX (광고 배너 영역 공통)
    ========================================== */
@@ -2344,7 +2338,7 @@ body {
   font-weight: 700;
 }
 
-/* 플랫폼별 색상 구분 — 치지직/SOOP/유튜브를 동시에 연동해도 한눈에 구분되도록 */
+/* 플랫폼별 색상 구분 — 치지직/SOOP을 동시에 연동해도 한눈에 구분되도록 */
 .channel-chip-chzzk {
   background: rgba(0, 255, 102, 0.12);
   border-color: #00ff66;
@@ -2355,12 +2349,6 @@ body {
   background: rgba(0, 243, 255, 0.12);
   border-color: #00f3ff;
   color: #00f3ff;
-}
-
-.channel-chip-youtube {
-  background: rgba(255, 0, 85, 0.12);
-  border-color: #ff0055;
-  color: #ff0055;
 }
 
 .channel-chip-empty {

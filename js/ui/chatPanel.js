@@ -47,9 +47,6 @@
     const btnAddSoop = document.getElementById('btn-add-soop');
     if (btnAddSoop) btnAddSoop.addEventListener('click', () => addChannelHandler('soop', 'input-soop-id'));
 
-    const btnAddYt = document.getElementById('btn-add-yt');
-    if (btnAddYt) btnAddYt.addEventListener('click', () => addChannelHandler('youtube', 'input-yt-url'));
-
     if (!this._chatStatusListenerBound) {
       this._chatStatusListenerBound = true;
       window.addEventListener('chat-channel-status', () => this.renderActiveChannels());
@@ -97,7 +94,7 @@
     if (detail) {
       if (errorCount > 0) {
         const failed = errorChannels[0];
-        const platformNames = { soop: 'SOOP', chzzk: '치지직', youtube: '유튜브' };
+        const platformNames = { soop: 'SOOP', chzzk: '치지직' };
         const more = errorCount > 1 ? ` · 외 ${errorCount - 1}개` : '';
         detail.className = 'connection-detail is-error';
         detail.textContent = `⚠️ ${platformNames[failed.platform] || failed.platform} URL 연동 실패${more}`;

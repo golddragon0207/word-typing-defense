@@ -7,11 +7,6 @@
  */
 
 const CONFIG = {
-  // 📺 유튜브 라이브 채팅 연동용 YouTube Data API v3 키 (직접 발급 후 아래에 입력)
-  // https://console.cloud.google.com/apis/credentials 에서 "YouTube Data API v3" 사용 설정 후 API 키 발급
-  // 키가 비어 있으면 유튜브 연동은 자동으로 [BOT] 시뮬레이션 모드로 대체됩니다.
-  YOUTUBE_API_KEY: "AIzaSyCD9Gh03q3exnSz8T9YRdHzWXCcLwXfELs",
-
   // 🔵 SOOP(숲/아프리카) 연동용 CORS 프록시. ⭐ 개발자가 딱 한 번만 설정하면 됩니다.
   //   SOOP은 채팅 서버 주소·방송번호(BNO)를 player_live_api.php에서 받아와야 하는데
   //   이 API가 CORS 헤더를 주지 않아 브라우저에서 직접 호출하면 차단됩니다.

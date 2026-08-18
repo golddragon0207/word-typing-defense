@@ -62,17 +62,14 @@ const GlobalLeaderboard = {
   db: null,
   enabled: false,
   COLLECTION: 'leaderboard',
+  _aggregateContextPromise: null,
 
   // 📊 상위 % 표시에 필요한 "누적 기록 수" 최소 기준(고정값).
   //   글로벌 리더보드에 쌓인 전체 기록이 이 수 미만이면 백분위 대신 '집계 중'을 보여준다.
   //   (표본이 적을 때 '상위 100%'처럼 무의미하게 나오는 것을 방지)
   MIN_SAMPLE: 50,
 
-  // 백분위 계산 시 점수 내림차순으로 읽어올 최대 문서 수(상한).
-  //   이 SDK(compat)에는 count() 집계가 없어, 실제 기록을 읽어 개수·순위를 직접 센다.
-  //   기록 총량이 이 값 이하이면 snapshot.size가 곧 정확한 "누적 기록 수"이며,
-  //   이 값을 넘어서면 상위 SCAN_CAP개 안에서의 백분위로 saturate된다(그 시점엔 서버측
-  //   count/누적 카운터 문서 방식으로 교체 권장).
+  // 서버 집계 모듈 로드 또는 count()가 실패할 때만 사용하는 호환 폴백 상한.
   PERCENTILE_SCAN_CAP: 2000,
 
   analytics: null,
@@ -199,8 +196,9 @@ const GlobalLeaderboard = {
 
   /**
    * 📊 내 점수의 글로벌 상위 백분위(%) 조회 — "상위 X%" 표시용.
-   *   이 compat SDK에는 count() 집계가 없어, 점수 내림차순으로 누적 기록을 SCAN_CAP까지 읽어
-   *   (1) 누적 기록 수(snapshot.size)와 (2) 내 점수보다 높은 기록 수를 직접 센다.
+   *   Firestore 모듈 SDK의 count() 서버 집계로 (1) 누적 기록 수와
+   *   (2) 내 점수보다 높은 기록 수만 받아 문서 본문 다운로드를 피한다.
+   *   모듈 로드 또는 집계가 실패하면 compat 스캔 방식으로 자동 폴백한다.
    *   - 누적 기록 수가 MIN_SAMPLE 미만이면 { enough:false }로 반환('집계 중' 표시).
    *   - 랭킹 기준은 결과 화면의 등급(점수 기반)과 일관되게 '점수'를 사용한다.
    *   내 기록은 아직 서버에 반영되지 않았을 수 있으므로 "가상으로 1건 추가"해 계산한다
@@ -216,8 +214,62 @@ const GlobalLeaderboard = {
     if (s <= 0) return { available: false };
 
     try {
+      // compat 앱은 그대로 유지하고, 순위 조회 시에만 동일 버전의 모듈 SDK를 지연 로드한다.
+      // count 집계는 문서 본문을 최대 2,000건 내려받지 않고 서버에서 개수만 반환한다.
+      const aggregate = await this._getAggregateContext();
+      const scores = aggregate.collection(aggregate.db, this.COLLECTION);
+      const totalQuery = aggregate.query(scores, aggregate.where('score', '>', 0));
+      const aboveQuery = aggregate.query(scores, aggregate.where('score', '>', s));
+      const [totalSnapshot, aboveSnapshot] = await Promise.all([
+        aggregate.getCountFromServer(totalQuery),
+        aggregate.getCountFromServer(aboveQuery)
+      ]);
+
+      const total = totalSnapshot.data().count;
+      const above = aboveSnapshot.data().count;
+      if (total < this.MIN_SAMPLE) {
+        return { available: true, enough: false, total, rank: above + 1 };
+      }
+
+      let topPercent = ((above + 1) / (total + 1)) * 100;
+      topPercent = Math.max(0.1, Math.min(100, topPercent));
+      return { available: true, enough: true, total, topPercent, rank: above + 1 };
+    } catch (aggregateError) {
+      console.warn('⚠️ [GlobalLeaderboard] count 집계 실패, 호환 조회로 폴백:', aggregateError.message);
+      return this._fetchPercentileByScan(s);
+    }
+  },
+
+  async _getAggregateContext() {
+    if (!this._aggregateContextPromise) {
+      this._aggregateContextPromise = (async () => {
+        const [appSdk, firestoreSdk] = await Promise.all([
+          import('https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js'),
+          import('https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js')
+        ]);
+        const cfg = CONFIG.FIREBASE;
+        const appName = 'wtd-aggregate';
+        const existing = appSdk.getApps().find(app => app.name === appName);
+        const app = existing || appSdk.initializeApp(cfg, appName);
+        return {
+          db: firestoreSdk.getFirestore(app),
+          collection: firestoreSdk.collection,
+          query: firestoreSdk.query,
+          where: firestoreSdk.where,
+          getCountFromServer: firestoreSdk.getCountFromServer
+        };
+      })().catch(error => {
+        this._aggregateContextPromise = null;
+        throw error;
+      });
+    }
+    return this._aggregateContextPromise;
+  },
+
+  async _fetchPercentileByScan(score) {
+    try {
       const snap = await this.db.collection(this.COLLECTION)
-        .where('score', '>', 0)        // 0점 기록은 누적 표본에서 제외
+        .where('score', '>', 0)
         .orderBy('score', 'desc')
         .limit(this.PERCENTILE_SCAN_CAP)
         .get();
@@ -225,21 +277,19 @@ const GlobalLeaderboard = {
       const docs = snap.docs;
       let above = 0;
       for (let i = 0; i < docs.length; i++) {
-        if ((docs[i].data().score || 0) > s) above++;
+        if ((docs[i].data().score || 0) > score) above++;
         else break;
       }
 
-      const total = snap.size; // 0점 제외 누적 기록 수 (SCAN_CAP 이하이면 정확한 전체 누적값)
+      const total = snap.size;
       if (total < this.MIN_SAMPLE) {
         return { available: true, enough: false, total, rank: above + 1 };
       }
 
-      let topPercent = ((above + 1) / (total + 1)) * 100;
-      topPercent = Math.max(0.1, Math.min(100, topPercent));
-      // rank = 나보다 높은 점수 수 + 1 (점수 기준 정확 등수). SCAN_CAP 밖이면 그 안에서 saturate.
+      const topPercent = Math.max(0.1, Math.min(100, ((above + 1) / (total + 1)) * 100));
       return { available: true, enough: true, total, topPercent, rank: above + 1 };
-    } catch (e) {
-      console.warn('⚠️ [GlobalLeaderboard] 백분위 조회 실패:', e.message);
+    } catch (error) {
+      console.warn('⚠️ [GlobalLeaderboard] 백분위 호환 조회 실패:', error.message);
       return { available: false };
     }
   },

@@ -9,6 +9,7 @@ class GameEngine {
   constructor() {
     this.isInitialized = false;
     this.animationFrameId = null;
+    this._lastFrameTime = null;
 
     // 1인 전용 고정 설정
     this.config = {
@@ -697,9 +698,24 @@ class GameEngine {
       this.animationFrameId = null;
     }
 
-    const loop = () => {
-      this.update(0.016);
-      this.render();
+    this._lastFrameTime = null;
+
+    const loop = (timestamp) => {
+      const previous = this._lastFrameTime;
+      this._lastFrameTime = timestamp;
+
+      // 실제 경과시간을 사용해 30/60/120Hz 어디서나 같은 속도로 진행한다.
+      // 탭 복귀·디버거 중단 뒤 큰 값이 들어오면 한 프레임에 몬스터가 바닥까지
+      // 순간이동할 수 있으므로 최대 50ms까지만 반영한다.
+      const deltaTime = previous == null
+        ? 0
+        : Math.min(Math.max((timestamp - previous) / 1000, 0), 0.05);
+
+      const isPlaying = this.stateManager && this.stateManager.currentState === 'PLAYING';
+      if (isPlaying && !document.hidden) {
+        this.update(deltaTime);
+        this.render();
+      }
       this.animationFrameId = requestAnimationFrame(loop);
     };
     this.animationFrameId = requestAnimationFrame(loop);

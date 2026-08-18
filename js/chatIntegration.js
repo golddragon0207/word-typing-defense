@@ -37,20 +37,6 @@ class ChatIntegrationEngine {
         }
       }
 
-      // 🔴 유튜브 (YouTube): 라이브 영상 URL 또는 Video ID 파싱
-      if (platform === 'youtube') {
-        if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
-          if (trimmed.includes('youtu.be/')) {
-            return trimmed.split('youtu.be/')[1].split('?')[0];
-          }
-          if (trimmed.includes('/live/')) {
-            return trimmed.split('/live/')[1].split('?')[0];
-          }
-          const urlObj = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
-          const videoId = urlObj.searchParams.get('v');
-          if (videoId) return videoId;
-        }
-      }
     } catch (e) {
       console.warn(`[ChatIntegration] URL 파싱 중 오류 발생 (기본값 사용): ${e.message}`);
     }
@@ -70,7 +56,6 @@ class ChatIntegrationEngine {
     let prefix = '[💬테스트]';
     if (platform === 'chzzk') { icon = '🟢'; prefix = '[🟢치지직]'; }
     if (platform === 'soop') { icon = '🔵'; prefix = '[🔵SOOP]'; }
-    if (platform === 'youtube') { icon = '🔴'; prefix = '[🔴유튜브]'; }
 
     const channelObj = {
       id: Date.now() + Math.random(),
@@ -113,9 +98,6 @@ class ChatIntegrationEngine {
         break;
       case 'soop':
         this.connectSoop(channel, prefix);
-        break;
-      case 'youtube':
-        this.connectYouTube(channel, prefix);
         break;
       default:
         console.warn(`[ChatIntegration] 지원하지 않는 플랫폼이거나 커스텀 모드입니다.`);
@@ -450,73 +432,6 @@ class ChatIntegrationEngine {
       if (v && v !== message) { nickname = v; break; }
     }
     return { nickname, message };
-  }
-
-  /**
-   * 🔴 유튜브 (YouTube) 라이브 채팅 연동 (YouTube Data API v3 폴링)
-   * 1) Video ID → liveChatId 조회 (videos.list)
-   * 2) liveChatId → liveChatMessages.list 주기적 폴링
-   */
-  async connectYouTube(channel, prefix) {
-    const apiKey = (typeof CONFIG !== 'undefined' && CONFIG.YOUTUBE_API_KEY) ? CONFIG.YOUTUBE_API_KEY : null;
-
-    if (!apiKey) {
-      console.warn(`⚠️ ${prefix} YouTube API Key(CONFIG.YOUTUBE_API_KEY)가 설정되지 않아 실시간 연동을 시작할 수 없습니다.`);
-      this.setChannelStatus(channel, 'error', 'YouTube API Key 미설정');
-      this.notifyFallback(prefix, 'YouTube API Key 미설정');
-      return;
-    }
-
-    try {
-      const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${channel.targetId}&key=${apiKey}`;
-      const res = await fetch(videosUrl);
-      if (!res.ok) throw new Error(`HTTP status ${res.status}`);
-
-      const data = await res.json();
-      const liveChatId = data?.items?.[0]?.liveStreamingDetails?.activeLiveChatId;
-
-      if (!liveChatId) {
-        throw new Error('현재 라이브 방송 중이 아니거나 채팅 ID를 찾을 수 없습니다.');
-      }
-
-      this.notifySuccess(prefix, '연동 시도 시작');
-
-      let nextPageToken = '';
-      let hasConnected = false;
-      const poll = async () => {
-        try {
-          const chatUrl = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&key=${apiKey}` +
-            (nextPageToken ? `&pageToken=${nextPageToken}` : '');
-          const chatRes = await fetch(chatUrl);
-          if (!chatRes.ok) throw new Error(`HTTP status ${chatRes.status}`);
-
-          const chatData = await chatRes.json();
-          nextPageToken = chatData.nextPageToken || '';
-
-          if (!hasConnected || channel.status !== 'connected') {
-            hasConnected = true;
-            this.setChannelStatus(channel, 'connected', 'YouTube 라이브 채팅 연결 성공');
-          }
-
-          (chatData.items || []).forEach(item => {
-            const nickname = item?.authorDetails?.displayName || '유튜브시청자';
-            const text = item?.snippet?.displayMessage || '';
-            this.handleIncomingChat(nickname, text, prefix);
-          });
-        } catch (pollErr) {
-          console.error(`❌ ${prefix} YouTube 채팅 폴링 오류`, pollErr);
-          this.setChannelStatus(channel, 'error', `YouTube 채팅 수신 오류: ${pollErr.message}`);
-        }
-      };
-
-      poll();
-      channel.pollTimer = setInterval(poll, 5000);
-
-    } catch (e) {
-      console.error(`❌ ${prefix} YouTube 연동 실패: ${e.message}`);
-      this.setChannelStatus(channel, 'error', e.message);
-      this.notifyFallback(prefix, e.message);
-    }
   }
 
   /**
