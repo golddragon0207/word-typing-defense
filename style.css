@@ -451,11 +451,11 @@ body {
   display: none !important;
 }
 
-/* 홈 화면은 방송 프레임의 남은 높이 660px을 전부 사용한다.
-   상단바 60px과 합쳐 정확히 720px이며, 내부 콘텐츠만 카드 안에서 중앙 정렬한다. */
+/* 홈 화면 배경은 방송 프레임의 남은 높이 660px을 전부 사용한다.
+   상단바와 카드는 12px 떨어뜨려 시각적으로 답답하지 않게 한다. */
 #screen-main {
-  padding-top: 0;
-  padding-bottom: 0;
+  padding-top: 12px;
+  padding-bottom: 12px;
 }
 
 #screen-main::before,
@@ -484,15 +484,13 @@ body {
   flex-shrink: 0;
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  grid-template-rows: auto auto auto auto auto auto;
+  grid-template-rows: auto auto auto auto;
   column-gap: 14px;
   row-gap: 10px;
   padding: 18px 24px;
-  align-content: center;
+  align-content: space-between;
 }
 
-.main-menu-card > .glow-text,
-.main-menu-card > .subtitle,
 .main-menu-card > .platform-indicators,
 .main-menu-card > .btn-giant,
 .main-menu-card > .ad-banner-box {
@@ -501,13 +499,13 @@ body {
 
 .main-menu-card > .home-guide-panel {
   grid-column: 1;
-  grid-row: 3;
+  grid-row: 1;
   align-self: start;
 }
 
 .main-menu-card > .home-chat-panel {
   grid-column: 2;
-  grid-row: 3;
+  grid-row: 1;
   align-self: start;
 }
 
@@ -517,26 +515,18 @@ body {
 }
 
 .main-menu-card > .platform-indicators {
-  grid-row: 4;
+  grid-row: 2;
   margin-top: 0;
 }
 
 .main-menu-card > .btn-giant {
-  grid-row: 5;
+  grid-row: 3;
   margin-top: 0;
 }
 
 .main-menu-card > .ad-banner-box {
-  grid-row: 6;
+  grid-row: 4;
   margin-top: 0;
-}
-
-.main-menu-card .glow-text {
-  font-size: 2.2rem;
-}
-
-.main-menu-card .subtitle {
-  font-size: 1rem;
 }
 
 .main-menu-card .btn-giant {
