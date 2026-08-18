@@ -451,6 +451,18 @@ body {
   display: none !important;
 }
 
+/* 홈 화면은 방송 프레임의 남은 높이 660px을 전부 사용한다.
+   상단바 60px과 합쳐 정확히 720px이며, 내부 콘텐츠만 카드 안에서 중앙 정렬한다. */
+#screen-main {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#screen-main::before,
+#screen-main::after {
+  display: none;
+}
+
 .main-menu-card,
 .result-card {
   background: #161926;
@@ -468,12 +480,15 @@ body {
    기존 1024px 레이아웃과 비슷한 화면 점유율(약 78%)을 유지한다. */
 .main-menu-card {
   width: min(94%, 1000px);
+  height: 100%;
+  flex-shrink: 0;
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   grid-template-rows: auto auto auto auto auto auto;
   column-gap: 14px;
   row-gap: 10px;
   padding: 18px 24px;
+  align-content: center;
 }
 
 .main-menu-card > .glow-text,
