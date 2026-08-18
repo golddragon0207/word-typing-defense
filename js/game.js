@@ -55,12 +55,12 @@ class GameEngine {
 
     // 3. 렌더러 & 포탑 셋업 (1인 포탑 중앙 배치)
     if (this.renderer) {
-      // 🖥️ 무대(1024×708 고정)를 창에 맞춰 비율 스케일 → 그 뒤 백버퍼 해상도 갱신
-      this.fitStage();
+      // 🖥️ 방송 프레임(1280×720 고정)을 창에 맞춰 비율 스케일 → 그 뒤 백버퍼 해상도 갱신
+      this.fitBroadcastFrame();
       this.renderer.resizeCanvas();
       this.resizeBgCanvas();
       window.addEventListener('resize', () => {
-        this.fitStage();                                   // 무대 스케일 재계산 (게임 좌표는 불변)
+        this.fitBroadcastFrame();                          // 앱 전체 스케일 재계산 (게임 좌표는 불변)
         if (this.renderer) this.renderer.resizeCanvas();   // 새 표시 크기에 맞춰 백버퍼만 갱신 → 선명도 유지
         this.resizeBgCanvas();
       });
@@ -106,20 +106,19 @@ class GameEngine {
   }
 
   /**
-   * 🖥️ 고정 무대(1024×708)를 상단 바 아래 남는 영역에 "비율 유지"로 맞춘다.
-   *    내부 논리 좌표는 그대로 두고 CSS transform:scale 배율(--stage-scale)만 조정하므로
-   *    창을 키우거나 줄여도 게임 좌표·방어선·몬스터 위치가 절대 바뀌지 않는다.
-   *    (상단바 60px + 무대 708px = 1024×768 PC 최소 해상도에 정확히 맞음)
+   * 🖥️ 고정 방송 프레임(1280×720)을 브라우저 창에 "비율 유지"로 맞춘다.
+   *    상단바와 무대를 포함한 앱 전체에 동일한 CSS transform 배율을 적용하므로
+   *    720p·1080p 방송에서 화면을 정확히 채우고, 다른 비율에서는 잘림 없이 레터박스 처리된다.
+   *    내부 게임 좌표(1280×660)는 창 크기와 무관하게 유지된다.
    */
-  fitStage() {
-    const frame = document.querySelector('.stage-frame');
-    const stage = document.getElementById('game-stage');
-    if (!frame || !stage) return;
-    const availW = frame.clientWidth;
-    const availH = frame.clientHeight;
+  fitBroadcastFrame() {
+    const app = document.getElementById('app');
+    if (!app) return;
+    const availW = window.innerWidth;
+    const availH = window.innerHeight;
     if (availW <= 0 || availH <= 0) return;
-    const scale = Math.min(availW / 1024, availH / 708);
-    stage.style.setProperty('--stage-scale', String(scale));
+    const scale = Math.min(availW / 1280, availH / 720);
+    app.style.setProperty('--app-scale', String(scale));
   }
 
   /**

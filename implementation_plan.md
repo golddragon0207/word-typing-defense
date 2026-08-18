@@ -1,7 +1,7 @@
 # 🎮 word-typing-defense (스트리머 워드 디펜스) 구현 계획서
 
 스트리머 1인 솔로 플레이에 최적화된 단일 입력 웹 타자 디펜스 환경을 제공하며, 화면상에는 시청자 닉네임 뱃지와 타깃 제시어(밈/유행어/실시간 채팅)가 직관적으로 구분되는 **2단 몬스터 UI 시스템**을 구축합니다.
-모바일 접속은 배제하고 최소 지원 해상도를 **1024×768 (PC 전용)** 으로 고정하며, 논리 무대 해상도를 **1024×708**로 고정하고 창 크기에 맞춰 비율 스케일(`fitStage`)하여 방송 송출(OBS 크로마키 및 투명 오버레이 지원) 시 화면 잘림이나 가로 스크롤 없이 안정적으로 플레이할 수 있습니다.
+모바일 접속은 배제하고 방송 표준 해상도인 **1280×720 (16:9, PC 전용)** 을 논리 프레임으로 사용합니다. 상단바를 포함한 앱 전체를 창 크기에 맞춰 비율 스케일(`fitBroadcastFrame`)하여 720p·1080p 송출 화면을 정확히 채우고, 다른 화면 비율에서는 잘림 없는 레터박스로 표시합니다. 게임 논리 무대는 **1280×660**이며 OBS 크로마키 및 투명 오버레이를 지원합니다.
 
 ---
 
@@ -10,14 +10,14 @@
 | 구분 | 사양 |
 | :--- | :--- |
 | **게임명 / 프로젝트명** | `word-typing-defense` (스트리머 워드 디펜스) |
-| **타깃 플랫폼 & 해상도** | PC Desktop 전용 (**1024 × 768** 최소 해상도 고정, 논리 무대 **1024 × 708** 비율 스케일, OBS 크로마키/투명 오버레이 지원) |
+| **타깃 플랫폼 & 해상도** | PC Desktop 전용 (방송 표준 논리 프레임 **1280×720, 16:9**, 논리 무대 **1280×660**, 720p·1080p 비율 스케일, OBS 크로마키/투명 오버레이 지원) |
 | **웹 배포 및 접속 주소** | **GitHub Pages 단일 Git URL 배포** (`https://golddragon0207.github.io/word-typing-defense/`) |
 | **플레이 모드** | **1인 솔로 스트리머 전용 디펜스** |
 | **방송 채팅 연동 방식** | **원클릭 방송 URL 파싱 연동**(방송 주소 입력 시 자동 ID 추출). SOOP/치지직/유튜브 **동시 다중 연동**. SOOP·치지직 REST는 전용 무료 Cloudflare Worker 프록시(`CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY`, 개발자 1회 배포) 경유 |
 | **몬스터 UI 시스템** | **2단 UI**(상단: 시청자 닉네임 Pill Tag / 하단: 제시어 Target Box). 보스는 금색·확대(`scale: 1.65`) + HP 하트(`HP ♥♥`) + 차지 게이지(`CHARGE`), 라이브 채팅 문구는 보라색 강조. **동시 출전 Max Cap 15마리** |
 | **밸런스** | 밸런스 테이블(`CONFIG.DIFFICULTY`)로 낙하속도·스폰주기·기지 체력·피격 데미지·스테이지 처치목표 관리. 표준(`normal`)으로 실행하며 스테이지별 자동 상승 |
 | **명예의 전당** | **최고 도달 스테이지 기준 단일 TOP 5**(동점 시 점수순). 로컬(`localStorage`) 기본 + Firebase Firestore **글로벌 리더보드**(설정 시 자동 활성, 미설정 시 로컬 폴백). 3가지 뷰 — **📜 전체 순위 보기(최대 200위)** / **🙋 내 순위 보기(글로벌 점수 기준 `#N위 / 총 M명 · 상위 X%`)** / **🔎 닉네임 검색**. 모달 진입 시 상위 200을 1회만 로드·캐시해 뷰 전환·검색은 추가 조회 없이 처리 |
-| **화면 & 모달** | 카드 너비 `width: min(96%, 800px)` / 세로 `max-height: 72vh`. 버튼 영역(`.modal-actions`)과 광고 영역(`.modal-footer`) 분리 |
+| **화면 & 모달** | 카드 너비 `width: min(96%, 800px)` / 세로 `max-height: 520px`. 버튼 영역(`.modal-actions`)과 광고 영역(`.modal-footer`) 분리 |
 | **상단 컨트롤바 (6개)** | 🏆 명예의 전당, ☕ 개발자 후원, 💡 건의사항, 💬 라이브 채팅 모드, 📺 OBS 크로마키, 🔊 사운드 ON/OFF(방송 채팅 연동은 홈 화면 인라인 패널). **게임 중에는 앞 3개(모달) 자동 잠금**, 뒤 3개(라이브/OBS/사운드)는 상시 조작 |
 | **수익화 광고 및 후원** | 카카오 애드핏 `728x90` **5개 슬롯**(메인/결과/명예의전당/후원/건의사항) + **카카오뱅크(`3333-28-2684443`) 계좌 복사 & QR(`donation-qr.png`)** 후원 모달 |
 | **선택형 백엔드** | Firebase(무료 티어) — Firestore 글로벌 리더보드(`leaderboard`) + 건의사항(`suggestions`) 저장 + Analytics(GA4). `CONFIG.FIREBASE` 미설정 시 전 기능 자동 비활성/로컬 폴백 |
@@ -91,11 +91,13 @@
   * 처치 수: `killPerStageBase 8·Step 0.5`(2스테이지당 +1) — 소프트 캡 이후 지구력 축.
 * `MonsterManager`/`StateManager`/`game.js`가 `getDifficultyConfig()`로 공용 참조.
 
-### 8. 💻 PC 전용 UI 및 모달/레이아웃 (1024×768)
-* **1024×768 고정 레이아웃 + 비율 스케일(scale-to-fit)**: 상단바(60px) + 게임 무대(`#game-stage.game-viewport`, **논리 크기 1024×708 고정**) = 1024×768. 무대는 부모 프레임(`.stage-frame`)에서 `transform: scale(var(--stage-scale))`로 창에 맞춰 비율 유지하며 확대/축소(`GameEngine.fitStage()`가 `min(availW/1024, availH/708)` 배율 계산).
-* **홈/게임오버 화면 분리**: `#screen-main`·`#screen-gameover`는 고정 무대 밖(`.stage-frame` 직속)에 두어 상단바 아래 전체 영역을 항상 채운다.
-* **반응형 상단바(아이콘 접힘 + 호버 툴팁)**: 각 컨트롤 버튼(`.qc-btn`)을 `아이콘(.qc-ic) + 라벨(.qc-tx)` span으로 구성하고 `data-tip` 부여. `@media (max-width:1439px)`에서 라벨을 숨기고 호버 시 툴팁 표시.
-* 모달 너비 `min(96%, 800px)`, 높이 `max-height: 72vh`, `.modal-body` 독립 스크롤.
+### 8. 💻 방송용 UI 및 모달/레이아웃 (1280×720, 16:9)
+* **1280×720 고정 방송 프레임 + 전체 비율 스케일(scale-to-fit)**: 상단바(60px) + 게임 무대(`#game-stage.game-viewport`, **논리 크기 1280×660 고정**) = 1280×720. `.app-container` 전체를 `transform: scale(var(--app-scale))`로 확대·축소하며, `GameEngine.fitBroadcastFrame()`이 `min(innerWidth/1280, innerHeight/720)` 배율을 계산한다. 따라서 상단바·HUD·캔버스가 서로 어긋나지 않고 1280×720 및 1920×1080 OBS 소스를 정확히 채운다.
+* **비표준 화면 안전 처리**: 16:9가 아닌 브라우저 창에서는 앱을 중앙 정렬하고 남는 영역만 레터박스로 처리한다. 콘텐츠를 자르거나 가로 스크롤을 만들지 않는다.
+* **홈/게임오버 화면 분리**: `#screen-main`·`#screen-gameover`는 `.stage-frame` 직속으로 두어 상단바 아래 1280×660 영역을 항상 채운다.
+* **상단바(아이콘 접힘 + 호버 툴팁)**: 각 컨트롤 버튼(`.qc-btn`)을 `아이콘(.qc-ic) + 라벨(.qc-tx)` span으로 구성하고 `data-tip` 부여. 1280px 논리 컨테이너 기준으로 라벨을 숨기고 호버 시 툴팁을 표시한다.
+* 모달 너비 `min(96%, 800px)`, 높이 `max-height: 520px`, `.modal-body` 독립 스크롤. 모달과 토스트도 논리 프레임 내부에 배치되어 앱과 같은 비율로 스케일된다.
+* **OBS 권장값**: 브라우저 소스는 `1280×720` 또는 `1920×1080`으로 설정한다. 두 해상도 모두 16:9라 추가 자르기 없이 화면을 채운다.
 * **버튼/광고 구역 분리**: `.modal-actions`(버튼, 위) + `.modal-footer`(광고, 아래) 분리.
 
 ### 9. 🎯 스마트 타깃 우선순위 & OBS 가시성
@@ -105,7 +107,7 @@
 
 ### 10. 👤 1인 솔로 모드 & 중앙 포탑
 * 스트리머 닉네임 단일 입력(**필수**).
-* 중앙 단일 포탑 회전각(θ)·레이저 빔·폭발 파티클·반동. **좌표는 `clientWidth/clientHeight`(1024×708 논리 픽셀) 기준**으로 계산.
+* 중앙 단일 포탑 회전각(θ)·레이저 빔·폭발 파티클·반동. **좌표는 `clientWidth/clientHeight`(1280×660 논리 픽셀) 기준**으로 계산.
 * **포탑·방어선 하단 배치**: 포탑(`height−105`)과 방어선/지면(`groundY = height−130`).
 * **HUD 위치**: `#game-hud`를 `top:0` 전체 폭 띠로 구성. 몬스터는 Y=40에서 생성되어 스르륵 떨어짐. 출전 대기열 패널(`top:80`) 우측끝(183px) 침범 방지를 위해 스폰 x 최소값을 `190 + 박스폭/2`로 고정.
 
@@ -162,7 +164,7 @@
    * 카카오 애드핏 5개 슬롯, Firebase SDK(app/firestore/analytics compat) 로드, 전용 JS 모듈 스크립트 로드.
 
 2. **`style.css`**
-   * 1024×768 고정 레이아웃, 모달 잘림 방지, `.modal-actions`/`.modal-footer` 분리, `body.obs-overlay` 투명 스타일, 토스트/등급뱃지/단어칩/피버 등 컴포넌트 스타일.
+   * 1280×720 방송용 16:9 고정 프레임, 앱 전체 비율 스케일, 모달 잘림 방지, `.modal-actions`/`.modal-footer` 분리, `body.obs-overlay` 투명 스타일, 토스트/등급뱃지/단어칩/피버 등 컴포넌트 스타일.
 
 3. **`js/config.js`**
    * `CONFIG.YOUTUBE_API_KEY`, `CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY`/`CONFIG.SOOP_DEBUG`, `CONFIG.FIREBASE`, `CONFIG.KAKAO_ADFIT`(6개), `CONFIG.DIFFICULTY`(밸런스 테이블) + `getDifficultyConfig()`, `CONFIG.MAX_MONSTER_CAP`(15), `CONFIG.START_SPAWN_DELAY_MS`(5000)/`STAGE_UP_SPAWN_DELAY_MS`(3000)/`RESUME_GRACE_MS`(5000), `CONFIG.QUEUE` 튜닝값, 광고 리프레시 로직.
@@ -183,7 +185,7 @@
    * 상태 머신, 무한 Stage/HP/점수/콤보/WPM/피버 관리, 체력·데미지·회복 적용, 등급 환산(SSS~D), 최고 도달 스테이지 기준 단일 로컬 TOP 5 저장/조회.
 
 9. **`js/core/TurretManager.js`**
-   * 중앙 포탑 좌표(논리 픽셀 기준 1024×708)·회전각·사격·반동.
+   * 중앙 포탑 좌표(논리 픽셀 기준 1280×660)·회전각·사격·반동.
 
 10. **`js/core/MonsterManager.js`**
     * 스폰/속도/상한(15), 대기열 소비, 5 Stage 보스전(차지 보스, HP 하트, 차지 게이지, 명중 리롤), 탭 백그라운드 스폰 정지.
@@ -192,10 +194,10 @@
     * 단일 타자 입력, 한글 IME 조합 감지(compositionstart/compositionend) 및 Enter 중복 방지.
 
 12. **`js/renderers/CanvasRenderer.js`**
-    * **논리 좌표계 1024×708 고정** Draw. 백버퍼 `displayW/displayH` × DPR 매핑. 2단 몬스터 UI(보스 금색·확대 / 라이브 채팅 보라색), 보스 HP(`HP ♥♥`) 및 차지바(`CHARGE`), OBS 가시성 Stroke·Shadow, 이펙트.
+    * **논리 좌표계 1280×660 고정** Draw. 백버퍼 `displayW/displayH` × DPR 매핑. 2단 몬스터 UI(보스 금색·확대 / 라이브 채팅 보라색), 보스 HP(`HP ♥♥`) 및 차지바(`CHARGE`), OBS 가시성 Stroke·Shadow, 이펙트.
 
 13. **`js/game.js`**
-    * 게임 루프 오케스트레이터 (`GameEngine` **클래스 정의**). 게임 흐름·상태 전용: `init`, `fitStage()` 무대 스케일, `bindUIEvents`(핵심 버튼 배선), 시작/재시작/메인복귀, 타자 제출 판정, 스테이지 진행, 피버 버스트, 보스 공격/처치, 일시정지(ESC/버튼), 시작 카운트다운, 메인 루프(update/render), MVP 집계.
+    * 게임 루프 오케스트레이터 (`GameEngine` **클래스 정의**). 게임 흐름·상태 전용: `init`, `fitBroadcastFrame()` 앱 전체 스케일, `bindUIEvents`(핵심 버튼 배선), 시작/재시작/메인복귀, 타자 제출 판정, 스테이지 진행, 피버 버스트, 보스 공격/처치, 일시정지(ESC/버튼), 시작 카운트다운, 메인 루프(update/render), MVP 집계.
     * UI 배선/렌더링은 아래 `js/ui/*`가 **`GameEngine.prototype`에 부착**(부분 클래스)해 game.js를 게임 로직에 집중시킨다.
 
 14. **`js/ui/*.js`** (GameEngine 부분 클래스 — game.js 뒤·main.js 앞에 로드)

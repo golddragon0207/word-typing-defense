@@ -112,11 +112,11 @@
   P.resizeBgCanvas = function () {
     const canvas = document.getElementById('bg-canvas');
     if (!canvas) return;
-    // 표시 크기(무대 scale 반영) × DPR 로 백버퍼를 잡아 어떤 배율에서도 선명하게
+    // 표시 크기(앱 전체 scale 반영) × DPR 로 백버퍼를 잡아 어떤 배율에서도 선명하게
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.max(1, Math.round((rect.width || 1024) * dpr));
-    canvas.height = Math.max(1, Math.round((rect.height || 708) * dpr));
+    canvas.width = Math.max(1, Math.round((rect.width || 1280) * dpr));
+    canvas.height = Math.max(1, Math.round((rect.height || 660) * dpr));
   };
 
   P.renderBackgroundStarfield = function () {

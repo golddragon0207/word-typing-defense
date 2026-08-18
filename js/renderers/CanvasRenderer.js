@@ -9,18 +9,18 @@ class CanvasRenderer {
         this.effects = [];
         this.dpr = window.devicePixelRatio || 1;
 
-        // 🎯 논리(게임) 좌표계는 항상 1024×708 고정 (상단바 60px + 708 = 1024×768 PC 최소 해상도).
+        // 🎯 논리(게임) 좌표계는 항상 1280×660 고정 (상단바 60px + 660 = 1280×720 방송 표준).
         //    모든 게임 로직/드로잉은 이 좌표계를 쓰므로 창 크기가 바뀌어도 좌표·방어선이
         //    변하지 않는다(리사이즈로 인한 몬스터 위치·방어선 급변 버그 원천 차단).
-        //    화면에는 부모 무대(.game-viewport)가 transform:scale로 비율 유지하며 맞춰진다.
-        this.LOGICAL_W = 1024;
-        this.LOGICAL_H = 708;
+        //    화면에는 앱 전체(.app-container)가 transform:scale로 비율 유지하며 맞춰진다.
+        this.LOGICAL_W = 1280;
+        this.LOGICAL_H = 660;
     }
 
     /**
      * 백버퍼 해상도를 "실제 화면에 표시되는 픽셀 크기"에 맞춘다.
-     * - 논리 좌표계(1024×708)는 setTransform으로 유지 → 드로잉 코드는 항상 0..1024/0..708 사용
-     * - 표시 크기 = getBoundingClientRect(무대 scale 반영) × devicePixelRatio → 어떤 배율에서도 선명
+     * - 논리 좌표계(1280×660)는 setTransform으로 유지 → 드로잉 코드는 항상 0..1280/0..660 사용
+     * - 표시 크기 = getBoundingClientRect(앱 scale 반영) × devicePixelRatio → 어떤 배율에서도 선명
      */
     resizeCanvas() {
         if (!this.canvas) return;
@@ -35,7 +35,7 @@ class CanvasRenderer {
         // CSS 크기는 스타일시트(width/height:100%)가 담당 → 여기서 건드리지 않음
 
         if (this.ctx) {
-            // 논리 좌표계(1024×708)를 백버퍼 픽셀로 매핑하는 변환 행렬
+            // 논리 좌표계(1280×660)를 백버퍼 픽셀로 매핑하는 변환 행렬
             this.ctx.setTransform(displayW / this.LOGICAL_W, 0, 0, displayH / this.LOGICAL_H, 0, 0);
         }
     }

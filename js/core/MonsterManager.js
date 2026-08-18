@@ -122,7 +122,7 @@ class MonsterManager {
             : { nickname: '[BOT] 시뮬레이터', isBot: true, word: '타자연습', isLiveChat: false };
 
         // CanvasRenderer가 논리(CSS) 좌표계로 그리므로 clientWidth(논리 픽셀) 기준으로 스폰 위치 계산
-        const safeWidth = this.canvas ? (this.canvas.clientWidth || 1024) : (window.innerWidth || 1024);
+        const safeWidth = this.canvas ? (this.canvas.clientWidth || 1280) : 1280;
 
         // 🕒 좌상단 '출전 대기열' 패널(우측끝 ≈ 183px)에 몬스터가 가려지지 않도록,
         //    닉네임/제시어 길이로 박스 폭을 추정해 몬스터 중심 x의 최소값을 확보한다.
@@ -130,7 +130,8 @@ class MonsterManager {
         const estLen = Math.max(String(data.word || '').length, String(data.nickname || '').length);
         const estBoxW = Math.max(110, estLen * 20 + 26); // CanvasRenderer의 박스 폭 계산과 동일한 감각
         const QUEUE_PANEL_RIGHT = 190;                   // 패널 우측끝(183) + 여백
-        const rightMargin = 90;
+        // 긴 닉네임/제시어도 16:9 프레임 오른쪽 밖으로 잘리지 않도록 박스 반폭까지 확보한다.
+        const rightMargin = Math.max(90, estBoxW / 2 + 20);
         const minX = QUEUE_PANEL_RIGHT + estBoxW / 2;
         const maxX = safeWidth - rightMargin;
         const spawnX = (minX < maxX) ? (Math.random() * (maxX - minX) + minX) : (safeWidth / 2);
@@ -188,7 +189,7 @@ class MonsterManager {
         if (this.bossSpawnedForStage) return;
 
         const stage = this.currentStage;
-        const canvasWidth = this.canvas ? (this.canvas.clientWidth || 1024) : 1024;
+        const canvasWidth = this.canvas ? (this.canvas.clientWidth || 1280) : 1280;
 
         // 후반 보스일수록 더 긴(어려운) 제시어를 우선 출제
         const bossWord = this._pickBossWord(stage);
@@ -417,7 +418,7 @@ class MonsterManager {
 
     update(deltaTime = 0.016) {
         let reachedCount = 0;
-        const canvasHeight = this.canvas ? (this.canvas.clientHeight || 708) : 708;
+        const canvasHeight = this.canvas ? (this.canvas.clientHeight || 660) : 660;
         const bottomY = canvasHeight - 130; // CanvasRenderer의 방어선(groundY)과 정렬
 
         const nowMs = (typeof performance !== 'undefined' ? performance.now() : Date.now());
