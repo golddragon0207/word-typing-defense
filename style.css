@@ -468,6 +468,52 @@ body {
    기존 1024px 레이아웃과 비슷한 화면 점유율(약 78%)을 유지한다. */
 .main-menu-card {
   width: min(94%, 1000px);
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-rows: auto auto auto auto auto auto;
+  column-gap: 14px;
+  row-gap: 10px;
+  padding: 18px 24px;
+}
+
+.main-menu-card > .glow-text,
+.main-menu-card > .subtitle,
+.main-menu-card > .platform-indicators,
+.main-menu-card > .btn-giant,
+.main-menu-card > .ad-banner-box {
+  grid-column: 1 / -1;
+}
+
+.main-menu-card > .home-guide-panel {
+  grid-column: 1;
+  grid-row: 3;
+  align-self: start;
+}
+
+.main-menu-card > .home-chat-panel {
+  grid-column: 2;
+  grid-row: 3;
+  align-self: start;
+}
+
+.main-menu-card .home-guide-body,
+.main-menu-card .home-chat-body {
+  max-height: 175px;
+}
+
+.main-menu-card > .platform-indicators {
+  grid-row: 4;
+  margin-top: 0;
+}
+
+.main-menu-card > .btn-giant {
+  grid-row: 5;
+  margin-top: 0;
+}
+
+.main-menu-card > .ad-banner-box {
+  grid-row: 6;
+  margin-top: 0;
 }
 
 .main-menu-card .glow-text {
