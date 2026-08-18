@@ -42,13 +42,15 @@ class MonsterManager {
             ? getDifficultyConfig(difficulty)
             : { speedMult: 1.0, maxMonsterCap: 15 };
 
-        // 낙하 속도: 스테이지마다 +0.05로 가속하되 **stage 60에서 상한**(이후 고정, 3.25).
+        // 낙하 속도: 스테이지마다 +0.05로 가속하되 **stage 60에서 상한**.
         //   요구 타자속도(스폰)와 별개로 "실수 봐주는 버퍼(반응창)"를 후반까지 계속 좁혀, 800타 소프트 캡 이후
         //   무오타 지구력을 강요하는 보조 축(요구 타수 자체는 CONFIG.SPAWN_CURVE가 정한다). (상한 stage24 → stage60로 연장)
-        //   stage1=0.30(낙하 ≈30초, 538px÷18px/s) … stage60=3.25(낙하 ≈2.8초)에서 고정 (× 난이도 speedMult)
+        //   16:9 전환으로 낙하 거리(y40→ground)가 538px→490px로 8.9% 짧아졌으므로 속도에도 490/538을 곱한다.
+        //   이 보정으로 stage1≈30초, stage60≈2.8초였던 기존 1024×708 반응 시간을 그대로 유지한다.
         //   ※ 반응 하한 ≈2.8s에서 멈춘다: 더 좁히면(≈1.5s↓) 인간 불가·일반 스테이지가 보스보다 어려워지는 역전 발생.
         const speedStage = Math.min(stage, 60);
-        this.speed = (0.30 + (speedStage - 1) * 0.05) * cfg.speedMult;
+        const fallDistanceCompensation = 490 / 538;
+        this.speed = (0.30 + (speedStage - 1) * 0.05) * cfg.speedMult * fallDistanceCompensation;
         // 절대 상한(CONFIG.MAX_MONSTER_CAP)을 넘지 않도록 항상 clamp
         const hardCap = (typeof CONFIG !== 'undefined' && CONFIG.MAX_MONSTER_CAP) || 15;
         this.MAX_MONSTER_CAP = Math.min(hardCap, cfg.maxMonsterCap);
