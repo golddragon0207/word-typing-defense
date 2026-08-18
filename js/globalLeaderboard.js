@@ -14,40 +14,9 @@
  * (리더보드는 정상 동작, logEvent 호출은 조용히 무시됨).
  *
  * ────────────────────────────────────────────────────────────
- * 🔐 Firestore 보안 규칙 (Firebase 콘솔 > Firestore Database > 규칙 탭에 붙여넣기)
- * ⚠️ 랭킹 기준이 '최고 도달 스테이지'로 바뀌었으므로 아래 규칙(difficulty 제거 + stage 검증
- *    추가)으로 반드시 교체 후 다시 "게시"해야 한다. (기존 문서는 그대로 둬도 읽기는 정상)
- * ────────────────────────────────────────────────────────────
- * rules_version = '2';
- * service cloud.firestore {
- *   match /databases/{database}/documents {
- *     match /leaderboard/{entryId} {
- *       allow read: if true;
- *       allow create: if request.resource.data.keys().hasOnly(
- *                         ['nickname','score','stage','wpm','combo','grade','playTimeSec','playTimeStr','date','createdAt']
- *                       )
- *                     && request.resource.data.nickname is string
- *                     && request.resource.data.nickname.size() <= 20
- *                     && request.resource.data.score is number
- *                     && request.resource.data.score >= 0
- *                     && request.resource.data.score <= 999999
- *                     && request.resource.data.stage is number
- *                     && request.resource.data.stage >= 1
- *                     && request.resource.data.stage <= 9999;
- *       allow update, delete: if false; // 클라이언트에서 수정/삭제 불가 (스코어 위변조 방지)
- *     }
- *     match /suggestions/{docId} {
- *       allow read: if false;   // 건의사항은 클라이언트 조회 불가 (개발자가 콘솔에서만 확인)
- *       allow create: if request.resource.data.keys().hasOnly(['text','nickname','createdAt'])
- *                     && request.resource.data.text is string
- *                     && request.resource.data.text.size() >= 1
- *                     && request.resource.data.text.size() <= 500
- *                     && request.resource.data.nickname is string
- *                     && request.resource.data.nickname.size() <= 20;
- *       allow update, delete: if false;
- *     }
- *   }
- * }
+ * 🔐 배포용 Firestore 보안 규칙의 단일 원본은 루트 `firestore.rules`다.
+ * 닉네임 정규화 키를 문서 ID로 사용하고, 같은 문서는 스테이지 우선·동률 시 점수가
+ * 높아질 때만 갱신한다. 따라서 글로벌 DB와 count() 모두 닉네임별 최고 기록 1개를 센다.
  * ────────────────────────────────────────────────────────────
  * ⚠️ 참고: 클라이언트(브라우저)에서 직접 점수를 전송하는 구조라 악의적인 시청자가
  * 개발자도구로 임의의 값을 보낼 가능성 자체를 완전히 막을 수는 없다. 위 규칙은
@@ -138,8 +107,11 @@ const GlobalLeaderboard = {
   async submitScore(entry) {
     if (!this.enabled || !this.db) return false;
     try {
-      await this.db.collection(this.COLLECTION).add({
-        nickname: (entry.nickname || '스트리머').slice(0, 20),
+      const nickname = String(entry.nickname || '스트리머').trim().replace(/\s+/g, ' ').slice(0, 20);
+      const nicknameKey = this.normalizeNicknameKey(nickname);
+      const nextRecord = {
+        nickname,
+        nicknameKey,
         score: Math.max(0, Math.min(999999, Math.floor(entry.score || 0))),
         stage: Math.max(1, Math.min(9999, Math.floor(entry.stage || 1))),
         wpm: entry.wpm || 0,
@@ -149,12 +121,34 @@ const GlobalLeaderboard = {
         playTimeStr: entry.playTimeStr || '0초',
         date: entry.date || new Date().toISOString().slice(0, 10),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      const docRef = this.db.collection(this.COLLECTION).doc(nicknameKey);
+
+      await this.db.runTransaction(async transaction => {
+        const currentSnapshot = await transaction.get(docRef);
+        if (currentSnapshot.exists) {
+          const current = currentSnapshot.data() || {};
+          const isHigher = nextRecord.stage > (current.stage || 1)
+            || (nextRecord.stage === (current.stage || 1) && nextRecord.score > (current.score || 0));
+          if (!isHigher) return;
+        }
+        transaction.set(docRef, nextRecord);
       });
       return true;
     } catch (e) {
       console.warn('⚠️ [GlobalLeaderboard] 점수 제출 실패:', e.message);
       return false;
     }
+  },
+
+  /** 닉네임별 고정 Firestore 문서 ID. `/`는 경로 구분자가 되지 않도록 전각 문자로 치환한다. */
+  normalizeNicknameKey(nickname) {
+    return String(nickname || '스트리머')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLocaleLowerCase('ko-KR')
+      .replace(/\//g, '／')
+      .slice(0, 20);
   },
 
   /** 닉네임별 최고 기록 1개만 남긴다(공백·영문 대소문자 차이는 동일인 처리). */
@@ -164,7 +158,7 @@ const GlobalLeaderboard = {
       .sort((a, b) => (b.stage || 1) - (a.stage || 1) || (b.score || 0) - (a.score || 0));
     const seen = new Set();
     return sorted.filter(entry => {
-      const key = String(entry.nickname || '스트리머').trim().replace(/\s+/g, ' ').toLocaleLowerCase('ko-KR');
+      const key = entry.nicknameKey || this.normalizeNicknameKey(entry.nickname);
       if (seen.has(key)) return false;
       seen.add(key);
       return true;

@@ -136,8 +136,8 @@
 
 ### 13. 👑 등급 뱃지(SSS~D) & 명예의 전당 & MVP
 * **도달 스테이지 기준 등급**: `SSS ≥ 53 · SS ≥ 39 · S ≥ 30 · A ≥ 20 · B ≥ 11 · C ≥ 1 · D=미플레이` (0점/0처치 시 D). 임계는 SPAWN_CURVE 요구 타자속도(200·300·400·500·650타 구간)에 정렬하되 **각 등급을 한 칸씩 후하게** 부여(같은 스테이지가 종전보다 한 등급 위 — s29=A).
-* **🌐 상위 %(글로벌 백분위)**: `fetchPercentile`가 Firestore `count()` 서버 집계로 전체 유효 기록 수와 나보다 높은 점수 수만 받아 백분위 + **정확 등수(`rank` = 나보다 높은 점수 수 + 1)** 를 산출한다(`MIN_SAMPLE` 50). 모듈 SDK 로드나 집계가 실패할 때만 compat 최대 2,000건 스캔으로 폴백한다.
-* **명예의 전당**: 최고 도달 스테이지 내림차순(동점 시 점수순). 로컬 `localStorage`(`wtd_leaderboard_top5`) 기본 + Firebase Firestore(`leaderboard`). **같은 닉네임은 최고 기록 1개만 표시**하며, 앞뒤·연속 공백과 영문 대소문자 차이는 같은 닉네임으로 정규화한다. 로컬은 새 기록 저장 시 중복 데이터도 함께 정리하고, 글로벌은 조회 결과를 닉네임별로 합친다. 모달 진입 시 상위 200을 **1회만** 로드해 캐시하고, 이후 TOP5·전체·검색은 캐시에서 클라이언트 측으로 처리(추가 조회 없음). 3가지 뷰(`leaderboardView`):
+* **🌐 상위 %(글로벌 백분위)**: `fetchPercentile`가 Firestore `count()` 서버 집계로 닉네임별 최고 기록 문서 수와 나보다 높은 점수 문서 수만 받아 백분위 + **정확 등수(`rank` = 나보다 높은 점수 수 + 1)** 를 산출한다(`MIN_SAMPLE` 50). 모듈 SDK 로드나 집계가 실패할 때만 compat 최대 2,000건 스캔으로 폴백한다.
+* **명예의 전당**: 최고 도달 스테이지 내림차순(동점 시 점수순). 로컬 `localStorage`(`wtd_leaderboard_top5`) 기본 + Firebase Firestore(`leaderboard`). 앞뒤·연속 공백과 영문 대소문자를 정규화한 `nicknameKey`를 **고정 문서 ID**로 사용하고, 트랜잭션에서 기존보다 높은 스테이지·동률 시 높은 점수만 같은 문서에 갱신해 **닉네임별 최고 기록 1개를 DB부터 유지**한다. 조회 단계 중복 제거도 레거시 데이터 안전망으로 유지한다. 모달 진입 시 상위 200을 **1회만** 로드해 캐시하고, 이후 TOP5·전체·검색은 캐시에서 클라이언트 측으로 처리(추가 조회 없음). 3가지 뷰(`leaderboardView`):
   * **📜 전체 순위 보기**(`#btn-leaderboard-all`): TOP 5 ↔ 전체(최대 200위) 토글. 순위 번호는 필터와 무관하게 전체 정렬상의 실제 등수를 유지.
   * **🙋 내 순위 보기**(`#btn-leaderboard-me`): 전체 랭킹과 분리된 내 등수 전용 뷰. 로컬 최고 기록(`getMyBestRecord` — 내 닉네임 우선)을 카드로 보여주고, 글로벌 연동 시 점수 기준 정확 등수(`#N위 / 총 M명 · 상위 X%`)를 붙임. 같은 점수는 세션 캐시(`_myRankCache`)로 재조회 방지, 늦은 응답은 토큰으로 무시. 본인 식별은 `getMyNickname`(홈 입력값 우선, 없으면 `config.playerNames[0]`, 기본값 `'스트리머'`는 미설정 처리).
   * **🔎 닉네임 검색**(`#leaderboard-search`): 부분일치 필터. 검색어 입력 시 상위 5개에 갇히지 않도록 전체 뷰로 자동 확장(캐시라 재조회 없음), 뷰 버튼 클릭 시 검색어 초기화.
@@ -181,7 +181,7 @@
    * `ChatIntegrationEngine`: 플랫폼별 URL 파서, SOOP/치지직 다중 연동, SOOP·치지직 채팅 프로토콜 클라이언트(`CONFIG.SOOP_PROXY`/`CONFIG.CHZZK_PROXY` 경유), Smart Fallback 토스트, `handleIncomingChat` → `wordPacks.processChatMessage` 전달.
 
 7. **`js/globalLeaderboard.js`**
-   * Firebase 초기화, Firestore 점수 제출/스테이지 기준 조회(`submitScore`/`fetchTop`), 백분위 조회(`fetchPercentile`), 건의사항 저장(`submitSuggestion`), Analytics `logEvent`. 상단 주석에 Firestore 보안 규칙 포함.
+   * Firebase 초기화, 닉네임 고정 문서 트랜잭션 최고 기록 저장, Firestore 스테이지 기준 조회(`submitScore`/`fetchTop`), `count()` 백분위 조회(`fetchPercentile`), 건의사항 저장(`submitSuggestion`), Analytics `logEvent`.
 
 8. **`js/core/StateManager.js`**
    * 상태 머신, 무한 Stage/HP/점수/콤보/WPM/피버 관리, 체력·데미지·회복 적용, 등급 환산(SSS~D), 최고 도달 스테이지 기준 단일 로컬 TOP 5 저장/조회.
