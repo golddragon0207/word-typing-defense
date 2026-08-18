@@ -55,7 +55,7 @@
         topBtn.classList.toggle('active', enabled);
         topBtn.setAttribute('aria-pressed', String(enabled));
         // 아이콘(💬)은 고정, 라벨 span만 갱신 → 아이콘 축소 모드/툴팁 구조 유지
-        this._setQcLabel(topBtn, enabled ? '라이브 채팅 모드: ON' : '라이브 채팅 모드: OFF');
+        this._setQcLabel(topBtn, enabled ? '라이브 ON' : '라이브 OFF');
       }
 
       this._syncLiveChatModalBtn(enabled);
@@ -107,7 +107,7 @@
     btn.addEventListener('click', () => {
       const active = document.body.classList.toggle('obs-overlay');
       btn.classList.toggle('active', active);
-      this._setQcLabel(btn, active ? 'OBS 모드: ON (배경 투명)' : 'OBS 크로마키 (배경 투명)');
+      this._setQcLabel(btn, active ? 'OBS 투명 ON' : 'OBS 투명 OFF');
       this.showToastInternal(active ? '📺 OBS 크로마키 모드가 켜졌습니다.' : '📺 OBS 크로마키 모드가 꺼졌습니다.', 'info');
       this._blurQuickControl(btn);
     });
@@ -120,7 +120,7 @@
       if (!window.audioManager) return;
       const enabled = window.audioManager.toggleSound();
       // 사운드는 아이콘도 상태에 따라 바뀜(🔊/🔇)
-      this._setQcLabel(btn, enabled ? '사운드: ON' : '사운드: OFF', enabled ? '🔊' : '🔇');
+      this._setQcLabel(btn, enabled ? '사운드 ON' : '사운드 OFF', enabled ? '🔊' : '🔇');
       this._blurQuickControl(btn);
     });
   };

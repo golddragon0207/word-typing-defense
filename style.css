@@ -80,6 +80,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
   padding: 0 20px;
   z-index: 200;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
@@ -89,6 +90,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .logo-icon {
@@ -108,7 +110,8 @@ body {
 
 .quick-controls {
   display: flex;
-  gap: 10px;
+  gap: 6px;
+  min-width: 0;
 }
 
 /* 상단 컨트롤 버튼: 아이콘 + 라벨 구조 (툴팁 기준점) */
@@ -117,6 +120,10 @@ body {
   align-items: center;
   gap: 6px;
   position: relative;
+  flex-shrink: 0;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  white-space: nowrap;
 }
 
 .qc-btn .qc-ic {
@@ -137,9 +144,10 @@ body {
   transform: none;
 }
 
-/* 🖥️ 폭이 좁아지면(<1440px) 라벨을 숨겨 아이콘만 표시 → 상단바 넘침 방지.
+/* 🖥️ 논리 프레임 자체가 1100px 미만으로 바뀌는 경우에만 라벨을 숨긴다.
+   현재 방송 프레임(1280px)에서는 짧은 한글 라벨을 항상 표시한다.
    마우스를 올리면 커스텀 툴팁으로 버튼 이름(현재 상태 포함)을 보여준다. */
-@container (max-width: 1439px) {
+@container (max-width: 1099px) {
   .quick-controls {
     gap: 6px;
   }
