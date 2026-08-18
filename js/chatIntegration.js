@@ -4,7 +4,7 @@
 
 class ChatIntegrationEngine {
   constructor() {
-    this.channels = []; // Array of { id, platform, targetId, rawUrl, name, ws, pollTimer }
+    this.channels = []; // Array of { id, platform, targetId, rawUrl, name, status, statusMessage, ws, pollTimer }
     this.connected = false;
   }
 
@@ -78,6 +78,8 @@ class ChatIntegrationEngine {
       targetId: targetId,
       rawUrl: targetInput.trim(),
       name: `${icon} [${platform.toUpperCase()}] ${targetId}`,
+      status: 'connecting',
+      statusMessage: '채팅 서버 연결을 확인하고 있습니다.',
       ws: null,
       pollTimer: null
     };
@@ -87,6 +89,16 @@ class ChatIntegrationEngine {
 
     this.startPlatformListener(channelObj, prefix);
     return channelObj;
+  }
+
+  /** 채널 연결 상태를 UI에 즉시 전달한다. */
+  setChannelStatus(channel, status, message = '') {
+    if (!channel || !this.channels.includes(channel)) return;
+    channel.status = status;
+    channel.statusMessage = message;
+    window.dispatchEvent(new CustomEvent('chat-channel-status', {
+      detail: { id: channel.id, status, message }
+    }));
   }
 
   /**
@@ -107,6 +119,7 @@ class ChatIntegrationEngine {
         break;
       default:
         console.warn(`[ChatIntegration] 지원하지 않는 플랫폼이거나 커스텀 모드입니다.`);
+        this.setChannelStatus(channel, 'error', '지원하지 않는 플랫폼입니다.');
         break;
     }
   }
@@ -132,11 +145,13 @@ class ChatIntegrationEngine {
     const debug = !!(typeof CONFIG !== 'undefined' && CONFIG.SOOP_DEBUG);
 
     if (!channelId) {
+      this.setChannelStatus(channel, 'error', '채널 ID를 확인할 수 없습니다.');
       this.notifyFallback(prefix, '채널 ID를 확인할 수 없습니다.');
       return;
     }
     if (!proxy) {
       console.warn(`⚠️ ${prefix} CONFIG.CHZZK_PROXY/SOOP_PROXY가 비어 있어 치지직 연동을 시작할 수 없습니다. (CORS 프록시 필요)`);
+      this.setChannelStatus(channel, 'error', '프록시 미설정 (CORS 프록시 필요)');
       this.notifyFallback(prefix, '프록시 미설정 (CORS 프록시 필요)');
       return;
     }
@@ -196,14 +211,15 @@ class ChatIntegrationEngine {
 
         switch (json.cmd) {
           case 10100: // CONNECTED
+            this.setChannelStatus(channel, 'connected', '치지직 채팅 연결 성공');
             this.notifySuccess(prefix, '채팅 연결 성공');
             if (channel.pollTimer) clearInterval(channel.pollTimer);
             channel.pollTimer = setInterval(() => {
-              try { ws.send(JSON.stringify({ cmd: 0, ver: '2' })); } catch (_) {}
+              try { ws.send(JSON.stringify({ cmd: 0, ver: '2' })); } catch (_) { }
             }, 20000);
             break;
           case 0: // 서버 PING → PONG 응답
-            try { ws.send(JSON.stringify({ cmd: 10000, ver: '2' })); } catch (_) {}
+            try { ws.send(JSON.stringify({ cmd: 10000, ver: '2' })); } catch (_) { }
             break;
           case 93101: { // CHAT
             const chats = Array.isArray(body) ? body : ((body && body.messageList) || []);
@@ -211,7 +227,7 @@ class ChatIntegrationEngine {
               const type = chat.msgTypeCode || chat.messageTypeCode;
               if (type !== 1) return; // 일반 텍스트 채팅만 (도네/구독/시스템 제외)
               let nickname = '치지직시청자';
-              try { const p = JSON.parse(chat.profile || '{}'); if (p && p.nickname) nickname = p.nickname; } catch (_) {}
+              try { const p = JSON.parse(chat.profile || '{}'); if (p && p.nickname) nickname = p.nickname; } catch (_) { }
               const message = chat.msg || chat.content || '';
               if (message) this.handleIncomingChat(nickname, message, prefix);
             });
@@ -222,17 +238,22 @@ class ChatIntegrationEngine {
 
       ws.onerror = (err) => {
         console.error(`❌ ${prefix} 치지직 웹소켓 오류`, err);
+        this.setChannelStatus(channel, 'error', '치지직 웹소켓 연결 오류');
         this.notifyFallback(prefix, '치지직 웹소켓 오류');
       };
 
       ws.onclose = () => {
         console.warn(`🔌 ${prefix} 치지직 웹소켓 연결 종료`);
         if (channel.pollTimer) { clearInterval(channel.pollTimer); channel.pollTimer = null; }
+        if (this.channels.includes(channel) && channel.status !== 'error') {
+          this.setChannelStatus(channel, 'disconnected', '치지직 채팅 연결이 종료되었습니다.');
+        }
       };
 
       this.notifySuccess(prefix, '연동 시도 시작');
     } catch (e) {
       console.error(`❌ ${prefix} 치지직 연동 실패: ${e.message}`);
+      this.setChannelStatus(channel, 'error', e.message);
       this.notifyFallback(prefix, e.message);
     }
   }
@@ -256,11 +277,13 @@ class ChatIntegrationEngine {
     const debug = !!(typeof CONFIG !== 'undefined' && CONFIG.SOOP_DEBUG);
 
     if (!bid) {
+      this.setChannelStatus(channel, 'error', 'BJ ID를 확인할 수 없습니다.');
       this.notifyFallback(prefix, 'BJ ID를 확인할 수 없습니다.');
       return;
     }
     if (!proxy) {
       console.warn(`⚠️ ${prefix} CONFIG.SOOP_PROXY가 비어 있어 SOOP 연동을 시작할 수 없습니다. (CORS 프록시 필요)`);
+      this.setChannelStatus(channel, 'error', 'SOOP_PROXY 미설정 (CORS 프록시 필요)');
       this.notifyFallback(prefix, 'SOOP_PROXY 미설정 (CORS 프록시 필요)');
       return;
     }
@@ -336,10 +359,11 @@ class ChatIntegrationEngine {
         if (svc === 1) {
           // LOGIN(CONNECT) 응답 → JOIN (채팅방 입장). 익명 입장 페이로드: 구분자 + CHATNO + 구분자×5
           ws.send(this._soopPacket(2, `${this.SOOP_SEP}${chatNo}${this.SOOP_SEP.repeat(5)}`));
+          this.setChannelStatus(channel, 'connected', 'SOOP 채팅방 연결 성공');
           this.notifySuccess(prefix, '채팅방 입장');
           // keepalive PING (svc 0) 60초 주기
           channel.pollTimer = setInterval(() => {
-            try { ws.send(this._soopPacket(0, this.SOOP_SEP)); } catch (_) {}
+            try { ws.send(this._soopPacket(0, this.SOOP_SEP)); } catch (_) { }
           }, 60000);
         } else if (svc === 5) {
           // CHAT 패킷 → 닉네임/메시지 파싱
@@ -353,17 +377,22 @@ class ChatIntegrationEngine {
 
       ws.onerror = (err) => {
         console.error(`❌ ${prefix} SOOP 웹소켓 오류`, err);
+        this.setChannelStatus(channel, 'error', 'SOOP 웹소켓 연결 오류');
         this.notifyFallback(prefix, 'SOOP 웹소켓 오류');
       };
 
       ws.onclose = () => {
         console.warn(`🔌 ${prefix} SOOP 웹소켓 연결 종료`);
         if (channel.pollTimer) { clearInterval(channel.pollTimer); channel.pollTimer = null; }
+        if (this.channels.includes(channel) && channel.status !== 'error') {
+          this.setChannelStatus(channel, 'disconnected', 'SOOP 채팅 연결이 종료되었습니다.');
+        }
       };
 
       this.notifySuccess(prefix, '연동 시도 시작');
     } catch (e) {
       console.error(`❌ ${prefix} SOOP 연동 실패: ${e.message}`);
+      this.setChannelStatus(channel, 'error', e.message);
       this.notifyFallback(prefix, e.message);
     }
   }
@@ -433,6 +462,7 @@ class ChatIntegrationEngine {
 
     if (!apiKey) {
       console.warn(`⚠️ ${prefix} YouTube API Key(CONFIG.YOUTUBE_API_KEY)가 설정되지 않아 실시간 연동을 시작할 수 없습니다.`);
+      this.setChannelStatus(channel, 'error', 'YouTube API Key 미설정');
       this.notifyFallback(prefix, 'YouTube API Key 미설정');
       return;
     }
@@ -452,6 +482,7 @@ class ChatIntegrationEngine {
       this.notifySuccess(prefix, '연동 시도 시작');
 
       let nextPageToken = '';
+      let hasConnected = false;
       const poll = async () => {
         try {
           const chatUrl = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&key=${apiKey}` +
@@ -462,6 +493,11 @@ class ChatIntegrationEngine {
           const chatData = await chatRes.json();
           nextPageToken = chatData.nextPageToken || '';
 
+          if (!hasConnected || channel.status !== 'connected') {
+            hasConnected = true;
+            this.setChannelStatus(channel, 'connected', 'YouTube 라이브 채팅 연결 성공');
+          }
+
           (chatData.items || []).forEach(item => {
             const nickname = item?.authorDetails?.displayName || '유튜브시청자';
             const text = item?.snippet?.displayMessage || '';
@@ -469,6 +505,7 @@ class ChatIntegrationEngine {
           });
         } catch (pollErr) {
           console.error(`❌ ${prefix} YouTube 채팅 폴링 오류`, pollErr);
+          this.setChannelStatus(channel, 'error', `YouTube 채팅 수신 오류: ${pollErr.message}`);
         }
       };
 
@@ -477,6 +514,7 @@ class ChatIntegrationEngine {
 
     } catch (e) {
       console.error(`❌ ${prefix} YouTube 연동 실패: ${e.message}`);
+      this.setChannelStatus(channel, 'error', e.message);
       this.notifyFallback(prefix, e.message);
     }
   }
@@ -520,7 +558,13 @@ class ChatIntegrationEngine {
    * 현재 연동 중인 채널 목록 반환 (UI 렌더링용)
    */
   getActiveChannels() {
-    return this.channels.map(c => ({ id: c.id, name: c.name, platform: c.platform }));
+    return this.channels.map(c => ({
+      id: c.id,
+      name: c.name,
+      platform: c.platform,
+      status: c.status || 'connecting',
+      statusMessage: c.statusMessage || ''
+    }));
   }
 
   /**

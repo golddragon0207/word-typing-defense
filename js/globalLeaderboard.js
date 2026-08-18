@@ -160,6 +160,20 @@ const GlobalLeaderboard = {
     }
   },
 
+  /** 닉네임별 최고 기록 1개만 남긴다(공백·영문 대소문자 차이는 동일인 처리). */
+  dedupeScoresByNickname(rows) {
+    const sorted = (Array.isArray(rows) ? rows : [])
+      .slice()
+      .sort((a, b) => (b.stage || 1) - (a.stage || 1) || (b.score || 0) - (a.score || 0));
+    const seen = new Set();
+    return sorted.filter(entry => {
+      const key = String(entry.nickname || '스트리머').trim().replace(/\s+/g, ' ').toLocaleLowerCase('ko-KR');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  },
+
   /**
    * 🏆 글로벌 단일 TOP N 조회 (랭킹 기준: 최고 도달 스테이지)
    * 컬렉션을 스테이지 내림차순으로 넉넉히 가져온 뒤, 동점(같은 스테이지)은 클라이언트에서
@@ -176,8 +190,7 @@ const GlobalLeaderboard = {
         .get();
 
       const rows = snap.docs.map(doc => doc.data());
-      rows.sort((a, b) => (b.stage || 1) - (a.stage || 1) || (b.score || 0) - (a.score || 0));
-      return rows.slice(0, limit);
+      return this.dedupeScoresByNickname(rows).slice(0, limit);
     } catch (e) {
       console.warn('⚠️ [GlobalLeaderboard] TOP 조회 실패:', e.message);
       return null;

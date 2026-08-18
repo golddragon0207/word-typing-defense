@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>word-typing-defense (스트리머 워드 디펜스)</title>
 
-  <link rel="stylesheet" href="style.css?v=20260818-5">
+  <link rel="stylesheet" href="style.css?v=20260818-10">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -142,7 +142,7 @@
       <!-- 🏠 홈/게임오버 화면은 고정 무대 밖(.stage-frame = 상단바 아래 전체 영역)을 채우도록 분리 -->
       <div id="screen-main" class="screen-overlay">
         <div class="main-menu-card">
-          <!-- 📖 처음 온 사람을 위한 설명서 (기본 펼침, 패널 내부 스크롤) -->
+          <!-- 📖 처음 온 사람을 위한 설명서 (기본 펼침, 720p 한 화면 표시) -->
           <details id="home-guide-panel" class="home-guide-panel" open>
             <summary class="home-guide-summary">
               <span class="home-guide-title">📖 게임 설명서 — 처음이세요?</span>
@@ -153,8 +153,7 @@
               <div class="guide-hero">
                 <div class="guide-hero-ic">🎮</div>
                 <div class="guide-hero-tx">
-                  <b>실시간 타자 디펜스</b> — 시청자 <b>닉네임·채팅</b>이 몬스터가 되어 위에서 몰려오면,
-                  스트리머가 몬스터에 적힌 <b>제시어를 타이핑</b>해 격파하며 기지를 지킵니다.
+                  시청자 <b>닉네임·채팅 몬스터</b>를 <b>제시어 타이핑</b>으로 막아 기지를 지키세요.
                 </div>
               </div>
 
@@ -163,9 +162,9 @@
                 <div class="guide-card streamer">
                   <div class="guide-card-head">🎨 스트리머 <span class="role-tag">플레이어</span></div>
                   <ol class="guide-steps">
-                    <li><span class="step-n">1</span><span>플랫폼(SOOP·치지직·유튜브) 고르고 <b>채널 주소</b> 붙여넣어 연동</span></li>
-                    <li><span class="step-n">2</span><span><b>스트리머 닉네임</b> 입력 <em class="req">*필수</em></span></li>
-                    <li><span class="step-n">3</span><span><b>🔥 게임 시작</b> — 5초 뒤 몬스터 등장!</span></li>
+                    <li><span class="step-n">1</span><span>플랫폼 선택 후 <b>채널 주소 연동</b></span></li>
+                    <li><span class="step-n">2</span><span><b>닉네임 입력</b> <em class="req">*필수</em></span></li>
+                    <li><span class="step-n">3</span><span><b>🔥 게임 시작</b></span></li>
                   </ol>
                   <p class="guide-tip">💡 방송 연동을 안 해도 봇 시청자로 바로 플레이 OK</p>
                 </div>
@@ -173,8 +172,8 @@
                 <div class="guide-card viewer">
                   <div class="guide-card-head">🙋 시청자 <span class="role-tag">참여자</span></div>
                   <ul class="guide-plain">
-                    <li>방송 채팅창에 <code class="cmd">!참여</code> 입력 → 내 닉네임이 몬스터로 출전!</li>
-                    <li><b>💬 라이브 모드</b> ON이면, <code class="cmd">!참여</code> 뒤에 친 채팅이 그대로 제시어가 됩니다.</li>
+                    <li><code class="cmd">!참여</code> 입력 → 닉네임 몬스터 출전</li>
+                    <li><b>라이브 모드 ON</b> → 이후 채팅이 제시어</li>
                   </ul>
                 </div>
               </div>
@@ -232,8 +231,12 @@
                 </div>
 
                 <div class="connected-channels-section">
-                  <label>📡 현재 연동 목록:</label>
+                  <div class="connected-channels-header">
+                    <label>📡 현재 연동 목록:</label>
+                    <span id="chat-connection-summary" class="connection-summary is-idle">미연결</span>
+                  </div>
                   <div id="active-channels-list" class="channel-chips-container"></div>
+                  <p id="chat-connection-detail" class="connection-detail is-idle">방송 URL을 추가하면 연결 결과가 여기에 표시됩니다.</p>
                 </div>
 
                 <div class="participants-section">
@@ -427,21 +430,21 @@
   <script src="js/config.js"></script>
   <script src="js/wordPacks.js"></script>
   <script src="js/audio.js"></script>
-  <script src="js/globalLeaderboard.js"></script>
+  <script src="js/globalLeaderboard.js?v=20260818-1"></script>
 
-  <script src="js/core/StateManager.js"></script>
+  <script src="js/core/StateManager.js?v=20260818-1"></script>
   <script src="js/core/TurretManager.js"></script>
   <script src="js/core/MonsterManager.js?v=20260818-2"></script>
   <script src="js/core/InputManager.js"></script>
 
   <script src="js/renderers/CanvasRenderer.js"></script>
 
-  <script src="js/chatIntegration.js"></script>
+  <script src="js/chatIntegration.js?v=20260818-1"></script>
 
   <!-- 🎮 GameEngine 클래스 정의 → ui/*가 prototype 확장 → main.js가 인스턴스화(순서 중요) -->
   <script src="js/game.js"></script>
   <script src="js/ui/fx.js"></script>
-  <script src="js/ui/chatPanel.js"></script>
+  <script src="js/ui/chatPanel.js?v=20260818-2"></script>
   <script src="js/ui/modals.js"></script>
   <script src="js/ui/quickControls.js?v=20260818-1"></script>
   <script src="js/main.js"></script>

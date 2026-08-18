@@ -49,23 +49,95 @@
 
     const btnAddYt = document.getElementById('btn-add-yt');
     if (btnAddYt) btnAddYt.addEventListener('click', () => addChannelHandler('youtube', 'input-yt-url'));
+
+    if (!this._chatStatusListenerBound) {
+      this._chatStatusListenerBound = true;
+      window.addEventListener('chat-channel-status', () => this.renderActiveChannels());
+    }
   };
 
   P.renderActiveChannels = function () {
     const list = document.getElementById('active-channels-list');
+    const summary = document.getElementById('chat-connection-summary');
+    const detail = document.getElementById('chat-connection-detail');
     if (!list || !window.chatEngine) return;
 
     const channels = window.chatEngine.getActiveChannels();
     if (channels.length === 0) {
       list.innerHTML = '<span class="channel-chip-empty">연동된 방송이 없습니다.</span>';
+      if (summary) {
+        summary.className = 'connection-summary is-idle';
+        summary.textContent = '미연결';
+      }
+      if (detail) {
+        detail.className = 'connection-detail is-idle';
+        detail.textContent = '방송 URL을 추가하면 연결 결과가 여기에 표시됩니다.';
+      }
       return;
     }
 
+    const connectedCount = channels.filter(ch => ch.status === 'connected').length;
+    const errorChannels = channels.filter(ch => ch.status === 'error' || ch.status === 'disconnected');
+    const errorCount = errorChannels.length;
+    if (summary) {
+      if (connectedCount > 0) {
+        summary.className = `connection-summary ${errorCount > 0 ? 'is-mixed' : 'is-connected'}`;
+        summary.textContent = errorCount > 0
+          ? `연결 ${connectedCount} · 오류 ${errorCount}`
+          : `연결됨 ${connectedCount}/${channels.length}`;
+      } else if (errorCount > 0) {
+        summary.className = 'connection-summary is-error';
+        summary.textContent = `연결 오류 ${errorCount}`;
+      } else {
+        summary.className = 'connection-summary is-connecting';
+        summary.textContent = '연결 확인 중';
+      }
+    }
+
+    if (detail) {
+      if (errorCount > 0) {
+        const failed = errorChannels[0];
+        const platformNames = { soop: 'SOOP', chzzk: '치지직', youtube: '유튜브' };
+        const more = errorCount > 1 ? ` · 외 ${errorCount - 1}개` : '';
+        detail.className = 'connection-detail is-error';
+        detail.textContent = `⚠️ ${platformNames[failed.platform] || failed.platform} URL 연동 실패${more}`;
+      } else if (connectedCount > 0) {
+        detail.className = 'connection-detail is-connected';
+        detail.textContent = '✅ 채팅 수신 준비가 완료되었습니다.';
+      } else {
+        detail.className = 'connection-detail is-connecting';
+        detail.textContent = '⏳ 방송 정보와 채팅 서버 연결을 확인하고 있습니다.';
+      }
+    }
+
     list.innerHTML = '';
+    const statusLabels = {
+      connecting: '연결 중',
+      connected: '연결됨',
+      error: '오류',
+      disconnected: '끊김'
+    };
     channels.forEach(ch => {
       const chip = document.createElement('span');
-      chip.className = `channel-chip channel-chip-${ch.platform}`;
-      chip.innerHTML = `${ch.name} <button type="button" class="chip-remove" data-channel-id="${ch.id}">✕</button>`;
+      chip.className = `channel-chip channel-chip-${ch.platform} status-${ch.status}`;
+
+      const name = document.createElement('span');
+      name.textContent = ch.name;
+      chip.appendChild(name);
+
+      const status = document.createElement('span');
+      status.className = 'channel-status';
+      status.textContent = statusLabels[ch.status] || '확인 중';
+      status.title = ch.statusMessage || status.textContent;
+      chip.appendChild(status);
+
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'chip-remove';
+      remove.dataset.channelId = ch.id;
+      remove.setAttribute('aria-label', `${ch.name} 연동 해제`);
+      remove.textContent = '✕';
+      chip.appendChild(remove);
       list.appendChild(chip);
     });
 

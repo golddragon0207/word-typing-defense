@@ -479,12 +479,12 @@ body {
 /* 1280px 방송 프레임에서 홈 설정 화면이 너무 작아 보이지 않도록
    기존 1024px 레이아웃과 비슷한 화면 점유율(약 78%)을 유지한다. */
 .main-menu-card {
-  width: min(94%, 1000px);
+  width: min(94%, 1080px);
   height: 100%;
   flex-shrink: 0;
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  grid-template-rows: auto auto auto auto;
+  grid-template-rows: minmax(0, 1fr) auto auto;
   column-gap: 14px;
   row-gap: 10px;
   padding: 18px 24px;
@@ -500,37 +500,194 @@ body {
 .main-menu-card > .home-guide-panel {
   grid-column: 1;
   grid-row: 1;
-  align-self: start;
+  align-self: stretch;
 }
 
 .main-menu-card > .home-chat-panel {
   grid-column: 2;
   grid-row: 1;
-  align-self: start;
+  align-self: stretch;
 }
 
 .main-menu-card .home-guide-body,
 .main-menu-card .home-chat-body {
-  max-height: 175px;
+  max-height: none;
+  overflow-y: hidden;
 }
 
 .main-menu-card > .platform-indicators {
+  display: none;
+}
+
+.main-menu-card > .btn-giant {
   grid-row: 2;
   margin-top: 0;
 }
 
-.main-menu-card > .btn-giant {
-  grid-row: 3;
-  margin-top: 0;
-}
-
 .main-menu-card > .ad-banner-box {
-  grid-row: 4;
+  grid-row: 3;
   margin-top: 0;
 }
 
 .main-menu-card .btn-giant {
   font-size: 1.25rem !important;
+}
+
+/* 720p 홈 화면에서는 두 패널도 스크롤 없이 한 번에 읽고 설정할 수 있게 압축한다. */
+.main-menu-card .home-guide-summary,
+.main-menu-card .home-chat-summary {
+  padding: 10px 12px;
+}
+
+.main-menu-card .home-guide-body {
+  gap: 7px;
+  padding: 8px 10px 10px;
+}
+
+.main-menu-card .guide-hero {
+  gap: 8px;
+  padding: 8px 10px;
+}
+
+.main-menu-card .guide-hero-ic {
+  font-size: 1.45rem;
+}
+
+.main-menu-card .guide-hero-tx {
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.main-menu-card .guide-roles {
+  gap: 8px;
+}
+
+.main-menu-card .guide-card {
+  gap: 5px;
+  padding: 8px 10px;
+}
+
+.main-menu-card .guide-card-head {
+  gap: 5px;
+  font-size: 0.86rem;
+}
+
+.main-menu-card .guide-steps,
+.main-menu-card .guide-plain {
+  gap: 4px;
+}
+
+.main-menu-card .guide-steps li,
+.main-menu-card .guide-plain li {
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.main-menu-card .step-n {
+  width: 17px;
+  height: 17px;
+  font-size: 0.68rem;
+}
+
+.main-menu-card .guide-tip {
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.main-menu-card .guide-rules {
+  gap: 5px;
+}
+
+.main-menu-card .rule-chip {
+  padding: 3px 7px;
+  font-size: 0.72rem;
+}
+
+.main-menu-card .home-chat-body {
+  gap: 6px;
+  padding: 6px 10px 10px;
+  min-height: 0;
+}
+
+.main-menu-card .home-chat-body > .modal-desc {
+  display: none;
+}
+
+.main-menu-card .platform-tabs {
+  flex-wrap: nowrap;
+  gap: 5px;
+}
+
+.main-menu-card .tab-btn {
+  flex: 1;
+  padding: 6px 5px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.main-menu-card .tab-contents,
+.main-menu-card .tab-content {
+  gap: 5px;
+}
+
+.main-menu-card .input-with-btn {
+  gap: 5px;
+}
+
+.main-menu-card .input-with-btn input[type="text"] {
+  padding: 7px 9px;
+}
+
+.main-menu-card .connected-channels-section,
+.main-menu-card .participants-section,
+.main-menu-card .streamer-name-section {
+  gap: 3px;
+  padding-top: 6px;
+}
+
+.main-menu-card .channel-chips-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 4px;
+  min-height: 18px;
+}
+
+.main-menu-card .channel-chip {
+  min-width: 0;
+  gap: 4px;
+  padding: 4px 6px;
+}
+
+.main-menu-card .channel-chip > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.main-menu-card .channel-status {
+  flex-shrink: 0;
+  padding-left: 5px;
+  font-size: 0.62rem;
+}
+
+.main-menu-card .participants-header,
+.main-menu-card .participants-header-actions {
+  gap: 5px;
+}
+
+.main-menu-card .participant-chips-container {
+  max-height: 38px;
+}
+
+.main-menu-card .chat-option-note {
+  display: none;
+}
+
+.main-menu-card .streamer-name-section .input-nickname {
+  height: 36px !important;
+  padding: 0 10px !important;
+  font-size: 0.86rem !important;
 }
 
 /* ==========================================
@@ -1079,7 +1236,7 @@ body {
   display: none !important;
 }
 
-/* 모달 실제 대화상자 (가로 800px, 세로 최대 520px) */
+/* 모달 실제 대화상자 (가로 800px, 720p 안에서 본문 스크롤이 생기지 않는 높이) */
 .modal-card,
 .modal-content,
 .modal-container {
@@ -1088,7 +1245,7 @@ body {
   border-radius: 12px !important;
 
   width: min(96%, 800px) !important;
-  max-height: 520px !important;
+  max-height: min(640px, calc(100% - 16px)) !important;
 
   display: flex !important;
   flex-direction: column !important;
@@ -1116,6 +1273,50 @@ body {
   flex-direction: column !important;
   gap: 12px !important;
   box-sizing: border-box !important;
+}
+
+/* 게임오버도 660px 무대 안에서 한 화면에 표시한다. */
+#screen-gameover {
+  padding: 12px 20px;
+  overflow-y: hidden;
+  justify-content: center;
+}
+
+#screen-gameover::before,
+#screen-gameover::after {
+  display: none;
+}
+
+#screen-gameover .result-card {
+  width: min(94%, 960px);
+  max-height: 100%;
+  padding: 16px 22px;
+  gap: 10px;
+}
+
+#screen-gameover .rank-result-header {
+  flex-direction: row;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#screen-gameover .stats-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+}
+
+#screen-gameover .stat-box {
+  padding: 7px 5px;
+}
+
+#screen-gameover .result-actions {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+#screen-gameover .ad-banner-box {
+  margin-top: 0;
 }
 
 /* 내부 요소 크기 제한 */
@@ -2031,6 +2232,103 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   min-height: 30px;
+}
+
+.connected-channels-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.connection-summary,
+.channel-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.connection-summary {
+  padding: 3px 8px;
+}
+
+.connection-detail {
+  margin: 0;
+  padding: 4px 7px;
+  border-radius: 6px;
+  font-size: 0.67rem;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.connection-detail.is-idle {
+  color: #8a8f9d;
+  background: rgba(138, 143, 157, 0.08);
+}
+
+.connection-detail.is-connecting {
+  color: #ffd54a;
+  background: rgba(255, 213, 74, 0.08);
+}
+
+.connection-detail.is-connected {
+  color: #00ff66;
+  background: rgba(0, 255, 102, 0.08);
+}
+
+.connection-detail.is-error {
+  color: #ff8aaa;
+  background: rgba(255, 0, 85, 0.1);
+  border: 1px solid rgba(255, 92, 133, 0.35);
+}
+
+.connection-summary::before,
+.channel-status::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 7px currentColor;
+}
+
+.connection-summary.is-idle {
+  color: #8a8f9d;
+  background: rgba(138, 143, 157, 0.12);
+}
+
+.connection-summary.is-connecting,
+.connection-summary.is-mixed,
+.channel-chip.status-connecting .channel-status {
+  color: #ffd54a;
+}
+
+.connection-summary.is-connected,
+.channel-chip.status-connected .channel-status {
+  color: #00ff66;
+}
+
+.connection-summary.is-error,
+.channel-chip.status-error .channel-status,
+.channel-chip.status-disconnected .channel-status {
+  color: #ff5c85;
+}
+
+.channel-chip.status-error,
+.channel-chip.status-disconnected {
+  border-color: #ff5c85;
+}
+
+.channel-status {
+  padding-left: 7px;
+  border-left: 1px solid currentColor;
 }
 
 .channel-chip {

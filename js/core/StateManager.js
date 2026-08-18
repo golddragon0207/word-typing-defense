@@ -308,6 +308,25 @@ class StateManager {
     }
 
     /**
+     * 닉네임별 최고 기록 1개만 남긴다.
+     * 앞뒤/연속 공백과 영문 대소문자는 같은 닉네임으로 취급한다.
+     * @param {Array<Object>} scores
+     * @returns {Array<Object>}
+     */
+    dedupeScoresByNickname(scores) {
+        const sorted = (Array.isArray(scores) ? scores : [])
+            .slice()
+            .sort((a, b) => (b.stage || 1) - (a.stage || 1) || (b.score || 0) - (a.score || 0));
+        const seen = new Set();
+        return sorted.filter(entry => {
+            const key = String(entry.nickname || '스트리머').trim().replace(/\s+/g, ' ').toLocaleLowerCase('ko-KR');
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    }
+
+    /**
      * 🏆 localStorage 기반 단일 통합 TOP 명예의 전당 조회
      *    '최고 도달 스테이지 내림차순, 동점이면 점수 내림차순'으로 정렬해 상위 limit개 반환.
      *    (난이도 구분 없음 — 옛 난이도별 데이터도 이 기준으로 자동 재정렬되어 함께 랭크됨)
@@ -315,10 +334,7 @@ class StateManager {
      * @returns {Array<Object>}
      */
     getTopScores(limit = 5) {
-        return this.getAllScores()
-            .slice()
-            .sort((a, b) => (b.stage || 1) - (a.stage || 1) || (b.score || 0) - (a.score || 0))
-            .slice(0, limit);
+        return this.dedupeScoresByNickname(this.getAllScores()).slice(0, limit);
     }
 
     /**
@@ -368,8 +384,7 @@ class StateManager {
 
         const all = this.getAllScores();
         all.push(entry);
-        all.sort((a, b) => (b.stage || 1) - (a.stage || 1) || (b.score || 0) - (a.score || 0));
-        const finalList = all.slice(0, STORE_MAX);
+        const finalList = this.dedupeScoresByNickname(all).slice(0, STORE_MAX);
 
         // 신기록: 이번 판이 유효(점수>0 또는 스테이지>1)하고 상위 DISPLAY_TOP 안에 들었는지
         const isNewRecord = (this.score > 0 || this.currentStage > 1) &&
