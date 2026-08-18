@@ -456,6 +456,24 @@ body {
   gap: 15px;
 }
 
+/* 1280px 방송 프레임에서 홈 설정 화면이 너무 작아 보이지 않도록
+   기존 1024px 레이아웃과 비슷한 화면 점유율(약 78%)을 유지한다. */
+.main-menu-card {
+  width: min(94%, 1000px);
+}
+
+.main-menu-card .glow-text {
+  font-size: 2.2rem;
+}
+
+.main-menu-card .subtitle {
+  font-size: 1rem;
+}
+
+.main-menu-card .btn-giant {
+  font-size: 1.25rem !important;
+}
+
 /* ==========================================
    홈 화면: 방송 채팅 실시간 연동 (접이식 패널)
    ========================================== */
